@@ -27,9 +27,9 @@ int set_motor_speed(uint8_t motor_index, int speed);
 
 long get_motor_position(uint8_t motor_index);
 
-long long get_target_position(uint8_t motor_index);
+// long long get_target_position(uint8_t motor_index);
 
-int set_target_position(uint8_t motor_index, long long target_position);
+// int set_target_position(uint8_t motor_index, long long target_position);
 
 int get_motor_velocity(uint8_t motor_index);
 

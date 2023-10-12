@@ -1,4 +1,4 @@
-// #include "arm.h"
+#include "arm.h"
 
 // void arm_init(){
 //     steer_FR.index = BASE;
