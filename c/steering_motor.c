@@ -110,7 +110,7 @@ int steering_motor_handle_state(steering_motor_t *s_motor) {
         case STATE_CALIBRATION_CENTER:
             current = (long long)get_motor_position(s_motor->index) << 32;
             target = ((long long) s_motor->center_pos) << 32;
-            set_target_position(s_motor->index, target);
+            // set_target_position(s_motor->index, target);
             difference = target - current;
             int speed = ((1 * difference)>>32) ;
             speed  = 0;
