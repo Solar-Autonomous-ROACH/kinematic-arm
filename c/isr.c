@@ -6,6 +6,8 @@ static uint64_t total_count = 120000;
 static uint8_t watchdog_flag = 0;
 int new_inc = 4;
 
+int temp = 0;
+
 int isr_init(){
     struct sigaction sa;
     struct itimerval timer;
@@ -39,79 +41,90 @@ int isr(int signum) {
     set_PL_register(WATCHDOG_REG, watchdog_flag);
     set_PL_register(DEBUG_REG, 0xFF);
 
-    switch (state){
-        case 10:
-            rover_init();
-            state ++;
-            break;
-        case 11:
-            rover_calibrate();
-            if(rover_is_calibrated()) state++;
-            count_ms = 0;
-            break;
-        case 12:
-            rover_steer_point();
-            if(count_ms >= 1000){
-                count_ms = 0;
-                state ++;
-            }
-            break;
-        case 13:
-            rover_steer_forward();
-            if(count_ms >= 1000){
-                count_ms = 0;
-                state++;
-            }
-            break;
-        case 14:
-            rover_steer_left(200);
-            if(count_ms >= 1000){
-                count_ms = 0;
-                state ++;
-            }
+    //Making Base Motor Spin
+    if (temp > 5000) {
+        temp = -5000;
+    } else if (temp < 0) {
+        set_motor_speed(BASE, 20);
+        temp++;
+    } else if (temp > 0) {
+        set_motor_speed(BASE, -20);
+        temp++;
+    }
+    
+    // switch (state){
+    //     case 10:
+    //         rover_init();
+    //         state ++;
+    //         break;
+    //     case 11:
+    //         rover_calibrate();
+    //         if(rover_is_calibrated()) state++;
+    //         count_ms = 0;
+    //         break;
+    //     case 12:
+    //         rover_steer_point();
+    //         if(count_ms >= 1000){
+    //             count_ms = 0;
+    //             state ++;
+    //         }
+    //         break;
+    //     case 13:
+    //         rover_steer_forward();
+    //         if(count_ms >= 1000){
+    //             count_ms = 0;
+    //             state++;
+    //         }
+    //         break;
+    //     case 14:
+    //         rover_steer_left(200);
+    //         if(count_ms >= 1000){
+    //             count_ms = 0;
+    //             state ++;
+    //         }
             
-            break;
+    //         break;
 
-        case 15:
-            if(enter_distance() == 1){
-                state++;
-            }
-            break;
-        case 16:
-            rover_move();
-            if( finished_moving() == 1){
-                state = 15;
-                printf("%d\n", state);
-                for(int i = 0; i<10; i++){
-                    set_motor_speed(i, 0);
-                }
-                rover_steer_forward();
-                if(count_ms >= 1000){
-                    count_ms = 0;
-                }
-            }
-            break;
+    //     case 15:
+    //         if(enter_distance() == 1){
+    //             state++;
+    //         }
+    //         break;
+    //     case 16:
+    //         rover_move();
+    //         if( finished_moving() == 1){
+    //             state = 15;
+    //             printf("%d\n", state);
+    //             for(int i = 0; i<10; i++){
+    //                 set_motor_speed(i, 0);
+    //             }
+    //             rover_steer_forward();
+    //             if(count_ms >= 1000){
+    //                 count_ms = 0;
+    //             }
+    //         }
+    //         break;
         
-        default:
-            rover_move();
-            if( finished_moving() == 1){
-                state = 12;
-                for(int i = 0; i<10; i++){
-                    set_motor_speed(i, 0);
-                }
-            }
-            //rover_steer_right(200);
-            // if(count_ms >= 1000){
-            //     count_ms = 0;
-            //     state=12;
-            // }
-            //new_inc++;
-            break;
-    }
+    //     default:
+    //         rover_move();
+    //         if( finished_moving() == 1){
+    //             state = 12;
+    //             for(int i = 0; i<10; i++){
+    //                 set_motor_speed(i, 0);
+    //             }
+    //         }
+    //         //rover_steer_right(200);
+    //         // if(count_ms >= 1000){
+    //         //     count_ms = 0;
+    //         //     state=12;
+    //         // }
+    //         //new_inc++;
+    //         break;
+    // }
 
-    if(rover_is_calibrated()){
-        rover_update_steering();
-    }
+    // if(rover_is_calibrated()){
+    //     rover_update_steering();
+    // }
 
     set_PL_register(DEBUG_REG, 0x00);
     watchdog_flag = !watchdog_flag;

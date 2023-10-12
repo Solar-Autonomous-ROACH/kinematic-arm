@@ -69,6 +69,7 @@ char get_raw_pos(uint8_t motor_index){
 }
 
 // Not used
+
 // long long get_target_position(uint8_t motor_index){
 //     if(motor_index >= MAX_MOTORS){
 //         perror("Motor Index Out Of Range");
