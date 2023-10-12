@@ -30,7 +30,7 @@ int isr_init(){
         set_motor_speed(i, 0);
     }
 
-    rover_init();
+    // arm_init();
     return 0;
 
 }
