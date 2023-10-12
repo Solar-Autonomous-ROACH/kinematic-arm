@@ -29,7 +29,7 @@ int main() {
     set_brightness( 100, 100, 000);
     speed1=0;
     while(1){
-        scanf("%d", &speed1);
+        //scanf("%d", &speed1);
     }
 
     close_mem();

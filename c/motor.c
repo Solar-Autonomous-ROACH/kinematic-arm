@@ -68,24 +68,22 @@ char get_raw_pos(uint8_t motor_index){
     return motor_raw_pos[motor_index];
 }
 
-// Not used
+long long get_target_position(uint8_t motor_index){
+    if(motor_index >= MAX_MOTORS){
+        perror("Motor Index Out Of Range");
+        return -1;
+    }
+    return motor_target_pos[motor_index];
+}
 
-// long long get_target_position(uint8_t motor_index){
-//     if(motor_index >= MAX_MOTORS){
-//         perror("Motor Index Out Of Range");
-//         return -1;
-//     }
-//     return motor_target_pos[motor_index];
-// }
-
-// int set_target_position(uint8_t motor_index, long long target_position){
-//     if(motor_index >= MAX_MOTORS){
-//         perror("Motor Index Out Of Range");
-//         return -1;
-//     }
-//     motor_target_pos[motor_index] = target_position;
-//     return 0;
-// }
+int set_target_position(uint8_t motor_index, long long target_position){
+    if(motor_index >= MAX_MOTORS){
+        perror("Motor Index Out Of Range");
+        return -1;
+    }
+    motor_target_pos[motor_index] = target_position;
+    return 0;
+}
 
 int get_motor_velocity(uint8_t motor_index){
     if(motor_index >= MAX_MOTORS){

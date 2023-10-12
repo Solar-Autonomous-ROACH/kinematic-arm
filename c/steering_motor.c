@@ -6,7 +6,6 @@ long pos[buf_size];
 long pos_index = 0;
 long spinup = 20;
 long vel = 0;
-
 void calibrate (steering_motor_t *s_motor) {
     if(s_motor->state == STATE_WAITING)
         s_motor->state = STATE_CALIBRATION_LEFT;
@@ -108,9 +107,10 @@ int steering_motor_handle_state(steering_motor_t *s_motor) {
 
 
         case STATE_CALIBRATION_CENTER:
+
             current = (long long)get_motor_position(s_motor->index) << 32;
             target = ((long long) s_motor->center_pos) << 32;
-            // set_target_position(s_motor->index, target);
+            set_target_position(s_motor->index, target);
             difference = target - current;
             int speed = ((1 * difference)>>32) ;
             speed  = 0;
