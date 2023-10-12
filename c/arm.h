@@ -33,31 +33,31 @@ static steering_motor_t steer_ELBOW;
 static steering_motor_t steer_WRIST;
 static steering_motor_t steer_CLAW;
 
-void rover_init();
+void arm_init();
 
-int rover_is_calibrated();
+int arm_is_calibrated();
 
-void rover_calibrate();
+void arm_calibrate();
 
-void rover_update_steering();
+void arm_update_steering();
 
-void rover_stop();
+// void rover_stop();
 
-void rover_forward(int speed);
+// void arm_forward(int speed);
 
-void rover_reverse(int speed);
+// void arm_reverse(int speed);
 
-void rover_pointTurn_CW(int speed);
+// void arm_pointTurn_CW(int speed);
 
-void rover_pointTurn_CCW(int speed);
+// void arm_pointTurn_CCW(int speed);
 
-void rover_steer_forward();
+// void arm_steer_forward();
 
-void rover_steer_right(int angle);
+// void arm_steer_right(int angle);
 
-void rover_steer_left(int angle);
+// void arm_steer_left(int angle);
 
-void rover_steer_point();
+// void arm_steer_point();
 
 
 
