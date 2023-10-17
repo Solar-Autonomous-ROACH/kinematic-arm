@@ -58,6 +58,10 @@ int isr(int signum) {
             break;
     }
     temp++;
+    if (!(temp % 1000)){
+        motor_update();
+        printf("RAW POSITION = %d\n", get_raw_pos(13));
+    }
 
 //     switch (state){
 //         case 10:
