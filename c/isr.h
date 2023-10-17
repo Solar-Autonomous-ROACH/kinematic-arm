@@ -11,8 +11,8 @@
 #include "motor.h"
 #include "move.h"
 #include "mmio.h"
-#include "rover.h"
-#include "steering_motor.h"
+// #include "rover.h"
+// #include "steering_motor.h"
 #include "led.h"
 
 #ifndef ROVERCORE_ISR_H
