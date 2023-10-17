@@ -7,6 +7,7 @@ static uint64_t total_count = 120000;
 static uint8_t watchdog_flag = 0;
 int new_inc = 4;
 int temp = 0;
+#define CURMOTOR 0
 
 int isr_init(){
     struct sigaction sa;
@@ -42,25 +43,27 @@ int isr(int signum) {
 
     switch (temp >> 11) {
         case 0:
-            set_motor_speed(13, ((temp >> 6) & 127));
+            set_motor_speed(0, ((temp >> 4) & 127));
             break;
         case 1:
-            set_motor_speed(13, 128 - ((temp >> 6) & 127));
+            set_motor_speed(0, 128 - ((temp >> 4) & 127));
             break;
         case 2:
-            set_motor_speed(13, 0 - ((temp >> 6) & 127));
+            set_motor_speed(0, 0 - ((temp >> 4) & 127));
             break;
         case 3:
-            set_motor_speed(13, ((temp >> 6) & 127) - 128);
+            set_motor_speed(0, ((temp >> 4) & 127) - 128);
             break;
         default:
             temp = 0;
+            // set_motor_speed(0, 50);
             break;
     }
     temp++;
     if (!(temp % 1000)){
-        motor_update();
-        printf("RAW POSITION = %d\n", get_raw_pos(13));
+        motor_update(0);
+        printf("RAW POSITION = %d\n", get_motor_position(0));
+        printf("Temp = %d\n", temp);
     }
 
 //     switch (state){
