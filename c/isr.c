@@ -42,16 +42,16 @@ int isr(int signum) {
 
     switch (temp >> 11) {
         case 0:
-            set_motor_speed(13, int speed)
+            set_motor_speed(13, ((temp >> 6) & 127))
             break;
         case 1:
-
+            set_motor_speed(13, 128 - ((temp >> 6) & 127))
             break;
         case 2:
-
+            set_motor_speed(13, 0 - ((temp >> 6) & 127))
             break;
         case 3:
-
+            set_motor_speed(13, ((temp >> 6) & 127) - 128)
             break;
         default:
             temp = 0;
