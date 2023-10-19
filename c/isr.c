@@ -60,10 +60,10 @@ int isr(int signum) {
             break;
     }
     temp++;
+    motor_update(0);
     if (!(temp % 1000)){
-        motor_update(0);
         printf("RAW POSITION = %d\n", get_motor_position(0));
-        printf("Temp = %d\n", temp);
+        // printf("Temp = %d\n", temp);
     }
 
 //     switch (state){
