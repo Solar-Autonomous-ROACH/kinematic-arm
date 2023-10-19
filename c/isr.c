@@ -41,18 +41,18 @@ int isr(int signum) {
     set_PL_register(WATCHDOG_REG, watchdog_flag);
     //set_PL_register(DEBUG_REG, 0xFF);
 
-    switch (temp >> 11) {
+    switch (temp >> 10) {
         case 0:
-            set_motor_speed(0, ((temp >> 4) & 127));
+            set_motor_speed(0, ((temp >> 3) & 127));
             break;
         case 1:
-            set_motor_speed(0, 128 - ((temp >> 4) & 127));
+            set_motor_speed(0, 128 - ((temp >> 3) & 127));
             break;
         case 2:
-            set_motor_speed(0, 0 - ((temp >> 4) & 127));
+            set_motor_speed(0, 0 - ((temp >> 3) & 127));
             break;
         case 3:
-            set_motor_speed(0, ((temp >> 4) & 127) - 128);
+            set_motor_speed(0, ((temp >> 3) & 127) - 128);
             break;
         default:
             temp = 0;
@@ -61,7 +61,7 @@ int isr(int signum) {
     }
     temp++;
     motor_update(0);
-    if (!(temp % 1000)){
+    if (!(temp % 250)){
         printf("RAW POSITION = %d\n", get_motor_position(0));
         // printf("Temp = %d\n", temp);
     }
