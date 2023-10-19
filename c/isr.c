@@ -45,7 +45,7 @@ int isr(int signum) {
         case 0:
             if (temp == 1) {printf("Bound 1 = %d\n", get_PL_register(MOTOR_READ_REG + 0));}
             // set_motor_speed(0, ((temp >> 3) & 127));
-            set_motor_speed(0, 30);
+            set_motor_speed(0, 8);
             break;
         case 1:
             // set_motor_speed(0, 128 - ((temp >> 3) & 127));
@@ -53,7 +53,7 @@ int isr(int signum) {
         case 2:
             if (temp == 2049) {printf("Bound 2 = %d\n", get_PL_register(MOTOR_READ_REG + 0));}
             // set_motor_speed(0, 0 - ((temp >> 3) & 127));
-            set_motor_speed(0, -30);
+            set_motor_speed(0, -8);
             break;
         case 3:
             // set_motor_speed(0, ((temp >> 3) & 127) - 128);
