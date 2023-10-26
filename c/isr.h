@@ -2,15 +2,15 @@
 // Created by Tyler Bovenzi on 3/23/23.
 //
 
-#include <stdio.h>
 #include <signal.h>
-#include <unistd.h>
+#include <stdio.h>
 #include <sys/time.h>
+#include <unistd.h>
 
-#include "stdint.h"
+#include "mmio.h"
 #include "motor.h"
 #include "move.h"
-#include "mmio.h"
+#include "stdint.h"
 // #include "rover.h"
 // #include "steering_motor.h"
 #include "led.h"
@@ -39,4 +39,4 @@ int isr_init();
 
 int isr(int signum);
 
-#endif //ROVERCORE_ISR_H
+#endif // ROVERCORE_ISR_H

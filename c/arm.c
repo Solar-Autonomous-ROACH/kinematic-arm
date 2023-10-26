@@ -2,10 +2,10 @@
 
 // static struct arm_motor_t arm_motor_array[4];
 
-static arm_motor_t BASE_MOTOR;
-static arm_motor_t ELBOW_MOTOR;
-static arm_motor_t WRIST_MOTOR;
 // static arm_motor_t CLAW_MOTOR; // forget about claw for now
+arm_motor_t BASE_MOTOR;
+arm_motor_t ELBOW_MOTOR;
+arm_motor_t WRIST_MOTOR;
 
 /**
  * @brief State machine which goes through the motors and calibrates them
@@ -16,7 +16,7 @@ arms_calibrate_state_t arm_calibrate() {
   switch (arms_calibrate_state) {
   case ARM_CALIBRATE_WRIST:
     if (calibrate_handle_state(&WRIST_MOTOR) == ARM_MOTOR_CALIBRATE_SUCCESS) {
-    //   arms_calibrate_state = ARM_CALIBRATE_ELBOW;
+      //   arms_calibrate_state = ARM_CALIBRATE_ELBOW;
       arms_calibrate_state = ARM_CALIBRATE_READY;
     }
     break;
@@ -47,27 +47,35 @@ arms_calibrate_state_t arm_calibrate() {
  */
 void set_joints_angle(int16_t base_angle, int16_t elbow_angle,
                       int16_t wrist_angle) {
-  if (base_angle > 0) {
+  if (base_angle >= 0) {
     set_joint_angle(&BASE_MOTOR, base_angle);
   }
-  if (elbow_angle > 0) {
-    set_joint_angle(&ELBOW_MOTOR, base_angle);
+  if (elbow_angle >= 0) {
+    set_joint_angle(&ELBOW_MOTOR, elbow_angle);
   }
-  if (wrist_angle > 0) {
-    set_joint_angle(&WRIST_MOTOR, base_angle);
+  if (wrist_angle >= 0) {
+    set_joint_angle(&WRIST_MOTOR, wrist_angle);
   }
 }
 #define GEAR_RATIO 171.7877
 #define CPR 48
 
 void set_joint_angle(arm_motor_t *arm_motor, uint16_t angle) {
-  long ticks = angle * CPR * GEAR_RATIO;
+  printf("in set_joint_angle, angle %d\n", angle);
+  long ticks = angle * CPR * GEAR_RATIO / 360;
   // TODO: add a check that low_pos + ticks < high_pos
+  printf("ticks: %ld\n", ticks);
   arm_motor->motor->target_pos = arm_motor->low_pos + ticks;
 }
 
 void arm_init() {
   WRIST_MOTOR.index = 0;
+  WRIST_MOTOR.motor = get_motor(0);
+  WRIST_MOTOR.high_pos = 0;
+  WRIST_MOTOR.low_pos = 0;
+  WRIST_MOTOR.is_calibrated = true; // TODO: set me back to false
+  WRIST_MOTOR.move_bits = 0;
+  WRIST_MOTOR.state = ARM_MOTOR_CHECK_POSITION;
   // steer_FR.index = BASE;
   // steer_FR.state = STATE_INITIALIZE;
 

@@ -18,7 +18,6 @@ arm_motor_state_t arm_motor_handle_state(arm_motor_t *a_motor) {
     // don't do anything if arm is not calibrated
     return a_motor->state;
   }
-
   long current_position = a_motor->motor->abs_pos;
   long target_position = a_motor->motor->target_pos;
   long diff = target_position - current_position;
@@ -27,11 +26,13 @@ arm_motor_state_t arm_motor_handle_state(arm_motor_t *a_motor) {
   long abs_speed = 0;
   // long diff = a_motor.
 
-  motor_update(a_motor->index);
+  // motor_update(a_motor->index);
+  // printf("State: %d\n", a_motor->state);
   switch (a_motor->state) {
 
   case ARM_MOTOR_CHECK_POSITION:
-    if (diff > MOTOR_TICKS_ERROR_MARGIN) {
+    printf("Current: %ld, Target: %ld\n", current_position, target_position);
+    if (abs_diff > MOTOR_TICKS_ERROR_MARGIN) {
       a_motor->state = ARM_MOTOR_MOVING_TO_TARGET;
       a_motor->moving_time_ms = 0;
     } else {
@@ -40,6 +41,9 @@ arm_motor_state_t arm_motor_handle_state(arm_motor_t *a_motor) {
     break;
 
   case ARM_MOTOR_MOVING_TO_TARGET:
+    if (a_motor->moving_time_ms % 1000 == 0) {
+      printf("Current: %ld, Target: %ld\n", current_position, target_position);
+    }
     a_motor->moving_time_ms++;
     if (abs_diff > MOTOR_TICKS_ERROR_MARGIN) {
       abs_speed = abs_diff * ARM_MOTOR_KP;
@@ -83,18 +87,18 @@ arm_motor_state_t calibrate_handle_state(arm_motor_t *a_motor) {
   switch (a_motor->state) {
   case ARM_MOTOR_CALIBRATE_INIT:
     // initialize some values
-    a_motor->motor = get_motor(a_motor->index);
-    a_motor->high_pos = 0;
-    a_motor->low_pos = 0;
-    a_motor->move_bits = 0;
-    a_motor->is_calibrated = false;
+    // a_motor->motor = get_motor(a_motor->index);
+    // a_motor->high_pos = 0;
+    // a_motor->low_pos = 0;
+    // a_motor->move_bits = 0;
+    // a_motor->is_calibrated = false;
 
     // next state
     a_motor->state = ARM_MOTOR_CALIBRATION_HOLD_POS_SPEED;
     set_motor_speed(a_motor->index, CALIBRATION_SPEED);
     a_motor->moving_time_ms = 0;
     break;
-  
+
   case ARM_MOTOR_CALIBRATION_HOLD_POS_SPEED:
     if (a_motor->moving_time_ms > CALIBRATE_MOVE_HOLD_DURATION) {
       a_motor->state = ARM_MOTOR_CALIBRATE_POS_SPEED;
@@ -103,15 +107,15 @@ arm_motor_state_t calibrate_handle_state(arm_motor_t *a_motor) {
 
   case ARM_MOTOR_CALIBRATE_POS_SPEED:
     if (check_stopped(a_motor)) { // if motor has stopped
-        // now have high position
-        a_motor->high_pos = a_motor->motor->abs_pos;
-        // next state
-        a_motor->moving_time_ms = 0;
-        a_motor->state = ARM_MOTOR_CALIBRATION_HOLD_POS_SPEED;
-        set_motor_speed(a_motor->index, -CALIBRATION_SPEED);
+      // now have high position
+      a_motor->high_pos = a_motor->motor->abs_pos;
+      // next state
+      a_motor->moving_time_ms = 0;
+      a_motor->state = ARM_MOTOR_CALIBRATION_HOLD_POS_SPEED;
+      set_motor_speed(a_motor->index, -CALIBRATION_SPEED);
     }
     break;
-  
+
   case ARM_MOTOR_CALIBRATION_HOLD_NEG_SPEED:
     if (a_motor->moving_time_ms > CALIBRATE_MOVE_HOLD_DURATION) {
       a_motor->state = ARM_MOTOR_CALIBRATE_NEG_SPEED;
@@ -120,12 +124,12 @@ arm_motor_state_t calibrate_handle_state(arm_motor_t *a_motor) {
 
   case ARM_MOTOR_CALIBRATE_NEG_SPEED:
     if (check_stopped(a_motor)) { // if motor has stopped
-        // now have low position
-        a_motor->low_pos = a_motor->motor->abs_pos;
-        // next state
-        a_motor->state = ARM_MOTOR_CALIBRATE_SUCCESS;
-        a_motor->is_calibrated = true;
-        set_motor_speed(a_motor->index, 0);
+      // now have low position
+      a_motor->low_pos = a_motor->motor->abs_pos;
+      // next state
+      a_motor->state = ARM_MOTOR_CALIBRATE_SUCCESS;
+      a_motor->is_calibrated = true;
+      set_motor_speed(a_motor->index, 0);
     }
     break;
 
@@ -135,7 +139,7 @@ arm_motor_state_t calibrate_handle_state(arm_motor_t *a_motor) {
   }
 
   a_motor->moving_time_ms++;
-  return  a_motor->state;
+  return a_motor->state;
 }
 
 /**

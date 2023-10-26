@@ -1,11 +1,8 @@
 #include "isr.h"
-#include "mmio.h"
-#include "arm_motor.h"
 #include "arm.h"
+#include "arm_motor.h"
+#include "mmio.h"
 static int count_ms = 0;
-static int state = 10;
-static arm_state_t arm_state = CALIBRATE;
-static int motor = 0;
 static uint64_t total_count = 120000;
 static uint8_t watchdog_flag = 0;
 static unsigned long millis; // stores number of milliseconds since startup
@@ -16,6 +13,7 @@ int temp = 0;
 #define ERROR_MARGIN 5
 
 int isr_init() {
+  printf("isr init\n");
   struct sigaction sa;
   struct itimerval timer;
 
@@ -32,7 +30,7 @@ int isr_init() {
   timer.it_value.tv_usec = 1000; // was 1000
   setitimer(ITIMER_REAL, &timer, NULL);
   set_target_position(0, 0);
-
+  printf("HERE\n");
   for (int i = 0; i < 14; i++) {
     set_motor_speed(i, 0);
     motor_update(i);
@@ -42,71 +40,79 @@ int isr_init() {
   //        get_target_position(0));
 
   // rover_init();
+  printf("ARM INIT\n");
   arm_init();
+  printf("ARM INIT DONE\n");
   return 0;
 }
 
-extern arm_motor_t WRIST_MOTOR;
+// extern arm_motor_t WRIST_MOTOR;
 
+arm_state_t arm_state = WAIT_FOR_INPUT;
 int isr(int signum) {
+  // printf("ISR PARTY\n");
 
   set_PL_register(WATCHDOG_REG, watchdog_flag);
   // set_PL_register(DEBUG_REG, 0xFF);
-  motor_update(CURMOTOR);
-
-  switch(arm_state){
-    case CALIBRATE:
-      // //Temp stuff for now
-      // set_motor_speed(CURMOTOR, 30);
-      // printf("Has Stopped: %d\n", check_stopped());
-
-      //calibrate all 4 motors
-      if (arm_calibrate() == ARM_CALIBRATE_READY){
-        arm_state = WAIT_FOR_INPUT;
-      }
-      break;
-    case WAIT_FOR_INPUT:
-      //wait for coordinates and orientation info from vision team
-      // char input[10];
-      // read(STDIN_FILENO, input, 10);
-      // if (input){
-      //   current_arm_state = MOVE;
-      // }
-      //HERE: KINEMATIC CALCULATIONS TO GET TARGET ANGLE FOR EACH MOTOR
-      //for now, hard-code angles for testing
-      int base_target_angle = 0;
-      int elbow_target_angle = 0;
-      int wrist_target_angle = 0;
-      set_joints_angle(base_target_angle, elbow_target_angle, wrist_target_angle);
-      arm_state = MOVE;
-      break;
-    case MOVE:
-      bool all_motors_done = true;
-      int i;
-      arm_motor_handle_state(&WRIST_MOTOR);
-      // for (i = 0; i < 3; i++){//only base, elbow, and wrist
-      //   if (arm_motor_handle_state(&BASE) != ){
-      //       all_motors_done = false;
-      //   }
-      // }
-      //if (all_motors_done){
-        arm_state = CLAW_ACQUIRE;
-      //}
-      break;
-    case CLAW_ACQUIRE:
-      //grab the object
-      arm_state = PLACE_TARGET;
-      break;
-    case PLACE_TARGET:
-      //motor angles for placing object will be constant so just move to those angles
-      //open the claw?
-      arm_state = WAIT_FOR_INPUT;
-      break;
-    default:
-      break;
+  for (int i = 0; i < 14; i++) {
+    motor_update(i);
   }
-  
-  
+  int base_target_angle = -1;
+  int elbow_target_angle = -1;
+  int wrist_target_angle = 360;
+  // bool all_motors_done = true;
+
+  switch (arm_state) {
+  case CALIBRATE:
+    // //Temp stuff for now
+    // set_motor_speed(CURMOTOR, 30);
+    // printf("Has Stopped: %d\n", check_stopped());
+    if (arm_calibrate() == ARM_CALIBRATE_READY) {
+      arm_state = WAIT_FOR_INPUT;
+    }
+    break;
+  case WAIT_FOR_INPUT:
+    // wait for coordinates and orientation info from vision team
+    //  char input[10];
+    //  read(STDIN_FILENO, input, 10);
+    //  if (input){
+    //    current_arm_state = MOVE;
+    //  }
+    // HERE: KINEMATIC CALCULATIONS TO GET TARGET ANGLE FOR EACH MOTOR
+    // for now, hard-code angles for testing
+    printf("In WAIT_FOR_INPUT\n");
+    set_joints_angle(base_target_angle, elbow_target_angle, wrist_target_angle);
+    printf("heading to MOVE\n");
+    arm_state = MOVE;
+    break;
+  case MOVE:
+    // printf("In MOVE\n");
+    // int i;
+    if (arm_motor_handle_state(&WRIST_MOTOR) == ARM_MOTOR_CHECK_POSITION) {
+      arm_state = CLAW_ACQUIRE;
+    }
+    // for (i = 0; i < 3; i++){//only base, elbow, and wrist
+    //   if (arm_motor_handle_state(&BASE) != ){
+    //       all_motors_done = false;
+    //   }
+    // }
+    // if (all_motors_done){
+    // arm_state = CLAW_ACQUIRE;
+    //}
+    break;
+  case CLAW_ACQUIRE:
+    // grab the object
+    arm_state = PLACE_TARGET;
+    break;
+  case PLACE_TARGET:
+    // motor angles for placing object will be constant so just move to those
+    // angles open the claw?
+    arm_state = WAIT_FOR_INPUT;
+    break;
+  default:
+    break;
+  }
+
   // printf("Velocity: %5ld\n------------------------\n", velocity);
 
   // switch (temp >> 10) {
