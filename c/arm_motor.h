@@ -17,10 +17,13 @@
 
 typedef struct {
     uint8_t index;
-    long left_pos;
-    long right_pos;
-    long center_pos;
+    long high_pos; //High and low for final calibration values
+    long low_pos;
+    long current_pos;
+    int high_angle; // actual angle, defined somewhere eventually
+    int low_angle;
     int target;
+    uint16_t move_bits; // each bit represents if it moved or not the last isr
     arm_state_t state;  // current state of the motor
 } arm_motor_t;
 
