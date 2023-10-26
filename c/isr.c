@@ -32,7 +32,7 @@ int isr_init() {
     set_motor_speed(i, 0);
     motor_update(i);
   }
-  set_target_position(0, get_motor_position(0) - 16512);
+  set_target_position(0, get_motor_position(0) - 8245.8096 * 1);
   printf("Start position %ld, Target position: %ld\n", get_motor_position(0),
          get_target_position(0));
 
@@ -61,6 +61,8 @@ int isr(int signum) {
   int velocity = get_motor_velocity(0);
   long diff = current_position - target_position;
   long speed;
+  static unsigned long millis; // stores number of milliseconds since startup
+  long speed_reducer = 0;
 
   switch (current_state) {
   case START_CALIBRATE:
@@ -94,6 +96,7 @@ int isr(int signum) {
     if (diff > ERROR_MARGIN || diff < -ERROR_MARGIN) {
       current_state = MOVING_TO_TARGET;
       printf("Changing state to MOVING_TO_TARGET\n");
+      count_ms = 0;
     } else {
       set_motor_speed(0, 0);
       speed = 0;
@@ -101,27 +104,41 @@ int isr(int signum) {
     /* code */
     break;
 
+#define ACCELERATION_TIME 5000
+#define MAX_SPEED 75
+
   case MOVING_TO_TARGET:
     // postive direction
     if (diff > ERROR_MARGIN || diff < -ERROR_MARGIN) {
       if (diff > 0) {
         // printf("Moving +")
         // set_motor_speed(0, -60);
-        speed = (target_position - current_position) * 0.05 - velocity;
-        if (speed < -80) {
-          speed = -80;
-        } else if (speed > -10) {
+        speed = (target_position - current_position) * 0.02;
+        if (count_ms < ACCELERATION_TIME) {
+          speed_reducer = (MAX_SPEED - 10) * (ACCELERATION_TIME - count_ms) /
+                          ACCELERATION_TIME;
+        }
+        if (speed < -MAX_SPEED) {
+          speed = -MAX_SPEED;
+        }
+        speed = speed + speed_reducer;
+        if (speed > -10) {
           speed = -10;
         }
         set_motor_speed(0, speed);
       } else { // negative direction
         // printf("Moving -")
         // set_motor_speed(0, 60);
-        speed = (target_position - current_position) * 0.05 + velocity;
-        ;
-        if (speed > 80) {
-          speed = 80;
-        } else if (speed < 10) {
+        speed = (target_position - current_position) * 0.02;
+        if (count_ms < ACCELERATION_TIME) {
+          speed_reducer = (MAX_SPEED - 10) * (ACCELERATION_TIME - count_ms) /
+                          ACCELERATION_TIME;
+        }
+        if (speed > MAX_SPEED) {
+          speed = MAX_SPEED;
+        }
+        speed = speed - speed_reducer;
+        if (speed < 10) {
           speed = 10;
         }
         set_motor_speed(0, speed);
@@ -242,6 +259,7 @@ int isr(int signum) {
   //     }
 
   // set_PL_register(DEBUG_REG, 0x00);
+  millis++;
   watchdog_flag = !watchdog_flag;
   count_ms++;
   total_count++;
