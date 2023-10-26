@@ -1,34 +1,41 @@
+#ifndef ARM_MOTOR_H_
+#define ARM_MOTOR_H_
 #include <stdint.h>
+#include <stdbool.h>
 #include "motor.h"
 
-#ifndef C_ARM_MOTOR_H
-#define C_ARM_MOTOR_H
+#define CALIBRATION_SPEED 10
+#define MOTOR_TICKS_ERROR_MARGIN 5
+#define ACCELERATION_TIME 5000 // time motor takes to accelerate
+#define MAX_SPEED 75 // motor max_speed
+#define ARM_MOTOR_KP 0.02
+  #define CALIBRATE_MOVE_HOLD_DURATION 100 // 100ms
 
-#define CALIBRATION_SPEED 30
-
- typedef enum {
-    STATE_INITIALIZE,
-    STATE_WAITING,
-    STATE_CALIBRATION_LEFT,
-    STATE_CALIBRATION_RIGHT,
-    STATE_CALIBRATION_CENTER,
-    STATE_READY
-} arm_state_t;
+typedef enum {
+    ARM_MOTOR_CALIBRATE_INIT,
+    ARM_MOTOR_CALIBRATION_HOLD_POS_SPEED,
+    ARM_MOTOR_CALIBRATION_HOLD_NEG_SPEED,
+    ARM_MOTOR_CALIBRATE_POS_SPEED,
+    ARM_MOTOR_CALIBRATE_NEG_SPEED,
+    ARM_MOTOR_CALIBRATE_SUCCESS,
+    ARM_MOTOR_CHECK_POSITION,
+    ARM_MOTOR_MOVING_TO_TARGET,
+} arm_motor_state_t;
 
 typedef struct {
     uint8_t index;
-    long high_pos; //High and low for final calibration values
+    long high_pos;
     long low_pos;
-    long current_pos;
-    int high_angle; // actual angle, defined somewhere eventually
-    int low_angle;
-    int target;
     uint16_t move_bits; // each bit represents if it moved or not the last isr
-    arm_state_t state;  // current state of the motor
+    arm_motor_state_t state;  // current state of the motor
+    motor_t *motor;
+    bool is_calibrated;
+    long moving_time_ms; // time since the arm went from ARM_CHECK_POSITION to ARM_MOVING_TO_TARGET
 } arm_motor_t;
 
 
-void calibrate (arm_motor_t *s_motor);
-int arm_motor_handle_state(arm_motor_t *s_motor);
+arm_motor_state_t calibrate_handle_state(arm_motor_t *a_motor);
+arm_motor_state_t arm_motor_handle_state(arm_motor_t *motor);
+int check_stopped(arm_motor_t *s_motor);
 
-#endif //C_STEERING_MOTOR_H
+#endif

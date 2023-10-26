@@ -19,6 +19,13 @@
 #define KP 2
 #define KV 2
 
+typedef struct {
+    long abs_pos;
+    long long target_pos;
+    int velocity;
+    uint8_t raw_pos;
+} motor_t;
+
 char get_raw_pos(uint8_t motor_index);
 
 int motor_update(uint8_t motor_index);
@@ -32,5 +39,6 @@ long long get_target_position(uint8_t motor_index);
 int set_target_position(uint8_t motor_index, long long target_position);
 
 int get_motor_velocity(uint8_t motor_index);
+motor_t *get_motor(uint8_t motor_index)
 
 #endif // ROVERCORE_MOTOR_H

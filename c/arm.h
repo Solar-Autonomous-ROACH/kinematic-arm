@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 #include "steering_motor.h"
-#include "motor.h"
+#include "arm_motor.h"
 
 //The motor value on the board
 #define BASE 0xA
@@ -17,28 +17,25 @@
 #define MAX_STEERING_TICKS      300
 
  typedef enum {
-    ARM_CALIBRATE_WAITING,
-    ARM_CALIBRATE_FR,
-    ARM_CALIBRATE_RR,
-    ARM_CALIBRATE_FL,
-    ARM_CALIBRATE_RL,
+    ARM_CALIBRATE_BASE,
+    ARM_CALIBRATE_ELBOW,
+    ARM_CALIBRATE_WRIST,
+    ARM_CALIBRATE_CLAW,
     ARM_CALIBRATE_READY
-} arm_state_t;
+} arms_calibrate_state_t;
 
-static arm_state_t arm_state;
-
-static steering_motor_t steer_BASE;
-static steering_motor_t steer_ELBOW;
-static steering_motor_t steer_WRIST;
-static steering_motor_t steer_CLAW;
+// extern static struct arm_motor_t arm_motor_array[4];
+// extern static struct motor_t arm_motor_subarray[4];
 
 void arm_init();
 
-int arm_is_calibrated();
-
-void arm_calibrate();
+arms_calibrate_state_t arm_calibrate();
 
 void arm_update_steering();
+
+void set_joints_angle(int16_t base_angle, int16_t elbow_angle, int16_t elbow_angle);
+
+// void arm_init();
 
 // void rover_stop();
 

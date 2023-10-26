@@ -1,10 +1,15 @@
 #include "isr.h"
 #include "mmio.h"
+#include "arm_motor.h"
+#include "arm.h"
 static int count_ms = 0;
 static int state = 10;
+static arm_state_t arm_state = CALIBRATE;
 static int motor = 0;
 static uint64_t total_count = 120000;
 static uint8_t watchdog_flag = 0;
+static unsigned long millis; // stores number of milliseconds since startup
+
 int new_inc = 4;
 int temp = 0;
 #define CURMOTOR 0
@@ -32,138 +37,77 @@ int isr_init() {
     set_motor_speed(i, 0);
     motor_update(i);
   }
-  set_target_position(0, get_motor_position(0) - 8245.8096 * 1);
-  printf("Start position %ld, Target position: %ld\n", get_motor_position(0),
-         get_target_position(0));
+  // set_target_position(0, get_motor_position(0) - 8245.8096 * 1);
+  // printf("Start position %ld, Target position: %ld\n", get_motor_position(0),
+  //        get_target_position(0));
 
   // rover_init();
+  arm_init();
   return 0;
 }
 
-typedef enum {
-  CHECK_POSITION,
-  MOVING_TO_TARGET,
-  START_CALIBRATE,
-  CHECK_SPEED_POS,
-  CHECK_SPEED_NEG
-} arm_state;
+extern arm_motor_t WRIST_MOTOR;
 
 int isr(int signum) {
 
   set_PL_register(WATCHDOG_REG, watchdog_flag);
   // set_PL_register(DEBUG_REG, 0xFF);
-  static arm_state current_state = CHECK_POSITION;
-  // static arm_state current_state = START_CALIBRATE;
-  static uint16_t loops_in_start_calibrate = 0;
-  motor_update(0);
-  long current_position = get_motor_position(0);
-  long target_position = get_target_position(0);
-  int velocity = get_motor_velocity(0);
-  long diff = current_position - target_position;
-  long speed;
-  static unsigned long millis; // stores number of milliseconds since startup
-  long speed_reducer = 0;
+  motor_update(CURMOTOR);
 
-  switch (current_state) {
-  case START_CALIBRATE:
-    set_motor_speed(0, 10); /** start motors */
-    /** only go to next state if motor has been turning for 100ms*/
-    if (loops_in_start_calibrate == 5000) {
-      current_state = CHECK_SPEED_POS;
-      loops_in_start_calibrate = 0;
-      printf("Changing state to CHECK_SPEED_POS\n");
-    } else {
-      loops_in_start_calibrate++;
-    }
-    break;
+  switch(arm_state){
+    case CALIBRATE:
+      // //Temp stuff for now
+      // set_motor_speed(CURMOTOR, 30);
+      // printf("Has Stopped: %d\n", check_stopped());
 
-  case CHECK_SPEED_POS:
-    if (velocity == 0) {
-      current_state = CHECK_SPEED_NEG;
-      printf("Changing state to CHECK_SPEED_NEG\n");
-      set_motor_speed(0, -10);
-    }
-    break;
-
-  case CHECK_SPEED_NEG:
-    if (velocity == 0) {
-      current_state = CHECK_POSITION;
-      printf("Changing state to CHECK_POSITON\n");
-      set_motor_speed(0, 0);
-    }
-    break;
-  case CHECK_POSITION:
-    if (diff > ERROR_MARGIN || diff < -ERROR_MARGIN) {
-      current_state = MOVING_TO_TARGET;
-      printf("Changing state to MOVING_TO_TARGET\n");
-      count_ms = 0;
-    } else {
-      set_motor_speed(0, 0);
-      speed = 0;
-    }
-    /* code */
-    break;
-
-#define ACCELERATION_TIME 5000
-#define MAX_SPEED 75
-
-  case MOVING_TO_TARGET:
-    // postive direction
-    if (diff > ERROR_MARGIN || diff < -ERROR_MARGIN) {
-      if (diff > 0) {
-        // printf("Moving +")
-        // set_motor_speed(0, -60);
-        speed = (target_position - current_position) * 0.02;
-        if (count_ms < ACCELERATION_TIME) {
-          speed_reducer = (MAX_SPEED - 10) * (ACCELERATION_TIME - count_ms) /
-                          ACCELERATION_TIME;
-        }
-        if (speed < -MAX_SPEED) {
-          speed = -MAX_SPEED;
-        }
-        speed = speed + speed_reducer;
-        if (speed > -10) {
-          speed = -10;
-        }
-        set_motor_speed(0, speed);
-      } else { // negative direction
-        // printf("Moving -")
-        // set_motor_speed(0, 60);
-        speed = (target_position - current_position) * 0.02;
-        if (count_ms < ACCELERATION_TIME) {
-          speed_reducer = (MAX_SPEED - 10) * (ACCELERATION_TIME - count_ms) /
-                          ACCELERATION_TIME;
-        }
-        if (speed > MAX_SPEED) {
-          speed = MAX_SPEED;
-        }
-        speed = speed - speed_reducer;
-        if (speed < 10) {
-          speed = 10;
-        }
-        set_motor_speed(0, speed);
+      //calibrate all 4 motors
+      if (arm_calibrate() == ARM_CALIBRATE_READY){
+        arm_state = WAIT_FOR_INPUT;
       }
-    } else {
-      printf("Changing state to CHECK_POSITON\n");
-      current_state = CHECK_POSITION;
-      set_motor_speed(0, 0);
-      speed = 0;
-    }
-    break;
-
-  default:
-    break;
+      break;
+    case WAIT_FOR_INPUT:
+      //wait for coordinates and orientation info from vision team
+      // char input[10];
+      // read(STDIN_FILENO, input, 10);
+      // if (input){
+      //   current_arm_state = MOVE;
+      // }
+      //HERE: KINEMATIC CALCULATIONS TO GET TARGET ANGLE FOR EACH MOTOR
+      //for now, hard-code angles for testing
+      int base_target_angle = 0;
+      int elbow_target_angle = 0;
+      int wrist_target_angle = 0;
+      set_joints_angle(base_target_angle, elbow_target_angle, wrist_target_angle);
+      arm_state = MOVE;
+      break;
+    case MOVE:
+      bool all_motors_done = true;
+      int i;
+      arm_motor_handle_state(&WRIST_MOTOR);
+      // for (i = 0; i < 3; i++){//only base, elbow, and wrist
+      //   if (arm_motor_handle_state(&BASE) != ){
+      //       all_motors_done = false;
+      //   }
+      // }
+      //if (all_motors_done){
+        arm_state = CLAW_ACQUIRE;
+      //}
+      break;
+    case CLAW_ACQUIRE:
+      //grab the object
+      arm_state = PLACE_TARGET;
+      break;
+    case PLACE_TARGET:
+      //motor angles for placing object will be constant so just move to those angles
+      //open the claw?
+      arm_state = WAIT_FOR_INPUT;
+      break;
+    default:
+      break;
   }
+  
+  
   // printf("Velocity: %5ld\n------------------------\n", velocity);
-
-  if (temp == 500) {
-    temp = 0;
-    printf("Raw: %3d | Absolute: %5ld | Speed: %4ld| Velocity: "
-           "%4ld\n------------------------\n",
-           get_raw_pos(0), current_position, speed, velocity);
-  } else {
-    temp++;
-  }
 
   // switch (temp >> 10) {
   //     case 0:
