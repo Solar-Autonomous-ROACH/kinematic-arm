@@ -31,24 +31,21 @@ arm_motor_state_t arm_motor_handle_state(arm_motor_t *a_motor) {
   switch (a_motor->state) {
 
   case ARM_MOTOR_CHECK_POSITION:
-    printf("Current: %ld, Target: %ld\n", current_position, target_position);
     if (abs_diff > MOTOR_TICKS_ERROR_MARGIN) {
+      printf("Current: %ld, Target: %ld\n", current_position, target_position);
       a_motor->state = ARM_MOTOR_MOVING_TO_TARGET;
       a_motor->moving_time_ms = 0;
     } else {
       set_motor_speed(a_motor->index, 0);
     }
     break;
-
+#define MIN_SPEED 12
   case ARM_MOTOR_MOVING_TO_TARGET:
-    if (a_motor->moving_time_ms % 1000 == 0) {
-      printf("Current: %ld, Target: %ld\n", current_position, target_position);
-    }
     a_motor->moving_time_ms++;
     if (abs_diff > MOTOR_TICKS_ERROR_MARGIN) {
       abs_speed = abs_diff * ARM_MOTOR_KP;
       if (a_motor->moving_time_ms < ACCELERATION_TIME) {
-        speed_reducer = (MAX_SPEED - 10) *
+        speed_reducer = (MAX_SPEED - MIN_SPEED) *
                         (ACCELERATION_TIME - a_motor->moving_time_ms) /
                         ACCELERATION_TIME;
       }
@@ -56,8 +53,8 @@ arm_motor_state_t arm_motor_handle_state(arm_motor_t *a_motor) {
         abs_speed = MAX_SPEED;
       }
       abs_speed = abs_speed - speed_reducer;
-      if (abs_speed < 10) {
-        abs_speed = 10;
+      if (abs_speed < MIN_SPEED) {
+        abs_speed = MIN_SPEED;
       }
       if (diff > 0) {
         set_motor_speed(a_motor->index, abs_speed);
@@ -66,7 +63,14 @@ arm_motor_state_t arm_motor_handle_state(arm_motor_t *a_motor) {
       }
     } else {
       a_motor->state = ARM_MOTOR_CHECK_POSITION;
+      printf("Reached position\n");
+      printf("Current: %ld, Target: %ld, speed: %ld\n", current_position,
+             target_position, abs_speed);
       set_motor_speed(a_motor->index, 0);
+    }
+    if (a_motor->moving_time_ms % 1000 == 0) {
+      printf("Current: %ld, Target: %ld, speed: %ld\n", current_position,
+             target_position, abs_speed);
     }
     break;
 
@@ -97,6 +101,7 @@ arm_motor_state_t calibrate_handle_state(arm_motor_t *a_motor) {
     a_motor->state = ARM_MOTOR_CALIBRATION_HOLD_POS_SPEED;
     set_motor_speed(a_motor->index, CALIBRATION_SPEED);
     a_motor->moving_time_ms = 0;
+    printf("Starting arm calibration\n");
     break;
 
   case ARM_MOTOR_CALIBRATION_HOLD_POS_SPEED:
@@ -111,7 +116,8 @@ arm_motor_state_t calibrate_handle_state(arm_motor_t *a_motor) {
       a_motor->high_pos = a_motor->motor->abs_pos;
       // next state
       a_motor->moving_time_ms = 0;
-      a_motor->state = ARM_MOTOR_CALIBRATION_HOLD_POS_SPEED;
+      a_motor->state = ARM_MOTOR_CALIBRATION_HOLD_NEG_SPEED;
+      printf("Determined high position: %ld\n", a_motor->high_pos);
       set_motor_speed(a_motor->index, -CALIBRATION_SPEED);
     }
     break;
@@ -127,7 +133,8 @@ arm_motor_state_t calibrate_handle_state(arm_motor_t *a_motor) {
       // now have low position
       a_motor->low_pos = a_motor->motor->abs_pos;
       // next state
-      a_motor->state = ARM_MOTOR_CALIBRATE_SUCCESS;
+      a_motor->state = ARM_MOTOR_CHECK_POSITION;
+      printf("Determined low position: %ld\n", a_motor->low_pos);
       a_motor->is_calibrated = true;
       set_motor_speed(a_motor->index, 0);
     }
@@ -149,16 +156,18 @@ arm_motor_state_t calibrate_handle_state(arm_motor_t *a_motor) {
  * @param a_motor
  * @return int
  */
-int check_stopped(arm_motor_t *s_motor) {
+bool check_stopped(arm_motor_t *s_motor) {
   int cur_speed;
   uint16_t movement_bits;
   cur_speed = get_motor_velocity(s_motor->index);
   movement_bits = s_motor->move_bits << 1; // preps value to add
   s_motor->move_bits = movement_bits | (cur_speed && 0x0001); // updates value
-  if (s_motor->move_bits) { // If all 0's, is false, so hasn't moved for 16 isr
-                            // cycles
-    return true;
-  } else { // has moved recently
+  if (s_motor->move_bits) {
+    // has moved recently
     return false;
+  } else { // If all 0's, motor hasn't moved for 16 isr cycles
+    printf("arm stopped\n");
+    s_motor->move_bits = 0xFFFF; // reset back to 0 to prevent fake posiitives
+    return true;
   }
 }

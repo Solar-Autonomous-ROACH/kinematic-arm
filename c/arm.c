@@ -15,18 +15,18 @@ arms_calibrate_state_t arm_calibrate() {
   static arms_calibrate_state_t arms_calibrate_state = ARM_CALIBRATE_WRIST;
   switch (arms_calibrate_state) {
   case ARM_CALIBRATE_WRIST:
-    if (calibrate_handle_state(&WRIST_MOTOR) == ARM_MOTOR_CALIBRATE_SUCCESS) {
+    if (calibrate_handle_state(&WRIST_MOTOR) == ARM_MOTOR_CHECK_POSITION) {
       //   arms_calibrate_state = ARM_CALIBRATE_ELBOW;
       arms_calibrate_state = ARM_CALIBRATE_READY;
     }
     break;
   case ARM_CALIBRATE_ELBOW:
-    if (calibrate_handle_state(&ELBOW_MOTOR) == ARM_MOTOR_CALIBRATE_SUCCESS) {
+    if (calibrate_handle_state(&ELBOW_MOTOR) == ARM_MOTOR_CHECK_POSITION) {
       arms_calibrate_state = ARM_CALIBRATE_BASE;
     }
     break;
   case ARM_CALIBRATE_BASE:
-    if (calibrate_handle_state(&BASE_MOTOR) == ARM_MOTOR_CALIBRATE_SUCCESS) {
+    if (calibrate_handle_state(&BASE_MOTOR) == ARM_MOTOR_CHECK_POSITION) {
       arms_calibrate_state = ARM_CALIBRATE_READY;
     }
     break;
@@ -58,14 +58,16 @@ void set_joints_angle(int16_t base_angle, int16_t elbow_angle,
   }
 }
 #define GEAR_RATIO 171.7877
+// #define GEAR_RATIO 172
 #define CPR 48
 
 void set_joint_angle(arm_motor_t *arm_motor, uint16_t angle) {
-  printf("in set_joint_angle, angle %d\n", angle);
+  // printf("in set_joint_angle, angle %d\n", angle);
   long ticks = angle * CPR * GEAR_RATIO / 360;
   // TODO: add a check that low_pos + ticks < high_pos
-  printf("ticks: %ld\n", ticks);
+  // printf("ticks: %ld\n", ticks);
   arm_motor->motor->target_pos = arm_motor->low_pos + ticks;
+  // arm_motor->motor->target_pos = ticks;
 }
 
 void arm_init() {
@@ -73,9 +75,9 @@ void arm_init() {
   WRIST_MOTOR.motor = get_motor(0);
   WRIST_MOTOR.high_pos = 0;
   WRIST_MOTOR.low_pos = 0;
-  WRIST_MOTOR.is_calibrated = true; // TODO: set me back to false
-  WRIST_MOTOR.move_bits = 0;
-  WRIST_MOTOR.state = ARM_MOTOR_CHECK_POSITION;
+  WRIST_MOTOR.is_calibrated = false; // TODO: set me back
+  WRIST_MOTOR.move_bits = 0xFFFF;    // default to all 1s=>assume arm was moving
+  WRIST_MOTOR.state = ARM_MOTOR_CALIBRATE_INIT; // TODO: set me back
   // steer_FR.index = BASE;
   // steer_FR.state = STATE_INITIALIZE;
 

@@ -48,7 +48,7 @@ int isr_init() {
 
 // extern arm_motor_t WRIST_MOTOR;
 
-arm_state_t arm_state = WAIT_FOR_INPUT;
+arm_state_t arm_state = CALIBRATE;
 int isr(int signum) {
   // printf("ISR PARTY\n");
 
@@ -59,7 +59,7 @@ int isr(int signum) {
   }
   int base_target_angle = -1;
   int elbow_target_angle = -1;
-  int wrist_target_angle = 360;
+  int wrist_target_angle = 180;
   // bool all_motors_done = true;
 
   switch (arm_state) {
@@ -89,7 +89,8 @@ int isr(int signum) {
     // printf("In MOVE\n");
     // int i;
     if (arm_motor_handle_state(&WRIST_MOTOR) == ARM_MOTOR_CHECK_POSITION) {
-      arm_state = CLAW_ACQUIRE;
+      // arm_state = CLAW_ACQUIRE;
+      arm_state = MOVE;
     }
     // for (i = 0; i < 3; i++){//only base, elbow, and wrist
     //   if (arm_motor_handle_state(&BASE) != ){
