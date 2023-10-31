@@ -4,12 +4,13 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#define CALIBRATION_SPEED 15
+// #define CALIBRATION_SPEED 15
+#define CALIBRATION_SPEED 20
 #define MOTOR_TICKS_ERROR_MARGIN 5
 #define ACCELERATION_TIME 5000 // time motor takes to accelerate
 #define MAX_SPEED 70           // motor max_speed
 #define ARM_MOTOR_KP 0.02
-#define CALIBRATE_MOVE_HOLD_DURATION 500 // 500ms
+#define CALIBRATE_MOVE_HOLD_DURATION 1000 // 500ms
 
 typedef enum {
   ARM_MOTOR_CALIBRATE_INIT,

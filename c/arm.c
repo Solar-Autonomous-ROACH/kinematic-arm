@@ -57,9 +57,10 @@ void set_joints_angle(int16_t base_angle, int16_t elbow_angle,
     set_joint_angle(&WRIST_MOTOR, wrist_angle);
   }
 }
-#define GEAR_RATIO 171.7877
+// #define GEAR_RATIO 171.7877
+#define GEAR_RATIO 84.294
 // #define GEAR_RATIO 172
-#define CPR 48
+#define CPR 12
 
 void set_joint_angle(arm_motor_t *arm_motor, uint16_t angle) {
   // printf("in set_joint_angle, angle %d\n", angle);
