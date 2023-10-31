@@ -96,7 +96,7 @@ int isr(int signum) {
     // int i;
     if (arm_motor_handle_state(&WRIST_MOTOR) == ARM_MOTOR_CHECK_POSITION) {
       // arm_state = CLAW_ACQUIRE;
-      arm_state = MOVE_TARGET;
+      arm_state = MOVE_HOME;
     }
     // for (i = 0; i < 3; i++){//only base, elbow, and wrist
     //   if (arm_motor_handle_state(&BASE) != ){
