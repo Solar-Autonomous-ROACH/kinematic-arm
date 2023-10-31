@@ -18,12 +18,24 @@
 #ifndef ROVERCORE_ISR_H
 #define ROVERCORE_ISR_H
 
+#define BASE_HOME_ANGLE 0
+#define ELBOW_HOME_ANGLE 0
+#define WRIST_HOME_ANGLE 190
+
+#define BASE_PLACE_ANGLE 0
+#define ELBOW_PLACE_ANGLE 0
+#define WRIST_PLACE_ANGLE 0
+
+#define WRIST_PREP_ANGLE 150
+
 typedef enum {
   CALIBRATE,
   WAIT_FOR_INPUT,
-  MOVE,
+  PREPARE_TO_MOVE,
+  MOVE_TARGET,
   CLAW_ACQUIRE,
   PLACE_TARGET,
+  MOVE_HOME,
 } arm_state_t;
 
 typedef enum {

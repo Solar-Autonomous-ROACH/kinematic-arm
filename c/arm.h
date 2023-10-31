@@ -36,6 +36,8 @@ void set_joints_angle(int16_t base_angle, int16_t elbow_angle,
                       int16_t wrist_angle);
 void set_joint_angle(arm_motor_t *arm_motor, uint16_t angle);
 
+bool arm_movement_complete();
+
 extern arm_motor_t BASE_MOTOR;
 extern arm_motor_t ELBOW_MOTOR;
 extern arm_motor_t WRIST_MOTOR;

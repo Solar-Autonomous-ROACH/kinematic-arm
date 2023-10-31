@@ -61,6 +61,13 @@ void set_joints_angle(int16_t base_angle, int16_t elbow_angle,
 // #define GEAR_RATIO 172
 #define CPR 48
 
+bool arm_movement_complete(){
+  return 
+       (arm_motor_handle_state(&BASE_MOTOR) == ARM_MOTOR_CHECK_POSITION &&
+        arm_motor_handle_state(&ELBOW_MOTOR) == ARM_MOTOR_CHECK_POSITION &&
+        arm_motor_handle_state(&WRIST_MOTOR) == ARM_MOTOR_CHECK_POSITION);
+}
+
 void set_joint_angle(arm_motor_t *arm_motor, uint16_t angle) {
   // printf("in set_joint_angle, angle %d\n", angle);
   long ticks = angle * CPR * GEAR_RATIO / 360;
