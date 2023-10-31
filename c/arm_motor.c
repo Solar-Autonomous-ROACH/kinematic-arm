@@ -91,15 +91,21 @@ arm_motor_state_t calibrate_handle_state(arm_motor_t *a_motor) {
   switch (a_motor->state) {
   case ARM_MOTOR_CALIBRATE_INIT:
     // initialize some values
-    // a_motor->motor = get_motor(a_motor->index);
-    // a_motor->high_pos = 0;
-    // a_motor->low_pos = 0;
-    // a_motor->move_bits = 0;
-    // a_motor->is_calibrated = false;
+    a_motor->motor = get_motor(a_motor->index);
+    a_motor->stopper_pos = 0;
+    a_motor->move_bits = 0xFFFF;
+    a_motor->is_calibrated = false;
 
-    // next state
-    a_motor->state = ARM_MOTOR_CALIBRATION_HOLD_POS_SPEED;
-    set_motor_speed(a_motor->index, CALIBRATION_SPEED);
+    if (!(a_motor->pos_angle)) {
+      // we have to go counter clock wise to get to stopper
+      a_motor->state = ARM_MOTOR_CALIBRATION_HOLD_POS_SPEED;
+      set_motor_speed(a_motor->index, CALIBRATION_SPEED);
+    } else {
+      // we have to go clock wise to get to stopper
+      a_motor->state = ARM_MOTOR_CALIBRATION_HOLD_NEG_SPEED;
+      set_motor_speed(a_motor->index, -CALIBRATION_SPEED);
+    }
+
     a_motor->moving_time_ms = 0;
     printf("Starting arm calibration\n");
     break;
@@ -112,13 +118,13 @@ arm_motor_state_t calibrate_handle_state(arm_motor_t *a_motor) {
 
   case ARM_MOTOR_CALIBRATE_POS_SPEED:
     if (check_stopped(a_motor)) { // if motor has stopped
-      // now have high position
-      a_motor->high_pos = a_motor->motor->abs_pos;
-      // next state
-      a_motor->moving_time_ms = 0;
-      a_motor->state = ARM_MOTOR_CALIBRATION_HOLD_NEG_SPEED;
-      printf("Determined high position: %ld\n", a_motor->high_pos);
-      set_motor_speed(a_motor->index, -CALIBRATION_SPEED);
+      a_motor->stopper_pos = a_motor->motor->abs_pos;
+      printf("Determined stopper position: %ld\n", a_motor->stopper_pos);
+
+      a_motor->state = ARM_MOTOR_CHECK_POSITION;
+      a_motor->is_calibrated = true;
+      set_motor_speed(a_motor->index, 0);
+
     }
     break;
 
@@ -130,11 +136,10 @@ arm_motor_state_t calibrate_handle_state(arm_motor_t *a_motor) {
 
   case ARM_MOTOR_CALIBRATE_NEG_SPEED:
     if (check_stopped(a_motor)) { // if motor has stopped
-      // now have low position
-      a_motor->low_pos = a_motor->motor->abs_pos;
-      // next state
+      a_motor->stopper_pos = a_motor->motor->abs_pos;
+      printf("Determined stopper position: %ld\n", a_motor->stopper_pos);
+
       a_motor->state = ARM_MOTOR_CHECK_POSITION;
-      printf("Determined low position: %ld\n", a_motor->low_pos);
       a_motor->is_calibrated = true;
       set_motor_speed(a_motor->index, 0);
     }
