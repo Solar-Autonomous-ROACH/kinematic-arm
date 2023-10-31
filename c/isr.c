@@ -59,7 +59,7 @@ int isr(int signum) {
   }
   int base_target_angle = -1;
   int elbow_target_angle = -1;
-  int wrist_target_angle = 180;
+  int wrist_target_angle = 10;
   // bool all_motors_done = true;
 
   switch (arm_state) {
