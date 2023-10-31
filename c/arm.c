@@ -39,7 +39,7 @@ arms_calibrate_state_t arm_calibrate() {
     break;
   case ARM_CALIBRATE_READY:
     break;
-    
+
   default:
     break;
   }
@@ -73,26 +73,28 @@ void set_joints_angle(int16_t base_angle, int16_t elbow_angle,
 void set_joint_angle(arm_motor_t *arm_motor, uint16_t angle) {
   // printf("in set_joint_angle, angle %d\n", angle);
   long ticks = angle * arm_motor->CPR * arm_motor->gear_ratio / 360;
-  if (arm_motor->pos_angle) { //if the motor takes in postive angles use postive ticks
+  if (arm_motor->pos_angle) { // if the motor takes in postive angles use
+                              // postive ticks
     // TODO: add a check that low_pos + ticks < high_pos
     // printf("ticks: %ld\n", ticks);
     arm_motor->motor->target_pos = arm_motor->stopper_pos + ticks;
     // arm_motor->motor->target_pos = ticks;
-  } else {  //if the motor takes in negative angles use negative ticks
+  } else { // if the motor takes in negative angles use negative ticks
     // TODO: add a check that low_pos + ticks < high_pos
     // printf("ticks: %ld\n", ticks);
     arm_motor->motor->target_pos = arm_motor->stopper_pos - ticks;
   }
 }
 
-//CURRENTLY
-//WRIST_MOTOR_PIN 0
-//ELBOW_MOTOR_PIN 1
-//BASE_MOTOR_PIN 2
-//CLAW_MOTOR_PIN 3
+// CURRENTLY
+// WRIST_MOTOR_PIN 0
+// ELBOW_MOTOR_PIN 1
+// BASE_MOTOR_PIN 2
+// CLAW_MOTOR_PIN 3
 void arm_init() {
   WRIST_MOTOR.index = 0;
-  WRIST_MOTOR.motor = get_motor(WRIST_MOTOR_PIN); // TODO: Change to correct motor value
+  WRIST_MOTOR.motor =
+      get_motor(WRIST_MOTOR_PIN); // TODO: Change to correct motor value
   WRIST_MOTOR.pos_angle = false;
   WRIST_MOTOR.stopper_pos = 0;
   WRIST_MOTOR.is_calibrated = false; // TODO: set me back
@@ -102,7 +104,8 @@ void arm_init() {
   WRIST_MOTOR.CPR = 12;
 
   ELBOW_MOTOR.index = 0;
-  ELBOW_MOTOR.motor = get_motor(ELBOW_MOTOR_PIN); // TODO: Change to correct motor value
+  ELBOW_MOTOR.motor =
+      get_motor(ELBOW_MOTOR_PIN); // TODO: Change to correct motor value
   ELBOW_MOTOR.pos_angle = true;
   ELBOW_MOTOR.stopper_pos = 0;
   ELBOW_MOTOR.is_calibrated = false; // TODO: set me back
@@ -112,7 +115,8 @@ void arm_init() {
   ELBOW_MOTOR.CPR = 12;
 
   BASE_MOTOR.index = 0;
-  BASE_MOTOR.motor = get_motor(BASE_MOTOR_PIN); // TODO: Change to correct motor value
+  BASE_MOTOR.motor =
+      get_motor(BASE_MOTOR_PIN); // TODO: Change to correct motor value
   BASE_MOTOR.pos_angle = false;
   BASE_MOTOR.stopper_pos = 0;
   BASE_MOTOR.is_calibrated = false; // TODO: set me back
@@ -126,12 +130,9 @@ void arm_init() {
   // CLAW_MOTOR.pos_angle = 0;
   // CLAW_MOTOR.stopper_pos = 0;
   // CLAW_MOTOR.is_calibrated = false; // TODO: set me back
-  // CLAW_MOTOR.move_bits = 0xFFFF;    // default to all 1s=>assume arm was moving
-  // CLAW_MOTOR.state = ARM_MOTOR_CALIBRATE_INIT; // TODO: set me back
+  // CLAW_MOTOR.move_bits = 0xFFFF;    // default to all 1s=>assume arm was
+  // moving CLAW_MOTOR.state = ARM_MOTOR_CALIBRATE_INIT; // TODO: set me back
 
-
-
-  
   // steer_FR.index = BASE;
   // steer_FR.state = STATE_INITIALIZE;
 

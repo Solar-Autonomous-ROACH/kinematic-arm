@@ -39,7 +39,7 @@ arm_motor_state_t arm_motor_handle_state(arm_motor_t *a_motor) {
       set_motor_speed(a_motor->index, 0);
     }
     break;
-#define MIN_SPEED 12
+#define MIN_SPEED 20
   case ARM_MOTOR_MOVING_TO_TARGET:
     a_motor->moving_time_ms++;
     if (abs_diff > MOTOR_TICKS_ERROR_MARGIN) {
