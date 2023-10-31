@@ -69,6 +69,7 @@ int isr(int signum) {
     // printf("Has Stopped: %d\n", check_stopped());
     if (arm_calibrate() == ARM_CALIBRATE_READY) {
       arm_state = WAIT_FOR_INPUT;
+      printf("Calibrate done, heading to WAIT_FOR_INPUT");
     }
     break;
   case WAIT_FOR_INPUT:
@@ -78,17 +79,18 @@ int isr(int signum) {
     //  if (input){
     //    current_arm_state = MOVE;
     //  }
-    printf("In WAIT_FOR_INPUT\n");
-    printf("heading to PREPARE FOR MOVE\n");
+    printf("Got input, heading to PREPARE FOR MOVE\n");
     arm_state = PREPARE_TO_MOVE;
     break;
   case PREPARE_TO_MOVE:
-    //adjust wrist angle because if we start moving from home position we might hit rover
-    printf("Preparing to move");
+    // adjust wrist angle because if we start moving from home position we might
+    // hit rover
     set_joint_angle(&WRIST_MOTOR, WRIST_PREP_ANGLE);
     if (arm_motor_handle_state(&WRIST_MOTOR) == ARM_MOTOR_CHECK_POSITION) {
-      set_joints_angle(base_target_angle, elbow_target_angle, wrist_target_angle);
+      set_joints_angle(base_target_angle, elbow_target_angle,
+                       wrist_target_angle);
       arm_state = MOVE_TARGET;
+      printf("Preparing to MOVE_TARGET");
     }
     break;
   case MOVE_TARGET:
@@ -115,14 +117,14 @@ int isr(int signum) {
     // motor angles for placing object will be constant so just move to those
     // angles open the claw?
     set_joints_angle(BASE_PLACE_ANGLE, ELBOW_PLACE_ANGLE, WRIST_PLACE_ANGLE);
-    if (arm_movement_complete()){
+    if (arm_movement_complete()) {
       arm_state = MOVE_HOME;
     }
-    
+
     break;
   case MOVE_HOME:
     set_joints_angle(BASE_HOME_ANGLE, ELBOW_HOME_ANGLE, WRIST_HOME_ANGLE);
-    if (arm_movement_complete()){
+    if (arm_movement_complete()) {
       arm_state = WAIT_FOR_INPUT;
     }
     break;
