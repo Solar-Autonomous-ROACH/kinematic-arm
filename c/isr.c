@@ -69,7 +69,7 @@ int isr(int signum) {
     // printf("Has Stopped: %d\n", check_stopped());
     if (arm_calibrate() == ARM_CALIBRATE_READY) {
       arm_state = WAIT_FOR_INPUT;
-      printf("Calibrate done, heading to WAIT_FOR_INPUT");
+      printf("Calibrate done, heading to WAIT_FOR_INPUT\n");
     }
     break;
   case WAIT_FOR_INPUT:
@@ -90,7 +90,7 @@ int isr(int signum) {
       set_joints_angle(base_target_angle, elbow_target_angle,
                        wrist_target_angle);
       arm_state = MOVE_TARGET;
-      printf("Preparing to MOVE_TARGET");
+      printf("Preparing to MOVE_TARGET\n");
     }
     break;
   case MOVE_TARGET:
@@ -99,6 +99,7 @@ int isr(int signum) {
     if (arm_motor_handle_state(&WRIST_MOTOR) == ARM_MOTOR_CHECK_POSITION) {
       // arm_state = CLAW_ACQUIRE;
       arm_state = MOVE_HOME;
+      printf("MOVE_TARGET complete, heading to MOVE_HOME\n");
     }
     // for (i = 0; i < 3; i++){//only base, elbow, and wrist
     //   if (arm_motor_handle_state(&BASE) != ){
@@ -126,6 +127,7 @@ int isr(int signum) {
     set_joints_angle(BASE_HOME_ANGLE, ELBOW_HOME_ANGLE, WRIST_HOME_ANGLE);
     if (arm_movement_complete()) {
       arm_state = WAIT_FOR_INPUT;
+      printf("MOVE_HOME complete, heading to WAIT_FOR_INPUT\n");
     }
     break;
   default:
