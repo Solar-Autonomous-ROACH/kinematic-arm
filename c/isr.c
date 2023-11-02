@@ -59,7 +59,7 @@ int isr(int signum) {
   }
   int base_target_angle = -1;
   int elbow_target_angle = -1;
-  int wrist_target_angle = 10;
+  int wrist_target_angle = 45;
   // bool all_motors_done = true;
 
   switch (arm_state) {
@@ -98,7 +98,7 @@ int isr(int signum) {
     // int i;
     if (arm_motor_handle_state(&WRIST_MOTOR) == ARM_MOTOR_CHECK_POSITION) {
       // arm_state = CLAW_ACQUIRE;
-      arm_state = MOVE_HOME;
+      // arm_state = MOVE_HOME;
       printf("MOVE_TARGET complete, heading to MOVE_HOME\n");
     }
     // for (i = 0; i < 3; i++){//only base, elbow, and wrist

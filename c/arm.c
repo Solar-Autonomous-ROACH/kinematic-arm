@@ -7,17 +7,33 @@ arm_motor_t BASE_MOTOR;
 arm_motor_t ELBOW_MOTOR;
 arm_motor_t WRIST_MOTOR;
 
+/** only one of these should be true at a time */
+// #define DEBUG_WRIST
+// #define DEBUG_ELBOW
+// #define DEBUG_BASE
 /**
  * @brief State machine which goes through the motors and calibrates them
  * @return arms_calibrate_state_t return the state of arm
  */
 arms_calibrate_state_t arm_calibrate() {
+#ifdef DEBUG_WRIST
   static arms_calibrate_state_t arms_calibrate_state = ARM_CALIBRATE_WRIST;
+#elif DEBUG_ELBOW
+  static arms_calibrate_state_t arms_calibrate_state = ARM_CALIBRATE_ELBOW;
+#elif DEBUG_BASE
+  static arms_calibrate_state_t arms_calibrate_state = ARM_CALIBRATE_BASE;
+#else
+  static arms_calibrate_state_t arms_calibrate_state = ARM_CALIBRATE_WRIST;
+#endif
+
   switch (arms_calibrate_state) {
   case ARM_CALIBRATE_WRIST:
     if (calibrate_handle_state(&WRIST_MOTOR) == ARM_MOTOR_CHECK_POSITION) {
-      //   arms_calibrate_state = ARM_CALIBRATE_ELBOW;
+#ifdef DEBUG_WRIST
       arms_calibrate_state = ARM_CALIBRATE_READY;
+#else
+      arms_calibrate_state = ARM_CALIBRATE_ELBOW;
+#endif
     }
     break;
   case ARM_CALIBRATE_PREPARE_ELBOW:
@@ -29,12 +45,21 @@ arms_calibrate_state_t arm_calibrate() {
     break;
   case ARM_CALIBRATE_BASE:
     if (calibrate_handle_state(&BASE_MOTOR) == ARM_MOTOR_CHECK_POSITION) {
+#ifdef DEBUG_BASE
+      arms_calibrate_state = ARM_CALIBRATE_READY;
+
+#else
       arms_calibrate_state = ARM_CALIBRATE_ELBOW;
+#endif
     }
     break;
   case ARM_CALIBRATE_ELBOW:
     if (calibrate_handle_state(&ELBOW_MOTOR) == ARM_MOTOR_CHECK_POSITION) {
+#ifdef DEBUG_ELBOW
       arms_calibrate_state = ARM_CALIBRATE_READY;
+#else
+      arms_calibrate_state = ARM_CALIBRATE_READY;
+#endif
     }
     break;
   case ARM_CALIBRATE_READY:
@@ -105,13 +130,18 @@ void arm_init() {
   WRIST_MOTOR.index = 0;
   WRIST_MOTOR.motor =
       get_motor(WRIST_MOTOR_PIN); // TODO: Change to correct motor value
-  WRIST_MOTOR.pos_angle = false;
+  // WRIST_MOTOR.pos_angle = false;
+  WRIST_MOTOR.pos_angle = true;
   WRIST_MOTOR.stopper_pos = 0;
   WRIST_MOTOR.is_calibrated = false; // TODO: set me back
   WRIST_MOTOR.move_bits = 0xFFFF;    // default to all 1s=>assume arm was moving
   WRIST_MOTOR.state = ARM_MOTOR_CALIBRATE_INIT; // TODO: set me back
-  WRIST_MOTOR.gear_ratio = 84.294;
+  WRIST_MOTOR.gear_ratio = 270.349;
+  // WRIST_MOTOR.gear_ratio = 84.294;
   WRIST_MOTOR.CPR = 12;
+  WRIST_MOTOR.calibration_speed = 30;
+  WRIST_MOTOR.min_speed = 40;
+  // WRIST_MOTOR.calibration_speed = 10;
 
   ELBOW_MOTOR.index = 0;
   ELBOW_MOTOR.motor =
