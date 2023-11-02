@@ -49,13 +49,16 @@ int isr_init() {
 // extern arm_motor_t WRIST_MOTOR;
 int isr(int signum) {
   // printf("ISR PARTY\n");
-
   set_PL_register(WATCHDOG_REG, watchdog_flag);
   // set_PL_register(DEBUG_REG, 0xFF);
   for (int i = 0; i < 14; i++) {
     motor_update(i);
   }
+#ifdef DEBUG_WRIST | DEBUG_ELBOW | DEBUG_BASE
+  arm_handle_state_debug();
+#else
   arm_handle_state();
+#endif
   // printf("Velocity: %5ld\n------------------------\n", velocity);
 
   // switch (temp >> 10) {
