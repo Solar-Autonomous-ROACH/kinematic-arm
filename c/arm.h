@@ -1,44 +1,54 @@
 #ifndef ARM_H
 #define ARM_H
 
-#include <stdint.h>
+#include "arm_motor.h"
 #include "steering_motor.h"
-#include "motor.h"
+#include <stdint.h>
 
-//The motor value on the board
+// The motor value on the board
 #define BASE 0xA
 #define ELBOW 0xB
 #define WRIST 0xC
 #define CLAW 0xD
 
-#define STEERING_GEAR_RATIO     172
-#define WHEEL_GEAR_RATIO        212
+#define WRIST_MOTOR_PIN 0
+#define ELBOW_MOTOR_PIN 1
+#define BASE_MOTOR_PIN 2
+#define CLAW_MOTOR_PIN 3
 
-#define MAX_STEERING_TICKS      300
+// #define STEERING_GEAR_RATIO 172
+// #define WHEEL_GEAR_RATIO 212
 
- typedef enum {
-    ARM_CALIBRATE_WAITING,
-    ARM_CALIBRATE_FR,
-    ARM_CALIBRATE_RR,
-    ARM_CALIBRATE_FL,
-    ARM_CALIBRATE_RL,
-    ARM_CALIBRATE_READY
-} arm_state_t;
+#define MAX_STEERING_TICKS 300
 
-static arm_state_t arm_state;
+typedef enum {
+  ARM_CALIBRATE_WRIST,
+  ARM_CALIBRATE_PREPARE_ELBOW,
+  ARM_CALIBRATE_BASE,
+  ARM_CALIBRATE_ELBOW,
+  ARM_CALIBRATE_CLAW,
+  ARM_CALIBRATE_READY
+} arms_calibrate_state_t;
 
-static steering_motor_t steer_BASE;
-static steering_motor_t steer_ELBOW;
-static steering_motor_t steer_WRIST;
-static steering_motor_t steer_CLAW;
+// extern static struct arm_motor_t arm_motor_array[4];
+// extern static struct motor_t arm_motor_subarray[4];
 
 void arm_init();
 
-int arm_is_calibrated();
-
-void arm_calibrate();
+arms_calibrate_state_t arm_calibrate();
 
 void arm_update_steering();
+void set_joints_angle(int16_t base_angle, int16_t elbow_angle,
+                      int16_t wrist_angle);
+void set_joint_angle(arm_motor_t *arm_motor, uint16_t angle);
+
+bool arm_movement_complete();
+
+extern arm_motor_t BASE_MOTOR;
+extern arm_motor_t ELBOW_MOTOR;
+extern arm_motor_t WRIST_MOTOR;
+
+// void arm_init();
 
 // void rover_stop();
 
@@ -58,8 +68,4 @@ void arm_update_steering();
 
 // void arm_steer_point();
 
-
-
-
-
-#endif //ROVERCORE_ROVER_H
+#endif // ROVERCORE_ROVER_H
