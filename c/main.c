@@ -5,6 +5,7 @@
 #include "isr.h"
 #include "led.h"
 #include "mmio.h"
+#include "arm.h"
 #include <signal.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -32,6 +33,9 @@ int main() {
   speed1 = 0;
   while (1) {
     // scanf("%d", &speed1);
+    scanf("%d %d %d", &base_target_angle, &elbow_target_angle, &wrist_target_angle);
+    validate_angle_set(base_target_angle, elbow_target_angle, wrist_target_angle);
+    while (input_ready); //wait for input_ready to be set back to zero (happens after retruning home)
   }
 
   close_mem();

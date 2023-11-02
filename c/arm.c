@@ -7,6 +7,13 @@ arm_motor_t BASE_MOTOR;
 arm_motor_t ELBOW_MOTOR;
 arm_motor_t WRIST_MOTOR;
 
+
+int input_ready = 0;
+arm_state_t arm_state = CALIBRATE;
+int base_target_angle = 0;
+int elbow_target_angle = 0;
+int wrist_target_angle = 0;
+
 /**
  * @brief State machine which goes through the motors and calibrates them
  * @return arms_calibrate_state_t return the state of arm
@@ -44,6 +51,97 @@ arms_calibrate_state_t arm_calibrate() {
     break;
   }
   return arms_calibrate_state;
+}
+
+//validate the set of angles
+//eventually move this to be with the kinematic engine
+bool validate_angle_set(int16_t base_angle, int16_t elbow_angle, int16_t wrist_angle){
+  if ((base_angle >= 0 && elbow_angle >= 0 && wrist_angle >= 0)
+   && (base_angle < 360 && elbow_angle < 360 && wrist_angle < 360)
+ /*&& other tests*/){
+    input_ready = 1;
+  }
+}
+
+void arm_handle_state(){
+
+  // bool all_motors_done = true;
+
+  switch (arm_state) {
+  case CALIBRATE:
+    // //Temp stuff for now
+    // set_motor_speed(CURMOTOR, 30);
+    // printf("Has Stopped: %d\n", check_stopped());
+    if (arm_calibrate() == ARM_CALIBRATE_READY) {
+      arm_state = WAIT_FOR_INPUT;
+      printf("Calibrate done, heading to WAIT_FOR_INPUT\n");
+    }
+    break;
+  case WAIT_FOR_INPUT:
+    // wait for coordinates and orientation info from vision team
+    //  char input[10];
+    //  read(STDIN_FILENO, input, 10);
+    //  if (input){
+    //    current_arm_state = MOVE;
+    //  }
+    if (input_ready){
+      printf("Got input, heading to PREPARE FOR MOVE\n");
+      arm_state = PREPARE_TO_MOVE;
+    }
+
+    break;
+  case PREPARE_TO_MOVE:
+    // adjust wrist angle because if we start moving from home position we might
+    // hit rover
+    set_joint_angle(&WRIST_MOTOR, WRIST_PREP_ANGLE);
+    if (arm_motor_handle_state(&WRIST_MOTOR) == ARM_MOTOR_CHECK_POSITION) {
+      set_joints_angle(base_target_angle, elbow_target_angle,
+                       wrist_target_angle);
+      arm_state = MOVE_TARGET;
+      printf("Preparing to MOVE_TARGET\n");
+    }
+    break;
+  case MOVE_TARGET:
+    // printf("In MOVE\n");
+    // int i;
+    if (arm_movement_complete()) {
+      // arm_state = CLAW_ACQUIRE;
+      arm_state = MOVE_HOME;
+      printf("MOVE_TARGET complete, heading to MOVE_HOME\n");
+    }
+    // for (i = 0; i < 3; i++){//only base, elbow, and wrist
+    //   if (arm_motor_handle_state(&BASE) != ){
+    //       all_motors_done = false;
+    //   }
+    // }
+    // if (all_motors_done){
+    // arm_state = CLAW_ACQUIRE;
+    //}
+    break;
+  case CLAW_ACQUIRE:
+    // grab the object
+    arm_state = PLACE_TARGET;
+    break;
+  case PLACE_TARGET:
+    // motor angles for placing object will be constant so just move to those
+    // angles open the claw?
+    set_joints_angle(BASE_PLACE_ANGLE, ELBOW_PLACE_ANGLE, WRIST_PLACE_ANGLE);
+    if (arm_movement_complete()) {
+      arm_state = MOVE_HOME;
+    }
+
+    break;
+  case MOVE_HOME:
+    set_joints_angle(BASE_HOME_ANGLE, ELBOW_HOME_ANGLE, WRIST_HOME_ANGLE);
+    if (arm_movement_complete()) {
+      arm_state = WAIT_FOR_INPUT;
+      printf("MOVE_HOME complete, heading to WAIT_FOR_INPUT\n");
+      input_ready = 0;
+    }
+    break;
+  default:
+    break;
+  }
 }
 
 /**
