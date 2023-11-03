@@ -68,9 +68,9 @@ arm_motor_state_t arm_motor_handle_state(arm_motor_t *a_motor) {
              target_position, abs_speed);
       set_motor_speed(a_motor->index, 0);
     }
-    if (a_motor->moving_time_ms % 1000 == 0) {
-      printf("Current: %ld, Target: %ld, speed: %ld\n", current_position,
-             target_position, abs_speed);
+    if (a_motor->moving_time_ms % 500 == 0) {
+      printf("Current: %ld, Target: %ld, speed: %ld, a_motor->min_speed: %d\n",
+             current_position, target_position, abs_speed, a_motor->min_speed);
     }
     break;
 

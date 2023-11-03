@@ -30,7 +30,6 @@ int isr_init() {
   timer.it_value.tv_usec = 1000; // was 1000
   setitimer(ITIMER_REAL, &timer, NULL);
   set_target_position(0, 0);
-  printf("HERE\n");
   for (int i = 0; i < 14; i++) {
     set_motor_speed(i, 0);
     motor_update(i);
@@ -54,7 +53,7 @@ int isr(int signum) {
   for (int i = 0; i < 14; i++) {
     motor_update(i);
   }
-#ifdef DEBUG_WRIST | DEBUG_ELBOW | DEBUG_BASE
+#if defined(DEBUG_WRIST) || defined(DEBUG_ELBOW) || defined(DEBUG_BASE)
   arm_handle_state_debug();
 #else
   arm_handle_state();

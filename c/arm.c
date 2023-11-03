@@ -23,7 +23,8 @@ arms_calibrate_state_t arm_calibrate() {
   switch (arms_calibrate_state) {
   case ARM_CALIBRATE_WRIST:
     if (calibrate_handle_state(&WRIST_MOTOR) == ARM_MOTOR_CHECK_POSITION) {
-      arms_calibrate_state = ARM_CALIBRATE_ELBOW;
+      arms_calibrate_state = ARM_CALIBRATE_PREPARE_ELBOW;
+      printf("Calibrate wrist done\n");
     }
     break;
   case ARM_CALIBRATE_PREPARE_ELBOW:
@@ -31,16 +32,19 @@ arms_calibrate_state_t arm_calibrate() {
       arms_calibrate_state = ARM_CALIBRATE_BASE;
       // assume elbow calibrate was not successful
       ELBOW_MOTOR.state = ARM_MOTOR_CALIBRATE_INIT;
+      printf("Calibrate elbow attempt\n");
     }
     break;
   case ARM_CALIBRATE_BASE:
     if (calibrate_handle_state(&BASE_MOTOR) == ARM_MOTOR_CHECK_POSITION) {
       arms_calibrate_state = ARM_CALIBRATE_ELBOW;
+      printf("Calibrate base done\n");
     }
     break;
   case ARM_CALIBRATE_ELBOW:
     if (calibrate_handle_state(&ELBOW_MOTOR) == ARM_MOTOR_CHECK_POSITION) {
       arms_calibrate_state = ARM_CALIBRATE_READY;
+      printf("Calibrate elbow done\n");
     }
     break;
   case ARM_CALIBRATE_READY:
@@ -266,9 +270,11 @@ void arm_init() {
   WRIST_MOTOR.move_bits = 0xFFFF;    // default to all 1s=>assume arm was moving
   WRIST_MOTOR.state = ARM_MOTOR_CALIBRATE_INIT; // TODO: set me back
   WRIST_MOTOR.gear_ratio = 84.294;
+  // WRIST_MOTOR.gear_ratio = 172;
   WRIST_MOTOR.CPR = 12;
-  WRIST_MOTOR.calibration_speed = 25;
-  WRIST_MOTOR.min_speed = 25;
+  // WRIST_MOTOR.CPR = 48;
+  WRIST_MOTOR.calibration_speed = 30;
+  WRIST_MOTOR.min_speed = 30;
 
   ELBOW_MOTOR.index = 1;
   ELBOW_MOTOR.motor =
@@ -280,7 +286,7 @@ void arm_init() {
   ELBOW_MOTOR.state = ARM_MOTOR_CALIBRATE_INIT; // TODO: set me back
   ELBOW_MOTOR.gear_ratio = 270.349;
   ELBOW_MOTOR.CPR = 12;
-  ELBOW_MOTOR.calibration_speed = 30;
+  ELBOW_MOTOR.calibration_speed = 40;
   ELBOW_MOTOR.min_speed = 40;
 
   BASE_MOTOR.index = 2;
@@ -293,8 +299,8 @@ void arm_init() {
   BASE_MOTOR.state = ARM_MOTOR_CALIBRATE_INIT; // TODO: set me back
   BASE_MOTOR.gear_ratio = 61.659 * 20;
   BASE_MOTOR.CPR = 12;
-  ELBOW_MOTOR.calibration_speed = 30;
-  ELBOW_MOTOR.min_speed = 30;
+  BASE_MOTOR.calibration_speed = 30;
+  BASE_MOTOR.min_speed = 30;
 
   // CLAW_MOTOR.index = 0;
   // CLAW_MOTOR.motor = get_motor(0); // TODO: Change to correct motor value

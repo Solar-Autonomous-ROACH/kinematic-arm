@@ -22,7 +22,6 @@ void sigint_handler(int sig) {
 }
 
 int main() {
-  printf("FOOOOOO\n");
   // int num;
   signal(SIGINT, sigint_handler);
   mmio_init();
@@ -32,10 +31,11 @@ int main() {
   set_brightness(100, 100, 000);
   speed1 = 0;
   int16_t base_in_angle, elbow_in_angle, wrist_in_angle;
+  // validate_angle_set(90, 90, 90);
   while (1) {
     // scanf("%d", &speed1);
-    if (scanf("%d %d %d\n", &base_in_angle, &elbow_in_angle, &wrist_in_angle) >
-        0) {
+    if (scanf("%hd %hd %hd\n", &base_in_angle, &elbow_in_angle,
+              &wrist_in_angle) > 0) {
       validate_angle_set(base_in_angle, elbow_in_angle, wrist_in_angle);
       printf("HERE");
     }

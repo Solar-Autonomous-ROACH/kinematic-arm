@@ -32,7 +32,7 @@
 #define WRIST_PLACE_ANGLE 0
 
 /** only one of these should be true at a time */
-#define DEBUG_WRIST
+// #define DEBUG_WRIST
 // #define DEBUG_ELBOW
 // #define DEBUG_BASE
 

@@ -8,7 +8,7 @@
 #define MOTOR_TICKS_ERROR_MARGIN 5
 #define ACCELERATION_TIME 5000 // time motor takes to accelerate
 #define MAX_SPEED 70           // motor max_speed
-#define ARM_MOTOR_KP 0.02
+#define ARM_MOTOR_KP 0.005
 #define CALIBRATE_MOVE_HOLD_DURATION 1000 // 500ms
 
 typedef enum {
@@ -37,7 +37,6 @@ typedef struct {
   uint16_t CPR;
   int8_t calibration_speed;
   int8_t min_speed;
-
 } arm_motor_t;
 
 arm_motor_state_t calibrate_handle_state(arm_motor_t *a_motor);
