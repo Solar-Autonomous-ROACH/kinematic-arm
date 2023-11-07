@@ -318,7 +318,7 @@ void arm_init() {
   BASE_MOTOR.is_calibrated = false; // TODO: set me back
   BASE_MOTOR.move_bits = 0xFFFF;    // default to all 1s=>assume arm was moving
   BASE_MOTOR.state = ARM_MOTOR_CALIBRATE_INIT; // TODO: set me back
-  BASE_MOTOR.gear_ratio = 61.659 * 20;
+  BASE_MOTOR.gear_ratio = 81.659 * 20;
   BASE_MOTOR.CPR = 12;
   BASE_MOTOR.calibration_speed = 30;
   BASE_MOTOR.min_speed = 30;
