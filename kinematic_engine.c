@@ -25,7 +25,7 @@ bool kinematic_engine(float x_pos, float y_pos, float z_pos,
         }
 
         theta_1 = law_of_cosines(S_E_LENGTH, magnitude, E_W_LENGTH);
-        theta_1 = law_of_cosines(E_W_LENGTH, magnitude, S_E_LENGTH);
+        theta_2 = law_of_cosines(E_W_LENGTH, magnitude, S_E_LENGTH);
 
         *shoulder_angle = 180 - to_deg(theta_1 + atan(y_pos / x_pos));
         *elbow_angle = to_deg(PI -  theta_1 - theta_2);
