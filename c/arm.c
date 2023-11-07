@@ -132,9 +132,9 @@ void arm_handle_state() {
     break;
   case MOVE_TARGET:
     if (arm_movement_complete()) {
-      set_joints_angle(BASE_HOME_ANGLE, ELBOW_HOME_ANGLE, WRIST_HOME_ANGLE);
+      // set_joints_angle(BASE_HOME_ANGLE, ELBOW_HOME_ANGLE, 0);
       printf("MOVE_TARGET complete, heading to MOVE_HOME\n");
-      arm_state = MOVE_HOME;
+      arm_state = WAIT_FOR_INPUT;
     }
     break;
   case CLAW_ACQUIRE:
@@ -297,7 +297,7 @@ void arm_init() {
   BASE_MOTOR.is_calibrated = false; // TODO: set me back
   BASE_MOTOR.move_bits = 0xFFFF;    // default to all 1s=>assume arm was moving
   BASE_MOTOR.state = ARM_MOTOR_CALIBRATE_INIT; // TODO: set me back
-  BASE_MOTOR.gear_ratio = 61.659 * 20;
+  BASE_MOTOR.gear_ratio = 81.659 * 20;
   BASE_MOTOR.CPR = 12;
   BASE_MOTOR.calibration_speed = 30;
   BASE_MOTOR.min_speed = 30;
