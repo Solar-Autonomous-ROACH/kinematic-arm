@@ -24,6 +24,11 @@ arm_motor_state_t arm_motor_handle_state(arm_motor_t *a_motor) {
   long abs_diff = diff < 0 ? -diff : diff;
   long speed_reducer = 0;
   long abs_speed = 0;
+  long abs_diff_velocity =
+      get_motor_position_n(a_motor->index, 0) -
+      get_motor_position_n(a_motor->index, POSITION_FIFO_SIZE - 1);
+  abs_diff_velocity =
+      abs_diff_velocity >= 0 ? abs_diff_velocity : -abs_diff_velocity;
   // long diff = a_motor.
 
   // motor_update(a_motor->index);
@@ -43,19 +48,25 @@ arm_motor_state_t arm_motor_handle_state(arm_motor_t *a_motor) {
   case ARM_MOTOR_MOVING_TO_TARGET:
     a_motor->moving_time_ms++;
     if (abs_diff > MOTOR_TICKS_ERROR_MARGIN) {
-      abs_speed = abs_diff * ARM_MOTOR_KP;
-      if (a_motor->moving_time_ms < ACCELERATION_TIME) {
-        speed_reducer = (MAX_SPEED - a_motor->min_speed) *
-                        (ACCELERATION_TIME - a_motor->moving_time_ms) /
-                        ACCELERATION_TIME;
-      }
+      abs_speed = a_motor->kp * abs_diff - a_motor->kd * abs_diff_velocity;
+      // abs_speed = abs_diff * ARM_MOTOR_KP;
+      // if (a_motor->moving_time_ms < ACCELERATION_TIME) {
+      //   speed_reducer = (MAX_SPEED - a_motor->min_speed) *
+      //                   (ACCELERATION_TIME - a_motor->moving_time_ms) /
+      //                   ACCELERATION_TIME;
+      // }
       if (abs_speed > MAX_SPEED) {
         abs_speed = MAX_SPEED;
       }
-      abs_speed = abs_speed - speed_reducer;
-      if (abs_speed < a_motor->min_speed) {
-        abs_speed = a_motor->min_speed;
+      if (abs_speed < 20) {
+        abs_speed = 20;
       }
+      // abs_speed = abs_speed - speed_reducer;
+      // if (abs_speed < a_motor->min_speed) {
+      //   abs_speed = a_motor->min_speed - 2 *
+      //   get_motor_velocity(a_motor->index);
+      //   // abs_speed = a_motor->min_speed;
+      // }
       if (diff > 0) {
         set_motor_speed(a_motor->index, abs_speed);
       } else {

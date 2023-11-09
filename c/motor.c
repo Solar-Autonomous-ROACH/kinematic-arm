@@ -38,6 +38,7 @@ int motor_update(uint8_t motor_index) {
   motor->abs_pos &= UPPER_MASK; // Mask the upper bits of the absolute position
   motor->abs_pos += motor->raw_pos; // Add the raw position to the absolute
                                     // position
+  set_motor_position(motor_index, motor->abs_pos);
 
   motor->velocity = motor->abs_pos - last_long;
 
@@ -66,6 +67,34 @@ long get_motor_position(uint8_t motor_index) {
     return -1;
   }
   return motors[motor_index].abs_pos;
+}
+
+void set_motor_position(uint8_t motor_index, long position) {
+  if (motor_index >= MAX_MOTORS) {
+    fprintf(stderr, "Motor Index Out Of Range");
+    return;
+  }
+  motors[motor_index].position_fifo_idx++;
+  if (motors[motor_index].position_fifo_idx >= POSITION_FIFO_SIZE) {
+    motors[motor_index].position_fifo_idx -= POSITION_FIFO_SIZE;
+  }
+  motors[motor_index].position_fifo[motors[motor_index].position_fifo_idx] =
+      position;
+}
+
+long get_motor_position_n(uint8_t motor_index, uint8_t n) {
+  if (motor_index >= MAX_MOTORS) {
+    fprintf(stderr, "Motor Index Out Of Range");
+    return -1;
+  } else if (n >= POSITION_FIFO_SIZE) {
+    fprintf(stderr, "Motor FIFO index out of bounds");
+    return -1;
+  }
+  int16_t index = motors[motor_index].position_fifo_idx - n;
+  if (index < 0) {
+    index += POSITION_FIFO_SIZE;
+  }
+  return motors[motor_index].position_fifo[index];
 }
 
 char get_raw_pos(uint8_t motor_index) {
@@ -101,4 +130,10 @@ int get_motor_velocity(uint8_t motor_index) {
   return motors[motor_index].velocity;
 }
 
-motor_t *get_motor(uint8_t motor_index) { return &motors[motor_index]; }
+motor_t *get_motor(uint8_t motor_index) {
+  if (motor_index >= MAX_MOTORS) {
+    fprintf(stderr, "Motor Index Out Of Range");
+    return NULL;
+  }
+  return &motors[motor_index];
+}

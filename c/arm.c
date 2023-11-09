@@ -261,46 +261,50 @@ void set_joint_angle(arm_motor_t *arm_motor, uint16_t angle) {
 // BASE_MOTOR_PIN 2
 // CLAW_MOTOR_PIN 3
 void arm_init() {
-  WRIST_MOTOR.index = 0;
-  WRIST_MOTOR.motor =
-      get_motor(WRIST_MOTOR_PIN); // TODO: Change to correct motor value
+  WRIST_MOTOR.index = WRIST_MOTOR_PIN;
+  WRIST_MOTOR.motor = get_motor(WRIST_MOTOR_PIN);
   WRIST_MOTOR.pos_angle = false;
   WRIST_MOTOR.stopper_pos = 0;
-  WRIST_MOTOR.is_calibrated = false; // TODO: set me back
-  WRIST_MOTOR.move_bits = 0xFFFF;    // default to all 1s=>assume arm was moving
-  WRIST_MOTOR.state = ARM_MOTOR_CALIBRATE_INIT; // TODO: set me back
+  WRIST_MOTOR.is_calibrated = false;
+  WRIST_MOTOR.move_bits = 0xFFFF; // default to all 1s=>assume arm was moving
+  WRIST_MOTOR.state = ARM_MOTOR_CALIBRATE_INIT;
   WRIST_MOTOR.gear_ratio = 84.294;
-  // WRIST_MOTOR.gear_ratio = 172;
   WRIST_MOTOR.CPR = 12;
-  // WRIST_MOTOR.CPR = 48;
   WRIST_MOTOR.calibration_speed = 30;
   WRIST_MOTOR.min_speed = 30;
+  WRIST_MOTOR.kp = 0.16;
+  WRIST_MOTOR.kd = 3;
+  WRIST_MOTOR.ki = 0;
 
-  ELBOW_MOTOR.index = 1;
-  ELBOW_MOTOR.motor =
-      get_motor(ELBOW_MOTOR_PIN); // TODO: Change to correct motor value
+  ELBOW_MOTOR.index = ELBOW_MOTOR_PIN;
+  ELBOW_MOTOR.motor = get_motor(ELBOW_MOTOR_PIN);
   ELBOW_MOTOR.pos_angle = true;
   ELBOW_MOTOR.stopper_pos = 0;
-  ELBOW_MOTOR.is_calibrated = false; // TODO: set me back
-  ELBOW_MOTOR.move_bits = 0xFFFF;    // default to all 1s=>assume arm was moving
-  ELBOW_MOTOR.state = ARM_MOTOR_CALIBRATE_INIT; // TODO: set me back
+  ELBOW_MOTOR.is_calibrated = false;
+  ELBOW_MOTOR.move_bits = 0xFFFF; // default to all 1s=>assume arm was moving
+  ELBOW_MOTOR.state = ARM_MOTOR_CALIBRATE_INIT;
   ELBOW_MOTOR.gear_ratio = 270.349;
   ELBOW_MOTOR.CPR = 12;
   ELBOW_MOTOR.calibration_speed = 40;
   ELBOW_MOTOR.min_speed = 40;
+  ELBOW_MOTOR.kp = 0.04;
+  ELBOW_MOTOR.kd = 3;
+  ELBOW_MOTOR.ki = 0;
 
-  BASE_MOTOR.index = 2;
-  BASE_MOTOR.motor =
-      get_motor(BASE_MOTOR_PIN); // TODO: Change to correct motor value
+  BASE_MOTOR.index = BASE_MOTOR_PIN;
+  BASE_MOTOR.motor = get_motor(BASE_MOTOR_PIN);
   BASE_MOTOR.pos_angle = false;
   BASE_MOTOR.stopper_pos = 0;
-  BASE_MOTOR.is_calibrated = false; // TODO: set me back
-  BASE_MOTOR.move_bits = 0xFFFF;    // default to all 1s=>assume arm was moving
-  BASE_MOTOR.state = ARM_MOTOR_CALIBRATE_INIT; // TODO: set me back
-  BASE_MOTOR.gear_ratio = 81.659 * 20;
+  BASE_MOTOR.is_calibrated = false;
+  BASE_MOTOR.move_bits = 0xFFFF; // default to all 1s=>assume arm was moving
+  BASE_MOTOR.state = ARM_MOTOR_CALIBRATE_INIT;
+  BASE_MOTOR.gear_ratio = 61.659 * 25;
   BASE_MOTOR.CPR = 12;
   BASE_MOTOR.calibration_speed = 30;
   BASE_MOTOR.min_speed = 30;
+  BASE_MOTOR.kp = 0.01;
+  BASE_MOTOR.kd = 0;
+  BASE_MOTOR.ki = 0;
 
   // CLAW_MOTOR.index = 0;
   // CLAW_MOTOR.motor = get_motor(0); // TODO: Change to correct motor value
