@@ -30,13 +30,13 @@ int main() {
   set_led_status();
   set_brightness(100, 100, 000);
   speed1 = 0;
-  int16_t base_in_angle, elbow_in_angle, wrist_in_angle;
-  // validate_angle_set(90, 90, 90);
+  int16_t base_in_angle, elbow_in_angle, wrist_in_angle, claw_in_angle;
   while (1) {
     // scanf("%d", &speed1);
-    if (scanf("%hd %hd %hd\n", &base_in_angle, &elbow_in_angle,
-              &wrist_in_angle) > 0) {
-      validate_angle_set(base_in_angle, elbow_in_angle, wrist_in_angle);
+    //if (Flag is set by vision team)
+    if (scanf("%hd %hd %hd %hd\n", &base_in_angle, &elbow_in_angle,
+              &wrist_in_angle, &claw_in_angle) > 0) {
+      validate_angle_set(base_in_angle, elbow_in_angle, wrist_in_angle, claw_in_angle);
       printf("HERE");
     }
   }

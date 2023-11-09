@@ -1,4 +1,5 @@
 #include "arm.h"
+#include "claw.h"
 
 // static struct arm_motor_t arm_motor_array[4];
 
@@ -6,12 +7,14 @@
 arm_motor_t BASE_MOTOR;
 arm_motor_t ELBOW_MOTOR;
 arm_motor_t WRIST_MOTOR;
+claw_motor_t CLAW_MOTOR;
 
 bool input_ready = false;
 arm_state_t arm_state = CALIBRATE;
 int16_t base_target_angle = 0;
 int16_t elbow_target_angle = 0;
 int16_t wrist_target_angle = 0;
+int16_t claw_target_angle = 0;
 static arms_calibrate_state_t arms_calibrate_state = ARM_CALIBRATE_START;
 
 /**
@@ -96,7 +99,7 @@ arms_calibrate_state_t arm_calibrate_debug() {
 // validate the set of angles
 // eventually move this to be with the kinematic engine
 void validate_angle_set(int16_t base_angle, int16_t elbow_angle,
-                        int16_t wrist_angle) {
+                        int16_t wrist_angle, int16_t claw_angle) {
   // if ((base_angle >= 0 && elbow_angle >= 0 && wrist_angle >= 0) &&
   // add more tests in future
   if (base_angle < 360 && elbow_angle < 360 && wrist_angle < 360) {
@@ -104,6 +107,7 @@ void validate_angle_set(int16_t base_angle, int16_t elbow_angle,
     base_target_angle = base_angle;
     elbow_target_angle = elbow_angle;
     wrist_target_angle = wrist_angle;
+    claw_target_angle = claw_angle;
   }
 }
 
@@ -152,18 +156,26 @@ void arm_handle_state() {
       // set_joints_angle(base_target_angle, elbow_target_angle,
       // wrist_target_angle);
       printf("MOVE_TARGET complete, heading to WAIT_FOR_INPUT\n");
-      arm_state = WAIT_FOR_INPUT;
+      set_claw_angle(claw_target_angle);
+      arm_state = CLAW_ACQUIRE;
     }
     break;
   case CLAW_ACQUIRE:
-    // grab the object
-    arm_state = PLACE_TARGET;
+    if (claw_handle_state(&CLAW_MOTOR) == ACQUIRED){
+      //arm_state = PLACE_TARGET;
+      //set_joints_angle(BASE_PLACE_ANGLE, ELBOW_PLACE_ANGLE, WRIST_PLACE_ANGLE);
+      arm_state = WAIT_FOR_INPUT;
+    }
+    
     break;
   case PLACE_TARGET:
     // motor angles for placing object will be constant so just move to those
     // angles open the claw?
-    set_joints_angle(BASE_PLACE_ANGLE, ELBOW_PLACE_ANGLE, WRIST_PLACE_ANGLE);
+    
     if (arm_movement_complete()) {
+      //open claw to release
+      CLAW_MOTOR.state = IDLE;
+      set_joints_angle(BASE_HOME_ANGLE, ELBOW_HOME_ANGLE, WRIST_HOME_ANGLE);
       arm_state = MOVE_HOME;
     }
 
@@ -257,6 +269,11 @@ bool arm_movement_complete() {
           wrist_state == ARM_MOTOR_CHECK_POSITION);
 }
 
+bool object_acquired(){
+  //function provided by the vision team
+  return true;
+}
+
 void set_joint_angle(arm_motor_t *arm_motor, uint16_t angle) {
   // printf("in set_joint_angle, angle %d\n", angle);
   long ticks = angle * arm_motor->CPR * arm_motor->gear_ratio / 360;
@@ -320,13 +337,13 @@ void arm_init() {
   BASE_MOTOR.calibration_speed = 30;
   BASE_MOTOR.min_speed = 30;
 
-  // CLAW_MOTOR.index = 0;
-  // CLAW_MOTOR.motor = get_motor(0); // TODO: Change to correct motor value
+  CLAW_MOTOR.index = 3;
+  CLAW_MOTOR.motor = get_motor(CLAW_MOTOR_PIN); // TODO: Change to correct motor value
   // CLAW_MOTOR.pos_angle = 0;
   // CLAW_MOTOR.stopper_pos = 0;
   // CLAW_MOTOR.is_calibrated = false; // TODO: set me back
   // CLAW_MOTOR.move_bits = 0xFFFF;    // default to all 1s=>assume arm was
-  // moving CLAW_MOTOR.state = ARM_MOTOR_CALIBRATE_INIT; // TODO: set me back
+  CLAW_MOTOR.state = IDLE; // TODO: set me back
 
   // steer_FR.index = BASE;
   // steer_FR.state = STATE_INITIALIZE;

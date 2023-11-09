@@ -2,6 +2,7 @@
 #define ARM_H
 
 #include "arm_motor.h"
+#include "claw.h"
 #include "steering_motor.h"
 #include <stdint.h>
 
@@ -65,7 +66,7 @@ void arm_init();
 void arm_handle_state(void);
 void arm_handle_state_debug();
 void validate_angle_set(int16_t base_angle, int16_t elbow_angle,
-                        int16_t wrist_angle);
+                        int16_t wrist_angle, int16_t claw_angle);
 
 arms_calibrate_state_t arm_calibrate();
 
@@ -74,6 +75,8 @@ void set_joints_angle(int16_t base_angle, int16_t elbow_angle,
 void set_joint_angle(arm_motor_t *arm_motor, uint16_t angle);
 
 bool arm_movement_complete();
+
+bool object_acquired();
 
 // extern arm_motor_t BASE_MOTOR;
 // extern arm_motor_t ELBOW_MOTOR;

@@ -21,12 +21,6 @@
 
 
 
-typedef enum {
-  IDLE,
-  ROTATE,
-  OPEN,
-  CLOSE,
-} claw_state_t;
 
 int speed1;
 
