@@ -39,13 +39,13 @@ arm_motor_state_t arm_motor_handle_state(arm_motor_t *a_motor) {
       set_motor_speed(a_motor->index, 0);
     }
     break;
-#define MIN_SPEED 20
+    // #define MIN_SPEED 40
   case ARM_MOTOR_MOVING_TO_TARGET:
     a_motor->moving_time_ms++;
     if (abs_diff > MOTOR_TICKS_ERROR_MARGIN) {
       abs_speed = abs_diff * ARM_MOTOR_KP;
       if (a_motor->moving_time_ms < ACCELERATION_TIME) {
-        speed_reducer = (MAX_SPEED - MIN_SPEED) *
+        speed_reducer = (MAX_SPEED - a_motor->min_speed) *
                         (ACCELERATION_TIME - a_motor->moving_time_ms) /
                         ACCELERATION_TIME;
       }
@@ -53,8 +53,8 @@ arm_motor_state_t arm_motor_handle_state(arm_motor_t *a_motor) {
         abs_speed = MAX_SPEED;
       }
       abs_speed = abs_speed - speed_reducer;
-      if (abs_speed < MIN_SPEED) {
-        abs_speed = MIN_SPEED;
+      if (abs_speed < a_motor->min_speed) {
+        abs_speed = a_motor->min_speed;
       }
       if (diff > 0) {
         set_motor_speed(a_motor->index, abs_speed);
@@ -68,9 +68,9 @@ arm_motor_state_t arm_motor_handle_state(arm_motor_t *a_motor) {
              target_position, abs_speed);
       set_motor_speed(a_motor->index, 0);
     }
-    if (a_motor->moving_time_ms % 1000 == 0) {
-      printf("Current: %ld, Target: %ld, speed: %ld\n", current_position,
-             target_position, abs_speed);
+    if (a_motor->moving_time_ms % 500 == 0) {
+      printf("Current: %ld, Target: %ld, speed: %ld, a_motor->min_speed: %d\n",
+             current_position, target_position, abs_speed, a_motor->min_speed);
     }
     break;
 
@@ -99,11 +99,11 @@ arm_motor_state_t calibrate_handle_state(arm_motor_t *a_motor) {
     if (!(a_motor->pos_angle)) {
       // we have to go counter clock wise to get to stopper
       a_motor->state = ARM_MOTOR_CALIBRATION_HOLD_POS_SPEED;
-      set_motor_speed(a_motor->index, CALIBRATION_SPEED);
+      set_motor_speed(a_motor->index, a_motor->calibration_speed);
     } else {
       // we have to go clock wise to get to stopper
       a_motor->state = ARM_MOTOR_CALIBRATION_HOLD_NEG_SPEED;
-      set_motor_speed(a_motor->index, -CALIBRATION_SPEED);
+      set_motor_speed(a_motor->index, -(a_motor->calibration_speed));
     }
 
     a_motor->moving_time_ms = 0;
@@ -124,7 +124,6 @@ arm_motor_state_t calibrate_handle_state(arm_motor_t *a_motor) {
       a_motor->state = ARM_MOTOR_CHECK_POSITION;
       a_motor->is_calibrated = true;
       set_motor_speed(a_motor->index, 0);
-
     }
     break;
 

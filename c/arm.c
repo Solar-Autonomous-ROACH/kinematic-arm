@@ -7,17 +7,24 @@ arm_motor_t BASE_MOTOR;
 arm_motor_t ELBOW_MOTOR;
 arm_motor_t WRIST_MOTOR;
 
+bool input_ready = false;
+arm_state_t arm_state = CALIBRATE;
+int16_t base_target_angle = 0;
+int16_t elbow_target_angle = 0;
+int16_t wrist_target_angle = 0;
+
 /**
  * @brief State machine which goes through the motors and calibrates them
  * @return arms_calibrate_state_t return the state of arm
  */
 arms_calibrate_state_t arm_calibrate() {
   static arms_calibrate_state_t arms_calibrate_state = ARM_CALIBRATE_WRIST;
+
   switch (arms_calibrate_state) {
   case ARM_CALIBRATE_WRIST:
     if (calibrate_handle_state(&WRIST_MOTOR) == ARM_MOTOR_CHECK_POSITION) {
-      //   arms_calibrate_state = ARM_CALIBRATE_ELBOW;
-      arms_calibrate_state = ARM_CALIBRATE_READY;
+      arms_calibrate_state = ARM_CALIBRATE_PREPARE_ELBOW;
+      printf("Calibrate wrist done\n");
     }
     break;
   case ARM_CALIBRATE_PREPARE_ELBOW:
@@ -25,16 +32,19 @@ arms_calibrate_state_t arm_calibrate() {
       arms_calibrate_state = ARM_CALIBRATE_BASE;
       // assume elbow calibrate was not successful
       ELBOW_MOTOR.state = ARM_MOTOR_CALIBRATE_INIT;
+      printf("Calibrate elbow attempt\n");
     }
     break;
   case ARM_CALIBRATE_BASE:
     if (calibrate_handle_state(&BASE_MOTOR) == ARM_MOTOR_CHECK_POSITION) {
       arms_calibrate_state = ARM_CALIBRATE_ELBOW;
+      printf("Calibrate base done\n");
     }
     break;
   case ARM_CALIBRATE_ELBOW:
     if (calibrate_handle_state(&ELBOW_MOTOR) == ARM_MOTOR_CHECK_POSITION) {
       arms_calibrate_state = ARM_CALIBRATE_READY;
+      printf("Calibrate elbow done\n");
     }
     break;
   case ARM_CALIBRATE_READY:
@@ -44,6 +54,111 @@ arms_calibrate_state_t arm_calibrate() {
     break;
   }
   return arms_calibrate_state;
+}
+
+/** only one of these should be true at a time */
+// #define DEBUG_WRIST
+// #define DEBUG_ELBOW
+// #define DEBUG_BASE
+/**
+ * @brief State machine which goes through the motors and calibrates them
+ * @return arms_calibrate_state_t return the state of arm
+ */
+arms_calibrate_state_t arm_calibrate_debug() {
+#ifdef DEBUG_WRIST
+  static arms_calibrate_state_t arms_calibrate_state = ARM_CALIBRATE_WRIST;
+  if (calibrate_handle_state(&WRIST_MOTOR) == ARM_MOTOR_CHECK_POSITION) {
+    arms_calibrate_state = ARM_CALIBRATE_READY;
+  }
+  return arms_calibrate_state;
+#elif defined DEBUG_ELBOW
+  static arms_calibrate_state_t arms_calibrate_state = ARM_CALIBRATE_ELBOW;
+  if (calibrate_handle_state(&ELBOW_MOTOR) == ARM_MOTOR_CHECK_POSITION) {
+    arms_calibrate_state = ARM_CALIBRATE_READY;
+  }
+  return arms_calibrate_state;
+#elif defined DEBUG_BASE
+  static arms_calibrate_state_t arms_calibrate_state = ARM_CALIBRATE_BASE;
+  if (calibrate_handle_state(&BASE_MOTOR) == ARM_MOTOR_CHECK_POSITION) {
+    arms_calibrate_state = ARM_CALIBRATE_READY;
+  }
+  return arms_calibrate_state;
+#endif
+  return ARM_CALIBRATE_READY;
+}
+
+// validate the set of angles
+// eventually move this to be with the kinematic engine
+void validate_angle_set(int16_t base_angle, int16_t elbow_angle,
+                        int16_t wrist_angle) {
+  // if ((base_angle >= 0 && elbow_angle >= 0 && wrist_angle >= 0) &&
+  // add more tests in future
+  if (base_angle < 360 && elbow_angle < 360 && wrist_angle < 360) {
+    input_ready = true;
+    base_target_angle = base_angle;
+    elbow_target_angle = elbow_angle;
+    wrist_target_angle = wrist_angle;
+  }
+}
+
+void arm_handle_state() {
+  switch (arm_state) {
+  case CALIBRATE:
+    // //Temp stuff for now
+    // set_motor_speed(CURMOTOR, 30);
+    if (arm_calibrate() == ARM_CALIBRATE_READY) {
+      arm_state = WAIT_FOR_INPUT;
+      printf("Calibrate done, heading to WAIT_FOR_INPUT\n");
+    }
+    break;
+  case WAIT_FOR_INPUT:
+    // wait for coordinates and orientation info from vision team
+    if (input_ready) {
+      input_ready = false;
+      printf("Got input, heading to PREPARE FOR MOVE\n");
+      set_joint_angle(&WRIST_MOTOR, WRIST_PREP_ANGLE);
+      arm_state = PREPARE_TO_MOVE;
+    }
+    break;
+  case PREPARE_TO_MOVE:
+    // adjust wrist angle because if we start moving from home position we might
+    // hit rover
+    if (arm_motor_handle_state(&WRIST_MOTOR) == ARM_MOTOR_CHECK_POSITION) {
+      set_joints_angle(base_target_angle, elbow_target_angle,
+                       wrist_target_angle);
+      arm_state = MOVE_TARGET;
+      printf("Preparing to MOVE_TARGET\n");
+    }
+    break;
+  case MOVE_TARGET:
+    if (arm_movement_complete()) {
+      // set_joints_angle(BASE_HOME_ANGLE, ELBOW_HOME_ANGLE, 0);
+      printf("MOVE_TARGET complete, heading to MOVE_HOME\n");
+      arm_state = WAIT_FOR_INPUT;
+    }
+    break;
+  case CLAW_ACQUIRE:
+    // grab the object
+    arm_state = PLACE_TARGET;
+    break;
+  case PLACE_TARGET:
+    // motor angles for placing object will be constant so just move to those
+    // angles open the claw?
+    set_joints_angle(BASE_PLACE_ANGLE, ELBOW_PLACE_ANGLE, WRIST_PLACE_ANGLE);
+    if (arm_movement_complete()) {
+      arm_state = MOVE_HOME;
+    }
+
+    break;
+  case MOVE_HOME:
+    if (arm_movement_complete()) {
+      arm_state = WAIT_FOR_INPUT;
+      printf("MOVE_HOME complete, heading to WAIT_FOR_INPUT\n");
+    }
+    break;
+  default:
+    break;
+  }
 }
 
 /**
@@ -63,6 +178,50 @@ void set_joints_angle(int16_t base_angle, int16_t elbow_angle,
   }
   if (wrist_angle >= 0) {
     set_joint_angle(&WRIST_MOTOR, wrist_angle);
+  }
+}
+
+void arm_handle_state_debug() {
+  switch (arm_state) {
+  case CALIBRATE:
+    if (arm_calibrate_debug() == ARM_CALIBRATE_READY) {
+      arm_state = WAIT_FOR_INPUT;
+      printf("Calibrate done, heading to WAIT_FOR_INPUT\n");
+    }
+    break;
+
+  case WAIT_FOR_INPUT:
+    if (input_ready) {
+      input_ready = false;
+      set_joints_angle(base_target_angle, elbow_target_angle,
+                       wrist_target_angle);
+      printf("Got input, heading to PREPARE FOR MOVE\n");
+      arm_state = MOVE_TARGET;
+    }
+    break;
+
+  case MOVE_TARGET:
+#ifdef DEBUG_WRIST
+    if (arm_motor_handle_state(&WRIST_MOTOR) == ARM_MOTOR_CHECK_POSITION) {
+      printf("MOVE_TARGET complete, Waiting for input\n");
+      arm_state = WAIT_FOR_INPUT;
+    }
+    break;
+#elif defined DEBUG_ELBOW
+    if (arm_motor_handle_state(&ELBOW_MOTOR) == ARM_MOTOR_CHECK_POSITION) {
+      printf("MOVE_TARGET complete, Waiting for input\n");
+      arm_state = WAIT_FOR_INPUT;
+    }
+    break;
+#elif defined DEBUG_BASE
+    if (arm_motor_handle_state(&BASE_MOTOR) == ARM_MOTOR_CHECK_POSITION) {
+      printf("MOVE_TARGET complete, Waiting for input\n");
+      arm_state = WAIT_FOR_INPUT;
+    }
+    break;
+#endif
+  default:
+    break;
   }
 }
 
@@ -111,9 +270,13 @@ void arm_init() {
   WRIST_MOTOR.move_bits = 0xFFFF;    // default to all 1s=>assume arm was moving
   WRIST_MOTOR.state = ARM_MOTOR_CALIBRATE_INIT; // TODO: set me back
   WRIST_MOTOR.gear_ratio = 84.294;
+  // WRIST_MOTOR.gear_ratio = 172;
   WRIST_MOTOR.CPR = 12;
+  // WRIST_MOTOR.CPR = 48;
+  WRIST_MOTOR.calibration_speed = 30;
+  WRIST_MOTOR.min_speed = 30;
 
-  ELBOW_MOTOR.index = 0;
+  ELBOW_MOTOR.index = 1;
   ELBOW_MOTOR.motor =
       get_motor(ELBOW_MOTOR_PIN); // TODO: Change to correct motor value
   ELBOW_MOTOR.pos_angle = true;
@@ -121,10 +284,12 @@ void arm_init() {
   ELBOW_MOTOR.is_calibrated = false; // TODO: set me back
   ELBOW_MOTOR.move_bits = 0xFFFF;    // default to all 1s=>assume arm was moving
   ELBOW_MOTOR.state = ARM_MOTOR_CALIBRATE_INIT; // TODO: set me back
-  ELBOW_MOTOR.gear_ratio = 84.294;
+  ELBOW_MOTOR.gear_ratio = 270.349;
   ELBOW_MOTOR.CPR = 12;
+  ELBOW_MOTOR.calibration_speed = 40;
+  ELBOW_MOTOR.min_speed = 40;
 
-  BASE_MOTOR.index = 0;
+  BASE_MOTOR.index = 2;
   BASE_MOTOR.motor =
       get_motor(BASE_MOTOR_PIN); // TODO: Change to correct motor value
   BASE_MOTOR.pos_angle = false;
@@ -132,8 +297,10 @@ void arm_init() {
   BASE_MOTOR.is_calibrated = false; // TODO: set me back
   BASE_MOTOR.move_bits = 0xFFFF;    // default to all 1s=>assume arm was moving
   BASE_MOTOR.state = ARM_MOTOR_CALIBRATE_INIT; // TODO: set me back
-  BASE_MOTOR.gear_ratio = 84.294;
+  BASE_MOTOR.gear_ratio = 81.659 * 20;
   BASE_MOTOR.CPR = 12;
+  BASE_MOTOR.calibration_speed = 30;
+  BASE_MOTOR.min_speed = 30;
 
   // CLAW_MOTOR.index = 0;
   // CLAW_MOTOR.motor = get_motor(0); // TODO: Change to correct motor value
