@@ -5,12 +5,15 @@
 #include <math.h>
 #include <stdbool.h>
 
-#define S_E_LENGTH 240
-#define E_W_LENGTH 260
+#define S_E_LENGTH 238
+#define E_W_LENGTH 273
 #define W_C_LENGTH 130
 
 #define PI 3.1416
 #define RAD_TO_DEG (180.0 / PI)
+#define WRIST_CONST (280.0 / 180.0 * PI - 3 * PI / 2) 
+/*This is the 270 deg that is used to finish the triangle 
+  and the compensator for where the wrist starts measuring from*/
 
 
 double law_of_cosines(double a, double b, double c);
