@@ -21,7 +21,35 @@
 
 #define MAX_STEERING_TICKS 300
 
+#define WRIST_PREP_ANGLE 0
+
+#define BASE_HOME_ANGLE 0
+#define ELBOW_HOME_ANGLE 0
+#define WRIST_HOME_ANGLE 190
+
+#define BASE_PLACE_ANGLE 0
+#define ELBOW_PLACE_ANGLE 0
+#define WRIST_PLACE_ANGLE 0
+
+/** only one of these should be true at a time */
+// #define DEBUG_WRIST
+// #define DEBUG_ELBOW
+// #define DEBUG_BASE
+
 typedef enum {
+  CALIBRATE,
+  WAIT_FOR_INPUT,
+  PREPARE_TO_MOVE,
+  MOVE_TARGET_BE1,
+  MOVE_TARGET_WRIST,
+  MOVE_TARGET_BE2,
+  CLAW_ACQUIRE,
+  PLACE_TARGET,
+  MOVE_HOME,
+} arm_state_t;
+
+typedef enum {
+  ARM_CALIBRATE_START,
   ARM_CALIBRATE_WRIST,
   ARM_CALIBRATE_PREPARE_ELBOW,
   ARM_CALIBRATE_BASE,
@@ -34,19 +62,22 @@ typedef enum {
 // extern static struct motor_t arm_motor_subarray[4];
 
 void arm_init();
+void arm_handle_state(void);
+void arm_handle_state_debug();
+void validate_angle_set(int16_t base_angle, int16_t elbow_angle,
+                        int16_t wrist_angle);
 
 arms_calibrate_state_t arm_calibrate();
 
-void arm_update_steering();
 void set_joints_angle(int16_t base_angle, int16_t elbow_angle,
                       int16_t wrist_angle);
 void set_joint_angle(arm_motor_t *arm_motor, uint16_t angle);
 
 bool arm_movement_complete();
 
-extern arm_motor_t BASE_MOTOR;
-extern arm_motor_t ELBOW_MOTOR;
-extern arm_motor_t WRIST_MOTOR;
+// extern arm_motor_t BASE_MOTOR;
+// extern arm_motor_t ELBOW_MOTOR;
+// extern arm_motor_t WRIST_MOTOR;
 
 // void arm_init();
 

@@ -7,8 +7,8 @@
 // #define CALIBRATION_SPEED 15
 #define MOTOR_TICKS_ERROR_MARGIN 5
 #define ACCELERATION_TIME 5000 // time motor takes to accelerate
-#define MAX_SPEED 70           // motor max_speed
-#define ARM_MOTOR_KP 0.02
+// #define MAX_SPEED 70           // motor max_speed
+#define MAX_SPEED 65                      // motor max_speed
 #define CALIBRATE_MOVE_HOLD_DURATION 1000 // 500ms
 
 typedef enum {
@@ -37,11 +37,17 @@ typedef struct {
   uint16_t CPR;
   int8_t calibration_speed;
   int8_t min_speed;
-
+  // values for PID controller
+  double kp;
+  double ki;
+  double kd;
+  double integral;
+  long integral_threshold;
 } arm_motor_t;
 
 arm_motor_state_t calibrate_handle_state(arm_motor_t *a_motor);
 arm_motor_state_t arm_motor_handle_state(arm_motor_t *motor);
 bool check_stopped(arm_motor_t *s_motor);
+double get_motor_angle(arm_motor_t *s_motor);
 
 #endif
