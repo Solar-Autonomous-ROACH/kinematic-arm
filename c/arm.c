@@ -123,10 +123,10 @@ void arm_handle_state() {
       input_ready = false;
       printf("Got input, heading to PREPARE FOR MOVE\n");
       set_joint_angle(&WRIST_MOTOR, WRIST_PREP_ANGLE);
-      arm_state = PREPARE_TO_MOVE;
+      arm_state = MOVE_TARGET_BE1;
     }
     break;
-  case PREPARE_TO_MOVE:
+  case PREPARE_TO_MOVE: /** Unused*/
     // adjust wrist angle because if we start moving from home position we might
     // hit rover
     if (arm_motor_handle_state(&WRIST_MOTOR) == ARM_MOTOR_CHECK_POSITION) {
