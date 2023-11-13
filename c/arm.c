@@ -272,9 +272,10 @@ void arm_init() {
   WRIST_MOTOR.CPR = 12;
   WRIST_MOTOR.calibration_speed = 30;
   WRIST_MOTOR.min_speed = 30;
-  WRIST_MOTOR.kp = 0.16;
+  WRIST_MOTOR.kp = 0.45;
   WRIST_MOTOR.kd = 3;
-  WRIST_MOTOR.ki = 0;
+  WRIST_MOTOR.ki = 0.02;
+  WRIST_MOTOR.integral_threshold = 133;
 
   ELBOW_MOTOR.index = ELBOW_MOTOR_PIN;
   ELBOW_MOTOR.motor = get_motor(ELBOW_MOTOR_PIN);
@@ -287,9 +288,10 @@ void arm_init() {
   ELBOW_MOTOR.CPR = 12;
   ELBOW_MOTOR.calibration_speed = 40;
   ELBOW_MOTOR.min_speed = 40;
-  ELBOW_MOTOR.kp = 0.04;
-  ELBOW_MOTOR.kd = 3;
-  ELBOW_MOTOR.ki = 0;
+  ELBOW_MOTOR.kp = 0.6;
+  ELBOW_MOTOR.kd = 6;
+  ELBOW_MOTOR.ki = 0.1;
+  ELBOW_MOTOR.integral_threshold = 100;
 
   BASE_MOTOR.index = BASE_MOTOR_PIN;
   BASE_MOTOR.motor = get_motor(BASE_MOTOR_PIN);
@@ -300,11 +302,12 @@ void arm_init() {
   BASE_MOTOR.state = ARM_MOTOR_CALIBRATE_INIT;
   BASE_MOTOR.gear_ratio = 61.659 * 25;
   BASE_MOTOR.CPR = 12;
-  BASE_MOTOR.calibration_speed = 30;
+  BASE_MOTOR.calibration_speed = 40;
   BASE_MOTOR.min_speed = 30;
-  BASE_MOTOR.kp = 0.01;
+  BASE_MOTOR.kp = 0.05;
   BASE_MOTOR.kd = 0;
-  BASE_MOTOR.ki = 0;
+  BASE_MOTOR.ki = 0.1;
+  BASE_MOTOR.integral_threshold = 1000;
 
   // CLAW_MOTOR.index = 0;
   // CLAW_MOTOR.motor = get_motor(0); // TODO: Change to correct motor value

@@ -19,7 +19,7 @@
 #define KP 2
 #define KV 2
 
-#define POSITION_FIFO_SIZE 2
+#define POSITION_FIFO_SIZE 10
 
 typedef struct {
   long abs_pos;

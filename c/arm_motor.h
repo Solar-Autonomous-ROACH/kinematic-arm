@@ -41,6 +41,8 @@ typedef struct {
   double kp;
   double ki;
   double kd;
+  double integral;
+  long integral_threshold;
 } arm_motor_t;
 
 arm_motor_state_t calibrate_handle_state(arm_motor_t *a_motor);
