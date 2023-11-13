@@ -139,7 +139,6 @@ void arm_handle_state() {
     arm_motor_handle_state(&BASE_MOTOR);
     arm_motor_handle_state(&ELBOW_MOTOR);
     double elbow_angle = get_motor_angle(&ELBOW_MOTOR);
-    printf("Elbow angle: %f\n", elbow_angle);
     if (elbow_angle >= elbow_target_angle / 2) {
       set_joints_angle(base_target_angle, elbow_target_angle,
                        wrist_target_angle);
