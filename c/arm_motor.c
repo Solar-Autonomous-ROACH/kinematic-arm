@@ -175,3 +175,8 @@ bool check_stopped(arm_motor_t *s_motor) {
     return true;
   }
 }
+
+double get_motor_angle(arm_motor_t *s_motor){
+  return (get_motor_position(s_motor->index) - s_motor->stopper_pos) *
+        360 / (s_motor->CPR * s_motor->gear_ratio);
+}

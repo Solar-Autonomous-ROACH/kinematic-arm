@@ -12,15 +12,21 @@ arm_state_t arm_state = CALIBRATE;
 int16_t base_target_angle = 0;
 int16_t elbow_target_angle = 0;
 int16_t wrist_target_angle = 0;
+static arms_calibrate_state_t arms_calibrate_state = ARM_CALIBRATE_START;
 
 /**
  * @brief State machine which goes through the motors and calibrates them
  * @return arms_calibrate_state_t return the state of arm
  */
 arms_calibrate_state_t arm_calibrate() {
-  static arms_calibrate_state_t arms_calibrate_state = ARM_CALIBRATE_WRIST;
-
   switch (arms_calibrate_state) {
+  case ARM_CALIBRATE_START:
+    arms_calibrate_state = ARM_CALIBRATE_WRIST;
+    WRIST_MOTOR.state = ARM_MOTOR_CALIBRATE_INIT;
+    ELBOW_MOTOR.state = ARM_MOTOR_CALIBRATE_INIT;
+    BASE_MOTOR.state = ARM_MOTOR_CALIBRATE_INIT;
+    break;
+
   case ARM_CALIBRATE_WRIST:
     if (calibrate_handle_state(&WRIST_MOTOR) == ARM_MOTOR_CHECK_POSITION) {
       arms_calibrate_state = ARM_CALIBRATE_PREPARE_ELBOW;
@@ -124,16 +130,27 @@ void arm_handle_state() {
     // adjust wrist angle because if we start moving from home position we might
     // hit rover
     if (arm_motor_handle_state(&WRIST_MOTOR) == ARM_MOTOR_CHECK_POSITION) {
-      set_joints_angle(base_target_angle, elbow_target_angle,
-                       wrist_target_angle);
-      arm_state = MOVE_TARGET;
+      set_joints_angle(base_target_angle, elbow_target_angle, WRIST_PREP_ANGLE);
+      arm_state = MOVE_TARGET_BE1;
       printf("Preparing to MOVE_TARGET\n");
     }
     break;
-  case MOVE_TARGET:
-    if (arm_movement_complete()) {
-      // set_joints_angle(BASE_HOME_ANGLE, ELBOW_HOME_ANGLE, 0);
+  case MOVE_TARGET_BE1:
+    arm_motor_handle_state(&BASE_MOTOR);
+    arm_motor_handle_state(&ELBOW_MOTOR);
+    double elbow_angle = get_motor_angle(&ELBOW_MOTOR);
+    if (elbow_angle >= elbow_target_angle / 2) {
+      set_joints_angle(base_target_angle, elbow_target_angle,
+                       wrist_target_angle);
       printf("MOVE_TARGET complete, heading to MOVE_HOME\n");
+      arm_state = MOVE_TARGET_WRIST;
+    }
+    break;
+  case MOVE_TARGET_WRIST:
+    if (arm_movement_complete()) {
+      // set_joints_angle(base_target_angle, elbow_target_angle,
+      // wrist_target_angle);
+      printf("MOVE_TARGET complete, heading to WAIT_FOR_INPUT\n");
       arm_state = WAIT_FOR_INPUT;
     }
     break;
@@ -196,11 +213,11 @@ void arm_handle_state_debug() {
       set_joints_angle(base_target_angle, elbow_target_angle,
                        wrist_target_angle);
       printf("Got input, heading to PREPARE FOR MOVE\n");
-      arm_state = MOVE_TARGET;
+      arm_state = MOVE_TARGET_BE1;
     }
     break;
 
-  case MOVE_TARGET:
+  case MOVE_TARGET_BE1:
 #ifdef DEBUG_WRIST
     if (arm_motor_handle_state(&WRIST_MOTOR) == ARM_MOTOR_CHECK_POSITION) {
       printf("MOVE_TARGET complete, Waiting for input\n");

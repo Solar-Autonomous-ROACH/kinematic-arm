@@ -42,5 +42,6 @@ typedef struct {
 arm_motor_state_t calibrate_handle_state(arm_motor_t *a_motor);
 arm_motor_state_t arm_motor_handle_state(arm_motor_t *motor);
 bool check_stopped(arm_motor_t *s_motor);
+double get_motor_angle(arm_motor_t *s_motor);
 
 #endif
