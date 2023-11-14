@@ -121,18 +121,11 @@ void arm_handle_state() {
     // wait for coordinates and orientation info from vision team
     if (input_ready) {
       input_ready = false;
-      printf("Got input, heading to PREPARE FOR MOVE\n");
-      set_joint_angle(&WRIST_MOTOR, WRIST_PREP_ANGLE);
+      printf("Got input, Base: %hd, Elbow: %hd, Wrist: %hd, heading to PREPARE "
+             "FOR MOVE\n",
+             base_target_angle, elbow_target_angle, wrist_target_angle);
+      set_joints_angle(base_target_angle, elbow_target_angle, 0);
       arm_state = MOVE_TARGET_BE1;
-    }
-    break;
-  case PREPARE_TO_MOVE: /** Unused*/
-    // adjust wrist angle because if we start moving from home position we might
-    // hit rover
-    if (arm_motor_handle_state(&WRIST_MOTOR) == ARM_MOTOR_CHECK_POSITION) {
-      set_joints_angle(base_target_angle, elbow_target_angle, WRIST_PREP_ANGLE);
-      arm_state = MOVE_TARGET_BE1;
-      printf("Preparing to MOVE_TARGET\n");
     }
     break;
   case MOVE_TARGET_BE1:
@@ -317,7 +310,7 @@ void arm_init() {
   BASE_MOTOR.is_calibrated = false;
   BASE_MOTOR.move_bits = 0xFFFF; // default to all 1s=>assume arm was moving
   BASE_MOTOR.state = ARM_MOTOR_CALIBRATE_INIT;
-  BASE_MOTOR.gear_ratio = 61.659 * 25;
+  BASE_MOTOR.gear_ratio = 61.659 * 22;
   BASE_MOTOR.CPR = 12;
   BASE_MOTOR.calibration_speed = 40;
   BASE_MOTOR.min_speed = 30;
