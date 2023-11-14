@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include <time.h>
 #include <stdio.h>
+#include <stdint.h>
 
 #define S_E_LENGTH 238
 #define E_W_LENGTH 273
@@ -22,7 +23,7 @@
 
 double law_of_cosines(double a, double b, double c);
 bool kinematic_engine(float x_pos, float y_pos, float z_pos, 
-    int * shoulder_angle, int * elbow_angle, int * wrist_angle, int * turn_angle);
+    int16_t * shoulder_angle, int16_t * elbow_angle, int16_t * wrist, int16_t * turn_angle);
 int to_deg(double radians);
 
 

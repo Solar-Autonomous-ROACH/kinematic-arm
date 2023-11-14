@@ -12,7 +12,7 @@ int to_deg(double radians) {
 
 
 bool kinematic_engine(float x_pos, float y_pos, float z_pos, 
-    int * shoulder_angle, int * elbow_angle, int * wrist_angle, int * turn_angle) {
+    int16_t * shoulder_angle, int16_t * elbow_angle, int16_t * wrist, int16_t * turn_angle) {
         // printf("Values: %f, %f, %f\n", x_pos, y_pos, z_pos);
         double magnitude, theta_1, theta_2, shoulder_rad, elbow_rad;
         clock_t start_time, end_time;
