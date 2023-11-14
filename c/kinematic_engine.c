@@ -50,6 +50,6 @@ bool kinematic_engine(float x_pos, float y_pos, float z_pos,
         *wrist_angle = to_deg(WRIST_CONST + shoulder_rad + elbow_rad);
 
         end_time = clock();
-        printf("Engine Elapsed: %.1f ms\n", (((double)(end_time - start_time)) * 1000.0 / CLOCKS_PER_SEC);
+        printf("Engine Elapsed: %.1f ms\n", (((double)(end_time - start_time)) * 1000.0 / CLOCKS_PER_SEC));
         return true;
     }
