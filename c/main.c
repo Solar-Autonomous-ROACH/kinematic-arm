@@ -4,6 +4,7 @@
 
 #include "arm.h"
 #include "isr.h"
+#include "kinematic_engine.h"
 #include "led.h"
 #include "mmio.h"
 #include <signal.h>
@@ -30,14 +31,38 @@ int main() {
   set_led_status();
   set_brightness(100, 100, 000);
   speed1 = 0;
-  int16_t base_in_angle, elbow_in_angle, wrist_in_angle;
-  // validate_angle_set(90, 90, 90);
+  int16_t input1, input2, input3;
+  int16_t calc_base_angle, calc_elbow_angle, calc_wrist_angle, turn_angle;
+  char input_type;
   while (1) {
     // scanf("%d", &speed1);
-    if (scanf("%hd %hd %hd\n", &base_in_angle, &elbow_in_angle,
-              &wrist_in_angle) > 0) {
-      validate_angle_set(base_in_angle, elbow_in_angle, wrist_in_angle);
-      printf("HERE");
+    char c = getchar();
+    if (c < 0) {
+      continue;
+    }
+    switch (c) {
+    case 'H':
+      validate_angle_set(0, 0, 0);
+      break;
+
+    case 'A':
+      if (scanf("%hd %hd %hd %c\n", &input1, &input2, &input3, &input_type) >
+          0) {
+        validate_angle_set(input1, input2, input3);
+      }
+      break;
+
+    case 'C':
+      if (scanf("%hd %hd %hd %c\n", &input1, &input2, &input3, &input_type) >
+          0) {
+        kinematic_engine(input1, input2, input3, &calc_base_angle,
+                         &calc_elbow_angle, &calc_wrist_angle, &turn_angle);
+        validate_angle_set(calc_base_angle, calc_elbow_angle, calc_wrist_angle);
+      }
+      break;
+
+    default:
+      break;
     }
   }
 

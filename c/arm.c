@@ -117,6 +117,7 @@ void arm_handle_state() {
       printf("Calibrate done, heading to WAIT_FOR_INPUT\n");
     }
     break;
+
   case WAIT_FOR_INPUT:
     // wait for coordinates and orientation info from vision team
     if (input_ready) {
@@ -125,9 +126,15 @@ void arm_handle_state() {
              "FOR MOVE\n",
              base_target_angle, elbow_target_angle, wrist_target_angle);
       set_joints_angle(base_target_angle, elbow_target_angle, 0);
-      arm_state = MOVE_TARGET_BE1;
+      if (base_target_angle == 0 && elbow_target_angle == 0 &&
+          wrist_target_angle == 0) {
+        move_home();
+      } else {
+        arm_state = MOVE_TARGET_BE1;
+      }
     }
     break;
+
   case MOVE_TARGET_BE1:
     arm_motor_handle_state(&BASE_MOTOR);
     arm_motor_handle_state(&ELBOW_MOTOR);
@@ -139,6 +146,7 @@ void arm_handle_state() {
       arm_state = MOVE_TARGET_WRIST;
     }
     break;
+
   case MOVE_TARGET_WRIST:
     if (arm_movement_complete()) {
       // set_joints_angle(base_target_angle, elbow_target_angle,
@@ -147,28 +155,49 @@ void arm_handle_state() {
       arm_state = WAIT_FOR_INPUT;
     }
     break;
+
   case CLAW_ACQUIRE:
     // grab the object
     arm_state = PLACE_TARGET;
     break;
+
   case PLACE_TARGET:
     // motor angles for placing object will be constant so just move to those
     // angles open the claw?
     set_joints_angle(BASE_PLACE_ANGLE, ELBOW_PLACE_ANGLE, WRIST_PLACE_ANGLE);
     if (arm_movement_complete()) {
-      arm_state = MOVE_HOME;
+      arm_state = MOVE_HOME_1;
     }
 
     break;
-  case MOVE_HOME:
+
+  case MOVE_HOME_1:
+    if (arm_movement_complete()) {
+      set_joint_angle(&ELBOW_MOTOR, ELBOW_HOME_ANGLE_2);
+      arm_state = MOVE_HOME_2;
+    }
+    break;
+
+  case MOVE_HOME_2:
     if (arm_movement_complete()) {
       arm_state = WAIT_FOR_INPUT;
       printf("MOVE_HOME complete, heading to WAIT_FOR_INPUT\n");
     }
     break;
+
   default:
     break;
   }
+}
+
+void move_home() {
+  double elbow_angle = get_motor_angle(&ELBOW_MOTOR);
+  if (elbow_angle < ELBOW_HOME_ANGLE_1) {
+    set_joints_angle(BASE_HOME_ANGLE, elbow_angle, WRIST_HOME_ANGLE);
+  } else {
+    set_joints_angle(BASE_HOME_ANGLE, ELBOW_HOME_ANGLE_1, WRIST_HOME_ANGLE);
+  }
+  arm_state = MOVE_HOME_1;
 }
 
 /**
