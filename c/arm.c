@@ -181,7 +181,7 @@ void arm_handle_state() {
     // angles open the claw?
     set_joints_angle(BASE_PLACE_ANGLE, ELBOW_PLACE_ANGLE, WRIST_PLACE_ANGLE);
     if (arm_movement_complete()) {
-      arm_state = MOVE_HOME;
+      arm_state = MOVE_HOME_1;
     }
 
     break;
