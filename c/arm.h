@@ -63,6 +63,7 @@ typedef enum {
 
 void arm_init();
 void arm_handle_state(void);
+void move_home();
 void arm_handle_state_debug();
 void validate_angle_set(int16_t base_angle, int16_t elbow_angle,
                         int16_t wrist_angle);

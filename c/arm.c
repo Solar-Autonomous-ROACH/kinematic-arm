@@ -128,22 +128,7 @@ void arm_handle_state() {
       set_joints_angle(base_target_angle, elbow_target_angle, 0);
       if (base_target_angle == 0 && elbow_target_angle == 0 &&
           wrist_target_angle == 0) {
-        // get elbow angle
-        // if (elbow angle < ELBOW_HOME_ANGLE_1)
-        // set joint_angle (0, 0,0)
-        // goto MOVE_HOME_2
-        // else
-        // set join angle (0, 45, 0)
-        // go to MOVE_HOME_1
-        if (get_motor_angle(&ELBOW_MOTOR) < ELBOW_HOME_ANGLE_1) {
-          set_joints_angle(BASE_HOME_ANGLE, ELBOW_HOME_ANGLE_2,
-                           WRIST_HOME_ANGLE);
-          arm_state = MOVE_HOME_2;
-        } else {
-          set_joints_angle(BASE_HOME_ANGLE, ELBOW_HOME_ANGLE_1,
-                           WRIST_HOME_ANGLE);
-          arm_state = MOVE_HOME_1;
-        }
+        move_home();
       } else {
         arm_state = MOVE_TARGET_BE1;
       }
@@ -203,6 +188,16 @@ void arm_handle_state() {
   default:
     break;
   }
+}
+
+void move_home() {
+  double elbow_angle = get_motor_angle(&ELBOW_MOTOR);
+  if (elbow_angle < ELBOW_HOME_ANGLE_1) {
+    set_joints_angle(BASE_HOME_ANGLE, elbow_angle, WRIST_HOME_ANGLE);
+  } else {
+    set_joints_angle(BASE_HOME_ANGLE, ELBOW_HOME_ANGLE_1, WRIST_HOME_ANGLE);
+  }
+  arm_state = MOVE_HOME_1;
 }
 
 /**
