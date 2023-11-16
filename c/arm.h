@@ -78,6 +78,9 @@ bool arm_movement_complete();
 
 bool object_acquired();
 
+int claw_rotate_ready(void);
+
+void set_claw_rotate_ready(bool value);
 // extern arm_motor_t BASE_MOTOR;
 // extern arm_motor_t ELBOW_MOTOR;
 // extern arm_motor_t WRIST_MOTOR;

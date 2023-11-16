@@ -15,6 +15,7 @@ int16_t base_target_angle = 0;
 int16_t elbow_target_angle = 0;
 int16_t wrist_target_angle = 0;
 int16_t claw_target_angle = 0;
+int claw_ready = false;
 static arms_calibrate_state_t arms_calibrate_state = ARM_CALIBRATE_START;
 
 /**
@@ -107,7 +108,7 @@ void validate_angle_set(int16_t base_angle, int16_t elbow_angle,
     base_target_angle = base_angle;
     elbow_target_angle = elbow_angle;
     wrist_target_angle = wrist_angle;
-    claw_target_angle = claw_angle;
+    claw_target_angle = claw_angle % 360;
   }
 }
 
@@ -155,16 +156,16 @@ void arm_handle_state() {
     if (arm_movement_complete()) {
       // set_joints_angle(base_target_angle, elbow_target_angle,
       // wrist_target_angle);
-      printf("MOVE_TARGET complete, heading to WAIT_FOR_INPUT\n");
+      printf("MOVE_TARGET complete, heading to CLAW_ACQUIRE\n");
       set_claw_angle(claw_target_angle);
+      claw_ready = true;
       arm_state = CLAW_ACQUIRE;
     }
     break;
   case CLAW_ACQUIRE:
     if (claw_handle_state(&CLAW_MOTOR) == ACQUIRED){
-      //arm_state = PLACE_TARGET;
-      //set_joints_angle(BASE_PLACE_ANGLE, ELBOW_PLACE_ANGLE, WRIST_PLACE_ANGLE);
-      arm_state = WAIT_FOR_INPUT;
+      set_joints_angle(BASE_PLACE_ANGLE, ELBOW_PLACE_ANGLE, WRIST_PLACE_ANGLE);
+      arm_state = PLACE_TARGET;
     }
     
     break;
@@ -172,11 +173,10 @@ void arm_handle_state() {
     // motor angles for placing object will be constant so just move to those
     // angles open the claw?
     
-    if (arm_movement_complete()) {
-      //open claw to release
-      CLAW_MOTOR.state = IDLE;
-      set_joints_angle(BASE_HOME_ANGLE, ELBOW_HOME_ANGLE, WRIST_HOME_ANGLE);
-      arm_state = MOVE_HOME;
+    if (arm_movement_complete() && claw_handle_state(&CLAW_MOTOR) == IDLE){
+        set_joints_angle(BASE_HOME_ANGLE, ELBOW_HOME_ANGLE, WRIST_HOME_ANGLE);
+        arm_state = MOVE_HOME;
+      }
     }
 
     break;
@@ -288,6 +288,14 @@ void set_joint_angle(arm_motor_t *arm_motor, uint16_t angle) {
     // printf("ticks: %ld\n", ticks);
     arm_motor->motor->target_pos = arm_motor->stopper_pos - ticks;
   }
+}
+
+int claw_rotate_ready(void){
+  return claw_ready;
+}
+
+void set_claw_rotate_ready(bool value){
+  claw_ready = value;
 }
 
 // CURRENTLY
