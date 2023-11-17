@@ -99,6 +99,10 @@ void validate_angle_set(int16_t base_angle, int16_t elbow_angle,
                         int16_t wrist_angle) {
   // if ((base_angle >= 0 && elbow_angle >= 0 && wrist_angle >= 0) &&
   // add more tests in future
+  if (base_angle > 10) {
+    // base_angle correction
+    base_angle += 5;
+  }
   if (base_angle < 360 && elbow_angle < 360 && wrist_angle < 360) {
     input_ready = true;
     base_target_angle = base_angle;
@@ -339,12 +343,12 @@ void arm_init() {
   BASE_MOTOR.is_calibrated = false;
   BASE_MOTOR.move_bits = 0xFFFF; // default to all 1s=>assume arm was moving
   BASE_MOTOR.state = ARM_MOTOR_CALIBRATE_INIT;
-  BASE_MOTOR.gear_ratio = 61.659 * 22;
+  BASE_MOTOR.gear_ratio = 61.659 * 22.5;
   BASE_MOTOR.CPR = 12;
   BASE_MOTOR.calibration_speed = 40;
   BASE_MOTOR.min_speed = 30;
-  BASE_MOTOR.kp = 0.05;
-  BASE_MOTOR.kd = 0;
+  BASE_MOTOR.kp = 1;
+  BASE_MOTOR.kd = 2;
   BASE_MOTOR.ki = 0.1;
   BASE_MOTOR.integral_threshold = 1000;
 
