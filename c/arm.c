@@ -348,7 +348,7 @@ void arm_init() {
   BASE_MOTOR.calibration_speed = 40;
   BASE_MOTOR.min_speed = 30;
   BASE_MOTOR.kp = 1;
-  BASE_MOTOR.kd = 2;
+  BASE_MOTOR.kd = 1;
   BASE_MOTOR.ki = 0.1;
   BASE_MOTOR.integral_threshold = 1000;
 
