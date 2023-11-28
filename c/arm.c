@@ -1,4 +1,5 @@
 #include "arm.h"
+#include "logger.h"
 
 // static struct arm_motor_t arm_motor_array[4];
 
@@ -30,7 +31,6 @@ arms_calibrate_state_t arm_calibrate() {
   case ARM_CALIBRATE_WRIST:
     if (calibrate_handle_state(&WRIST_MOTOR) == ARM_MOTOR_CHECK_POSITION) {
       arms_calibrate_state = ARM_CALIBRATE_PREPARE_ELBOW;
-      printf("Calibrate wrist done\n");
     }
     break;
   case ARM_CALIBRATE_PREPARE_ELBOW:
@@ -38,19 +38,17 @@ arms_calibrate_state_t arm_calibrate() {
       arms_calibrate_state = ARM_CALIBRATE_BASE;
       // assume elbow calibrate was not successful
       ELBOW_MOTOR.state = ARM_MOTOR_CALIBRATE_INIT;
-      printf("Calibrate elbow attempt\n");
     }
     break;
   case ARM_CALIBRATE_BASE:
     if (calibrate_handle_state(&BASE_MOTOR) == ARM_MOTOR_CHECK_POSITION) {
       arms_calibrate_state = ARM_CALIBRATE_ELBOW;
-      printf("Calibrate base done\n");
     }
     break;
   case ARM_CALIBRATE_ELBOW:
     if (calibrate_handle_state(&ELBOW_MOTOR) == ARM_MOTOR_CHECK_POSITION) {
       arms_calibrate_state = ARM_CALIBRATE_READY;
-      printf("Calibrate elbow done\n");
+      log_message(LOG_INFO, "Arm fully calibrated\n\n");
     }
     break;
   case ARM_CALIBRATE_READY:
@@ -118,7 +116,7 @@ void arm_handle_state() {
     // set_motor_speed(CURMOTOR, 30);
     if (arm_calibrate() == ARM_CALIBRATE_READY) {
       arm_state = WAIT_FOR_INPUT;
-      printf("Calibrate done, heading to WAIT_FOR_INPUT\n");
+      printf("Input: ");
     }
     break;
 
@@ -126,9 +124,11 @@ void arm_handle_state() {
     // wait for coordinates and orientation info from vision team
     if (input_ready) {
       input_ready = false;
-      printf("Got input, Base: %hd, Elbow: %hd, Wrist: %hd, heading to PREPARE "
-             "FOR MOVE\n",
-             base_target_angle, elbow_target_angle, wrist_target_angle);
+      log_message(
+          LOG_INFO,
+          "Got input, Base: %hd, Elbow: %hd, Wrist: %hd, heading to PREPARE "
+          "FOR MOVE\n",
+          base_target_angle, elbow_target_angle, wrist_target_angle);
       set_joints_angle(base_target_angle, elbow_target_angle, 0);
       if (base_target_angle == 0 && elbow_target_angle == 0 &&
           wrist_target_angle == 0) {
@@ -146,7 +146,6 @@ void arm_handle_state() {
     if (elbow_angle >= elbow_target_angle / 2) {
       set_joints_angle(base_target_angle, elbow_target_angle,
                        wrist_target_angle);
-      printf("MOVE_TARGET complete, heading to MOVE_HOME\n");
       arm_state = MOVE_TARGET_WRIST;
     }
     break;
@@ -155,7 +154,8 @@ void arm_handle_state() {
     if (arm_movement_complete()) {
       // set_joints_angle(base_target_angle, elbow_target_angle,
       // wrist_target_angle);
-      printf("MOVE_TARGET complete, heading to WAIT_FOR_INPUT\n");
+      log_message(LOG_INFO,
+                  "MOVE_TARGET complete, heading to WAIT_FOR_INPUT\nInput: ");
       arm_state = WAIT_FOR_INPUT;
     }
     break;
@@ -185,7 +185,8 @@ void arm_handle_state() {
   case MOVE_HOME_2:
     if (arm_movement_complete()) {
       arm_state = WAIT_FOR_INPUT;
-      printf("MOVE_HOME complete, heading to WAIT_FOR_INPUT\n");
+      log_message(LOG_INFO,
+                  "MOVE_HOME complete, heading to WAIT_FOR_INPUT\nInput: ");
     }
     break;
 
@@ -304,6 +305,7 @@ void set_joint_angle(arm_motor_t *arm_motor, uint16_t angle) {
 // BASE_MOTOR_PIN 2
 // CLAW_MOTOR_PIN 3
 void arm_init() {
+  WRIST_MOTOR.name = "WRIST";
   WRIST_MOTOR.index = WRIST_MOTOR_PIN;
   WRIST_MOTOR.motor = get_motor(WRIST_MOTOR_PIN);
   WRIST_MOTOR.pos_angle = false;
@@ -320,6 +322,7 @@ void arm_init() {
   WRIST_MOTOR.ki = 0.02;
   WRIST_MOTOR.integral_threshold = 133;
 
+  ELBOW_MOTOR.name = "ELBOW";
   ELBOW_MOTOR.index = ELBOW_MOTOR_PIN;
   ELBOW_MOTOR.motor = get_motor(ELBOW_MOTOR_PIN);
   ELBOW_MOTOR.pos_angle = true;
@@ -336,6 +339,7 @@ void arm_init() {
   ELBOW_MOTOR.ki = 0.1;
   ELBOW_MOTOR.integral_threshold = 100;
 
+  BASE_MOTOR.name = "BASE";
   BASE_MOTOR.index = BASE_MOTOR_PIN;
   BASE_MOTOR.motor = get_motor(BASE_MOTOR_PIN);
   BASE_MOTOR.pos_angle = false;
@@ -351,126 +355,4 @@ void arm_init() {
   BASE_MOTOR.kd = 1;
   BASE_MOTOR.ki = 0.1;
   BASE_MOTOR.integral_threshold = 1000;
-
-  // CLAW_MOTOR.index = 0;
-  // CLAW_MOTOR.motor = get_motor(0); // TODO: Change to correct motor value
-  // CLAW_MOTOR.pos_angle = 0;
-  // CLAW_MOTOR.stopper_pos = 0;
-  // CLAW_MOTOR.is_calibrated = false; // TODO: set me back
-  // CLAW_MOTOR.move_bits = 0xFFFF;    // default to all 1s=>assume arm was
-  // moving CLAW_MOTOR.state = ARM_MOTOR_CALIBRATE_INIT; // TODO: set me back
-
-  // steer_FR.index = BASE;
-  // steer_FR.state = STATE_INITIALIZE;
-
-  // steer_RR.index = ELBOW;
-  // steer_RR.state = STATE_INITIALIZE;
-
-  // steer_FL.index = WRIST;
-  // steer_FL.state = STATE_INITIALIZE;
-
-  // steer_RL.index = CLAW;
-  // steer_RL.state = STATE_INITIALIZE;
-
-  // steering_motor_handle_state(&steer_BASE);
-  // steering_motor_handle_state(&steer_ELBOW);
-  // steering_motor_handle_state(&steer_WRIST);
-  // steering_motor_handle_state(&steer_CLAW);
-
-  // arm_state = ARM_CALIBRATE_WAITING;
 }
-
-// int arm_is_calibrated() {
-//      return arm_state == ARM_CALIBRATE_READY;
-// }
-
-// void arm_init() { //Init function to set things up in isr
-//     int i;
-//     for (i=0; i<4; i++) {
-//         (arm_motor_array[i]).motor = arm_motor_subarray[i];
-//     }
-// }
-
-// // void rover_update_steering(){
-// //     steering_motor_handle_state(&steer_FR);
-// //     steering_motor_handle_state(&steer_RR);
-// //     steering_motor_handle_state(&steer_FL);
-// //     steering_motor_handle_state(&steer_RL);
-// // }
-
-// // void rover_stop(){
-// //     set_motor_speed(FRW, 0);
-// //     set_motor_speed(RRW, 0);
-// //     set_motor_speed(FLW, 0);
-// //     set_motor_speed(RLW, 0);
-// //     set_motor_speed(MRW, 0);
-// //     set_motor_speed(MLW, 0);
-// // }
-
-// // void rover_forward(int speed){
-// //     set_motor_speed(FRW, -speed);
-// //     set_motor_speed(MRW, -speed);
-// //     set_motor_speed(RRW, -speed);
-// //     set_motor_speed(FLW, speed);
-// //     set_motor_speed(MLW, speed);
-// //     set_motor_speed(RLW, speed);
-// // }
-
-// // void rover_reverse(int speed){
-// //     set_motor_speed(FRW, speed);
-// //     set_motor_speed(MRW, speed);
-// //     set_motor_speed(RRW, speed);
-// //     set_motor_speed(FLW, -speed);
-// //     set_motor_speed(MLW, -speed);
-// //     set_motor_speed(RLW, -speed);
-// // }
-
-// // void rover_pointTurn_CW(int speed){
-// //     set_motor_speed(FRW, speed);
-// //     set_motor_speed(MRW, speed);
-// //     set_motor_speed(RRW, speed);
-// //     set_motor_speed(FLW, speed);
-// //     set_motor_speed(MLW, speed);
-// //     set_motor_speed(RLW, speed);
-// // }
-
-// // void rover_pointTurn_CCW(int speed){
-// //     set_motor_speed(FRW, -speed);
-// //     set_motor_speed(MRW, -speed);
-// //     set_motor_speed(RRW, -speed);
-// //     set_motor_speed(FLW, -speed);
-// //     set_motor_speed(MLW, -speed);
-// //     set_motor_speed(RLW, -speed);
-// // }
-
-// // void rover_steer_forward(){
-// //     steer_FR.target = steer_FR.center_pos + 0;
-// //     steer_FL.target = steer_FL.center_pos + 0;
-// //     steer_RR.target = steer_RR.center_pos + 0;
-// //     steer_RL.target = steer_RL.center_pos + 0;
-// // }
-
-// // void rover_steer_right(int angle){
-// //     if(angle >  MAX_STEERING_TICKS) angle =    MAX_STEERING_TICKS;
-// //     if(angle < -MAX_STEERING_TICKS) angle =   -MAX_STEERING_TICKS;
-// //     steer_FR.target = steer_FR.center_pos + angle;
-// //     steer_RR.target = steer_RR.center_pos - angle;
-// //     steer_FL.target = steer_FL.center_pos + angle;
-// //     steer_RL.target = steer_RL.center_pos - angle;
-// // }
-
-// // void rover_steer_left(int angle){
-// //     if(angle >  MAX_STEERING_TICKS) angle =  MAX_STEERING_TICKS;
-// //     if(angle < -MAX_STEERING_TICKS) angle = -MAX_STEERING_TICKS;
-// //     steer_FR.target = steer_FR.center_pos -  angle;
-// //     steer_RR.target = steer_RR.center_pos +  angle;
-// //     steer_FL.target = steer_FL.center_pos -  angle;
-// //     steer_RL.target = steer_RL.center_pos +  angle;
-// // }
-
-// // void rover_steer_point(){
-// //     steer_FR.target = steer_FR.center_pos - MAX_STEERING_TICKS;
-// //     steer_RR.target = steer_RR.center_pos + MAX_STEERING_TICKS;
-// //     steer_FL.target = steer_FL.center_pos + MAX_STEERING_TICKS;
-// //     steer_RL.target = steer_RL.center_pos - MAX_STEERING_TICKS;
-// // }

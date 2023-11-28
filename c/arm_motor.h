@@ -23,6 +23,7 @@ typedef enum {
 } arm_motor_state_t;
 
 typedef struct {
+  char *name;
   uint8_t index;
   long stopper_pos;   // encoder reading of stopper is stored here
   bool pos_angle;     // if true the target encoder value should be < stopper
