@@ -43,8 +43,8 @@ typedef enum {
   PREPARE_TO_MOVE,
   MOVE_TARGET_BE1,
   MOVE_TARGET_WRIST,
-  MOVE_TARGET_BE2,
   CLAW_ACQUIRE,
+  CLAW_CHECK,
   PLACE_TARGET,
   MOVE_HOME,
 } arm_state_t;
@@ -76,11 +76,6 @@ void set_joint_angle(arm_motor_t *arm_motor, uint16_t angle);
 
 bool arm_movement_complete();
 
-bool object_acquired();
-
-int claw_rotate_ready(void);
-
-void set_claw_rotate_ready(bool value);
 // extern arm_motor_t BASE_MOTOR;
 // extern arm_motor_t ELBOW_MOTOR;
 // extern arm_motor_t WRIST_MOTOR;

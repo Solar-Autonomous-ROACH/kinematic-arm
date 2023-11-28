@@ -1,5 +1,4 @@
 #include "arm.h"
-#include "claw.h"
 
 // static struct arm_motor_t arm_motor_array[4];
 
@@ -128,13 +127,14 @@ void arm_handle_state() {
       input_ready = false;
       printf("Got input, heading to PREPARE FOR MOVE\n");
       set_joint_angle(&WRIST_MOTOR, WRIST_PREP_ANGLE);
+      set_claw_angle(&CLAW_MOTOR, claw_target_angle);
       arm_state = PREPARE_TO_MOVE;
     }
     break;
   case PREPARE_TO_MOVE:
     // adjust wrist angle because if we start moving from home position we might
     // hit rover
-    if (arm_motor_handle_state(&WRIST_MOTOR) == ARM_MOTOR_CHECK_POSITION) {
+    if (arm_motor_handle_state(&WRIST_MOTOR) == ARM_MOTOR_CHECK_POSITION && claw_handle_state(&CLAW_MOTOR) == CLOSE) {
       set_joints_angle(base_target_angle, elbow_target_angle, WRIST_PREP_ANGLE);
       arm_state = MOVE_TARGET_BE1;
       printf("Preparing to MOVE_TARGET\n");
@@ -157,13 +157,18 @@ void arm_handle_state() {
       // set_joints_angle(base_target_angle, elbow_target_angle,
       // wrist_target_angle);
       printf("MOVE_TARGET complete, heading to CLAW_ACQUIRE\n");
-      set_claw_angle(claw_target_angle);
-      claw_ready = true;
       arm_state = CLAW_ACQUIRE;
     }
     break;
   case CLAW_ACQUIRE:
     if (claw_handle_state(&CLAW_MOTOR) == ACQUIRED){
+      double current_base_angle = get_motor_angle(&BASE_MOTOR);
+      set_joint_angle(&BASE_MOTOR, current_base_angle - 20);
+    }
+    
+    break;
+  case CLAW_CHECK:
+    if (arm_movement_complete() && true){//REPLACE "true" WITH VISION TEAMS LOCATION CHECK
       set_joints_angle(BASE_PLACE_ANGLE, ELBOW_PLACE_ANGLE, WRIST_PLACE_ANGLE);
       arm_state = PLACE_TARGET;
     }
@@ -173,10 +178,9 @@ void arm_handle_state() {
     // motor angles for placing object will be constant so just move to those
     // angles open the claw?
     
-    if (arm_movement_complete() && claw_handle_state(&CLAW_MOTOR) == IDLE){
+    if (arm_movement_complete() && claw_handle_state(&CLAW_MOTOR) == ROTATE){
         set_joints_angle(BASE_HOME_ANGLE, ELBOW_HOME_ANGLE, WRIST_HOME_ANGLE);
         arm_state = MOVE_HOME;
-      }
     }
 
     break;
@@ -269,11 +273,6 @@ bool arm_movement_complete() {
           wrist_state == ARM_MOTOR_CHECK_POSITION);
 }
 
-bool object_acquired(){
-  //function provided by the vision team
-  return true;
-}
-
 void set_joint_angle(arm_motor_t *arm_motor, uint16_t angle) {
   // printf("in set_joint_angle, angle %d\n", angle);
   long ticks = angle * arm_motor->CPR * arm_motor->gear_ratio / 360;
@@ -290,13 +289,6 @@ void set_joint_angle(arm_motor_t *arm_motor, uint16_t angle) {
   }
 }
 
-int claw_rotate_ready(void){
-  return claw_ready;
-}
-
-void set_claw_rotate_ready(bool value){
-  claw_ready = value;
-}
 
 // CURRENTLY
 // WRIST_MOTOR_PIN 0
@@ -351,7 +343,7 @@ void arm_init() {
   // CLAW_MOTOR.stopper_pos = 0;
   // CLAW_MOTOR.is_calibrated = false; // TODO: set me back
   // CLAW_MOTOR.move_bits = 0xFFFF;    // default to all 1s=>assume arm was
-  CLAW_MOTOR.state = IDLE; // TODO: set me back
+  CLAW_MOTOR.state = ROTATE; // TODO: set me back
 
   // steer_FR.index = BASE;
   // steer_FR.state = STATE_INITIALIZE;
