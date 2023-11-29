@@ -10,6 +10,7 @@
 // #define MAX_SPEED 70           // motor max_speed
 #define MAX_SPEED 65                      // motor max_speed
 #define CALIBRATE_MOVE_HOLD_DURATION 1000 // 500ms
+#define CALIBRATION_STOP_DURATION 16
 
 typedef enum {
   ARM_MOTOR_CALIBRATE_INIT,
@@ -25,10 +26,9 @@ typedef enum {
 typedef struct {
   char *name;
   uint8_t index;
-  long stopper_pos;   // encoder reading of stopper is stored here
-  bool pos_angle;     // if true the target encoder value should be < stopper
-                      // position
-  uint16_t move_bits; // each bit represents if it moved or not the last isr
+  long stopper_pos; // encoder reading of stopper is stored here
+  bool pos_angle;   // if true the target encoder value should be < stopper
+                    // position
   arm_motor_state_t state; // current state of the motor
   motor_t *motor;
   bool is_calibrated;
@@ -48,7 +48,7 @@ typedef struct {
 
 arm_motor_state_t calibrate_handle_state(arm_motor_t *a_motor);
 arm_motor_state_t arm_motor_handle_state(arm_motor_t *motor);
-bool check_stopped(arm_motor_t *s_motor);
+bool check_stopped(arm_motor_t *s_motor, uint16_t duration);
 double get_motor_angle(arm_motor_t *s_motor);
 
 #endif

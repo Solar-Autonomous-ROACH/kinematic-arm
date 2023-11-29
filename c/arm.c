@@ -311,7 +311,6 @@ void arm_init() {
   WRIST_MOTOR.pos_angle = false;
   WRIST_MOTOR.stopper_pos = 0;
   WRIST_MOTOR.is_calibrated = false;
-  WRIST_MOTOR.move_bits = 0xFFFF; // default to all 1s=>assume arm was moving
   WRIST_MOTOR.state = ARM_MOTOR_CALIBRATE_INIT;
   WRIST_MOTOR.gear_ratio = 84.294;
   WRIST_MOTOR.CPR = 12;
@@ -328,7 +327,6 @@ void arm_init() {
   ELBOW_MOTOR.pos_angle = true;
   ELBOW_MOTOR.stopper_pos = 0;
   ELBOW_MOTOR.is_calibrated = false;
-  ELBOW_MOTOR.move_bits = 0xFFFF; // default to all 1s=>assume arm was moving
   ELBOW_MOTOR.state = ARM_MOTOR_CALIBRATE_INIT;
   ELBOW_MOTOR.gear_ratio = 270.349;
   ELBOW_MOTOR.CPR = 12;
@@ -345,7 +343,6 @@ void arm_init() {
   BASE_MOTOR.pos_angle = false;
   BASE_MOTOR.stopper_pos = 0;
   BASE_MOTOR.is_calibrated = false;
-  BASE_MOTOR.move_bits = 0xFFFF; // default to all 1s=>assume arm was moving
   BASE_MOTOR.state = ARM_MOTOR_CALIBRATE_INIT;
   BASE_MOTOR.gear_ratio = 61.659 * 22.5;
   BASE_MOTOR.CPR = 12;

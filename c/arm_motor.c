@@ -95,7 +95,7 @@ arm_motor_state_t calibrate_handle_state(arm_motor_t *a_motor) {
     // initialize some values
     a_motor->motor = get_motor(a_motor->index);
     a_motor->stopper_pos = 0;
-    a_motor->move_bits = 0xFFFF;
+    a_motor->motor->stopped_duration = 0;
     a_motor->is_calibrated = false;
 
     if (!(a_motor->pos_angle)) {
@@ -119,7 +119,8 @@ arm_motor_state_t calibrate_handle_state(arm_motor_t *a_motor) {
     break;
 
   case ARM_MOTOR_CALIBRATE_POS_SPEED:
-    if (check_stopped(a_motor)) { // if motor has stopped
+    if (check_stopped(a_motor,
+                      CALIBRATION_STOP_DURATION)) { // if motor has stopped
       a_motor->stopper_pos = a_motor->motor->abs_pos;
       log_message(LOG_INFO, "Determined %s stop position: %ld\n", a_motor->name,
                   a_motor->stopper_pos);
@@ -137,7 +138,8 @@ arm_motor_state_t calibrate_handle_state(arm_motor_t *a_motor) {
     break;
 
   case ARM_MOTOR_CALIBRATE_NEG_SPEED:
-    if (check_stopped(a_motor)) { // if motor has stopped
+    if (check_stopped(a_motor,
+                      CALIBRATION_STOP_DURATION)) { // if motor has stopped
       a_motor->stopper_pos = a_motor->motor->abs_pos;
       log_message(LOG_INFO, "Determined %s stop position: %ld\n", a_motor->name,
                   a_motor->stopper_pos);
@@ -162,24 +164,8 @@ arm_motor_state_t calibrate_handle_state(arm_motor_t *a_motor) {
  * true if has not moved in the last 16 calls
  * @author Luke Cartier
  * @param a_motor
- * @return int
+ * @return bool
  */
-bool check_stopped(arm_motor_t *s_motor) {
-  int cur_speed;
-  uint16_t movement_bits;
-  cur_speed = get_motor_velocity(s_motor->index);
-  movement_bits = s_motor->move_bits << 1; // preps value to add
-  s_motor->move_bits = movement_bits | (cur_speed && 0x0001); // updates value
-  if (s_motor->move_bits) {
-    // has moved recently
-    return false;
-  } else { // If all 0's, motor hasn't moved for 16 isr cycles
-    s_motor->move_bits = 0xFFFF; // reset back to 0 to prevent fake posiitives
-    return true;
-  }
-}
-
-double get_motor_angle(arm_motor_t *s_motor) {
-  return (get_motor_position(s_motor->index) - s_motor->stopper_pos) * 360 /
-         (s_motor->CPR * s_motor->gear_ratio);
+bool check_stopped(arm_motor_t *s_motor, uint16_t duration) {
+  return s_motor->motor->stopped_duration >= duration;
 }
