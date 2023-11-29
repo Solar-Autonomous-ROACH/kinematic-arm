@@ -2,19 +2,21 @@
 
 claw_state_t claw_handle_state(claw_motor_t * c_motor) {
   switch (c_motor->state) {
-  case ROTATE:
+  case ROTATE_TARGET:
     if (claw_rotation_complete(c_motor)){
         c_motor->state = CLOSE;
     }
     break;
   case CLOSE:
     if (claw_close()){
-        c_motor->state = ACQUIRED;
+      set_claw_angle(c_motor, 0);
+      c_motor->state = ROTATE_ZERO_AND_OPEN;
     }
     break;
-  case ACQUIRED:
-    if (claw_open()){
-      c_motor->state = ROTATE;
+
+  case ROTATE_ZERO_AND_OPEN:
+    if (claw_rotation_complete(c_motor) && claw_open()){
+      c_motor->state = ROTATE_TARGET;
     }
     
     break;

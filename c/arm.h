@@ -22,11 +22,12 @@
 
 #define MAX_STEERING_TICKS 300
 
-#define WRIST_PREP_ANGLE 150
+#define WRIST_PREP_ANGLE 0
 
 #define BASE_HOME_ANGLE 0
-#define ELBOW_HOME_ANGLE 0
-#define WRIST_HOME_ANGLE 190
+#define ELBOW_HOME_ANGLE_1 45
+#define ELBOW_HOME_ANGLE_2 0
+#define WRIST_HOME_ANGLE 0
 
 #define BASE_PLACE_ANGLE 0
 #define ELBOW_PLACE_ANGLE 0
@@ -40,13 +41,13 @@
 typedef enum {
   CALIBRATE,
   WAIT_FOR_INPUT,
-  PREPARE_TO_MOVE,
   MOVE_TARGET_BE1,
   MOVE_TARGET_WRIST,
   CLAW_ACQUIRE,
   CLAW_CHECK,
   PLACE_TARGET,
-  MOVE_HOME,
+  MOVE_HOME_1,
+  MOVE_HOME_2
 } arm_state_t;
 
 typedef enum {
@@ -64,6 +65,7 @@ typedef enum {
 
 void arm_init();
 void arm_handle_state(void);
+void move_home();
 void arm_handle_state_debug();
 void validate_angle_set(int16_t base_angle, int16_t elbow_angle,
                         int16_t wrist_angle, int16_t claw_angle);

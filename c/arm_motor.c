@@ -1,4 +1,5 @@
 #include "arm_motor.h"
+#include "logger.h"
 
 #define buf_size 20
 
@@ -22,40 +23,39 @@ arm_motor_state_t arm_motor_handle_state(arm_motor_t *a_motor) {
   long target_position = a_motor->motor->target_pos;
   long diff = target_position - current_position;
   long abs_diff = diff < 0 ? -diff : diff;
-  long speed_reducer = 0;
   long abs_speed = 0;
-  // long diff = a_motor.
+  long abs_diff_velocity =
+      get_motor_position_n(a_motor->index, 0) -
+      get_motor_position_n(a_motor->index, POSITION_FIFO_SIZE - 1);
+  abs_diff_velocity =
+      abs_diff_velocity >= 0 ? abs_diff_velocity : -abs_diff_velocity;
 
-  // motor_update(a_motor->index);
-  // printf("State: %d\n", a_motor->state);
   switch (a_motor->state) {
-
   case ARM_MOTOR_CHECK_POSITION:
     if (abs_diff > MOTOR_TICKS_ERROR_MARGIN) {
-      printf("Current: %ld, Target: %ld\n", current_position, target_position);
+      log_message(LOG_DEBUG, "%s: Current: %ld, Target: %ld\n", a_motor->name,
+                  current_position, target_position);
       a_motor->state = ARM_MOTOR_MOVING_TO_TARGET;
       a_motor->moving_time_ms = 0;
+      a_motor->integral = 0;
     } else {
       set_motor_speed(a_motor->index, 0);
     }
     break;
-    // #define MIN_SPEED 40
+
   case ARM_MOTOR_MOVING_TO_TARGET:
     a_motor->moving_time_ms++;
     if (abs_diff > MOTOR_TICKS_ERROR_MARGIN) {
-      abs_speed = abs_diff * ARM_MOTOR_KP;
-      if (a_motor->moving_time_ms < ACCELERATION_TIME) {
-        speed_reducer = (MAX_SPEED - a_motor->min_speed) *
-                        (ACCELERATION_TIME - a_motor->moving_time_ms) /
-                        ACCELERATION_TIME;
+      abs_speed = a_motor->kp * abs_diff;
+      if (abs_diff < a_motor->integral_threshold) {
+        a_motor->integral += abs_diff * a_motor->ki;
+        abs_speed += a_motor->integral;
       }
       if (abs_speed > MAX_SPEED) {
         abs_speed = MAX_SPEED;
       }
-      abs_speed = abs_speed - speed_reducer;
-      if (abs_speed < a_motor->min_speed) {
-        abs_speed = a_motor->min_speed;
-      }
+      abs_speed -= a_motor->kd * abs_diff_velocity;
+
       if (diff > 0) {
         set_motor_speed(a_motor->index, abs_speed);
       } else {
@@ -63,14 +63,16 @@ arm_motor_state_t arm_motor_handle_state(arm_motor_t *a_motor) {
       }
     } else {
       a_motor->state = ARM_MOTOR_CHECK_POSITION;
-      printf("Reached position\n");
-      printf("Current: %ld, Target: %ld, speed: %ld\n", current_position,
-             target_position, abs_speed);
+      log_message(LOG_INFO, "%s reached position\n", a_motor->name);
       set_motor_speed(a_motor->index, 0);
     }
-    if (a_motor->moving_time_ms % 500 == 0) {
-      printf("Current: %ld, Target: %ld, speed: %ld, a_motor->min_speed: %d\n",
-             current_position, target_position, abs_speed, a_motor->min_speed);
+    if (a_motor->moving_time_ms % 100 == 0) {
+      log_message(
+          LOG_DEBUG,
+          "Current: %ld, Target: %ld, speed: %ld, abs_diff_velocity: %ld, "
+          "integral: %f\n",
+          current_position, target_position, abs_speed, abs_diff_velocity,
+          a_motor->integral);
     }
     break;
 
@@ -107,7 +109,7 @@ arm_motor_state_t calibrate_handle_state(arm_motor_t *a_motor) {
     }
 
     a_motor->moving_time_ms = 0;
-    printf("Starting arm calibration\n");
+    log_message(LOG_INFO, "Starting %s calibration\n", a_motor->name);
     break;
 
   case ARM_MOTOR_CALIBRATION_HOLD_POS_SPEED:
@@ -119,7 +121,8 @@ arm_motor_state_t calibrate_handle_state(arm_motor_t *a_motor) {
   case ARM_MOTOR_CALIBRATE_POS_SPEED:
     if (check_stopped(a_motor)) { // if motor has stopped
       a_motor->stopper_pos = a_motor->motor->abs_pos;
-      printf("Determined stopper position: %ld\n", a_motor->stopper_pos);
+      log_message(LOG_INFO, "Determined %s stop position: %ld\n", a_motor->name,
+                  a_motor->stopper_pos);
 
       a_motor->state = ARM_MOTOR_CHECK_POSITION;
       a_motor->is_calibrated = true;
@@ -136,7 +139,8 @@ arm_motor_state_t calibrate_handle_state(arm_motor_t *a_motor) {
   case ARM_MOTOR_CALIBRATE_NEG_SPEED:
     if (check_stopped(a_motor)) { // if motor has stopped
       a_motor->stopper_pos = a_motor->motor->abs_pos;
-      printf("Determined stopper position: %ld\n", a_motor->stopper_pos);
+      log_message(LOG_INFO, "Determined %s stop position: %ld\n", a_motor->name,
+                  a_motor->stopper_pos);
 
       a_motor->state = ARM_MOTOR_CHECK_POSITION;
       a_motor->is_calibrated = true;
@@ -170,13 +174,12 @@ bool check_stopped(arm_motor_t *s_motor) {
     // has moved recently
     return false;
   } else { // If all 0's, motor hasn't moved for 16 isr cycles
-    printf("arm stopped\n");
     s_motor->move_bits = 0xFFFF; // reset back to 0 to prevent fake posiitives
     return true;
   }
 }
 
-double get_motor_angle(arm_motor_t *s_motor){
-  return (get_motor_position(s_motor->index) - s_motor->stopper_pos) *
-        360 / (s_motor->CPR * s_motor->gear_ratio);
+double get_motor_angle(arm_motor_t *s_motor) {
+  return (get_motor_position(s_motor->index) - s_motor->stopper_pos) * 360 /
+         (s_motor->CPR * s_motor->gear_ratio);
 }

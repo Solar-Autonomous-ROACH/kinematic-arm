@@ -9,9 +9,9 @@
 #define CLAW_SPEED 30
 
 typedef enum {
-  ROTATE,
+  ROTATE_TARGET,
   CLOSE,
-  ACQUIRED
+  ROTATE_ZERO_AND_OPEN
 } claw_state_t;
 
 typedef struct {
