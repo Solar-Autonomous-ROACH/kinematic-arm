@@ -45,26 +45,36 @@ arm_motor_state_t arm_motor_handle_state(arm_motor_t *a_motor) {
 
   case ARM_MOTOR_MOVING_TO_TARGET:
     a_motor->moving_time_ms++;
-    if (abs_diff > MOTOR_TICKS_ERROR_MARGIN) {
-      abs_speed = a_motor->kp * abs_diff;
-      if (abs_diff < a_motor->integral_threshold) {
-        a_motor->integral += abs_diff * a_motor->ki;
-        abs_speed += a_motor->integral;
-      }
-      if (abs_speed > MAX_SPEED) {
-        abs_speed = MAX_SPEED;
-      }
-      abs_speed -= a_motor->kd * abs_diff_velocity;
-
-      if (diff > 0) {
-        set_motor_speed(a_motor->index, abs_speed);
-      } else {
-        set_motor_speed(a_motor->index, -abs_speed);
-      }
+    /** Before doing anything check if motor stopped moving
+     * start checking after motor has been started for 200ms
+     */
+    if (a_motor->moving_time_ms > 200 && check_stopped(a_motor, 10)) {
+      // motor stopped for 10 ms
+      log_message(LOG_WARNING, "%s collision detected\n", a_motor->name);
+      set_motor_speed(a_motor->index, 0); // stop motor
+      a_motor->state = ARM_MOTOR_ERROR;
     } else {
-      a_motor->state = ARM_MOTOR_CHECK_POSITION;
-      log_message(LOG_INFO, "%s reached position\n", a_motor->name);
-      set_motor_speed(a_motor->index, 0);
+      if (abs_diff > MOTOR_TICKS_ERROR_MARGIN) {
+        abs_speed = a_motor->kp * abs_diff;
+        if (abs_diff < a_motor->integral_threshold) {
+          a_motor->integral += abs_diff * a_motor->ki;
+          abs_speed += a_motor->integral;
+        }
+        if (abs_speed > MAX_SPEED) {
+          abs_speed = MAX_SPEED;
+        }
+        abs_speed -= a_motor->kd * abs_diff_velocity;
+
+        if (diff > 0) {
+          set_motor_speed(a_motor->index, abs_speed);
+        } else {
+          set_motor_speed(a_motor->index, -abs_speed);
+        }
+      } else {
+        a_motor->state = ARM_MOTOR_CHECK_POSITION;
+        log_message(LOG_INFO, "%s reached position\n", a_motor->name);
+        set_motor_speed(a_motor->index, 0);
+      }
     }
     if (a_motor->moving_time_ms % 100 == 0) {
       log_message(
@@ -74,6 +84,10 @@ arm_motor_state_t arm_motor_handle_state(arm_motor_t *a_motor) {
           current_position, target_position, abs_speed, abs_diff_velocity,
           a_motor->integral);
     }
+    break;
+
+  case ARM_MOTOR_ERROR:
+    // don't do anything. main state machine should save us
     break;
 
   default:
@@ -168,4 +182,9 @@ arm_motor_state_t calibrate_handle_state(arm_motor_t *a_motor) {
  */
 bool check_stopped(arm_motor_t *s_motor, uint16_t duration) {
   return s_motor->motor->stopped_duration >= duration;
+}
+
+double get_motor_angle(arm_motor_t *s_motor) {
+  return (get_motor_position(s_motor->index) - s_motor->stopper_pos) * 360 /
+         (s_motor->CPR * s_motor->gear_ratio);
 }

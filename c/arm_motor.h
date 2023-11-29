@@ -21,6 +21,7 @@ typedef enum {
   ARM_MOTOR_CALIBRATE_SUCCESS,
   ARM_MOTOR_CHECK_POSITION,
   ARM_MOTOR_MOVING_TO_TARGET,
+  ARM_MOTOR_ERROR
 } arm_motor_state_t;
 
 typedef struct {
