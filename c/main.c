@@ -14,7 +14,7 @@
 void sigint_handler(int sig) {
   printf("Received SIGINT signal %d\n", sig);
   if (mmio_is_valid()) {
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 14; i++) {
       set_motor_speed(i, 0);
     }
   }

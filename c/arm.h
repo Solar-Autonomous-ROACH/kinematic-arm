@@ -60,11 +60,20 @@ typedef enum {
   ARM_CALIBRATE_READY
 } arms_calibrate_state_t;
 
+typedef enum {
+  ARM_MOTORS_ERROR,
+  ARM_MOTORS_MOVING,
+  ARM_MOTORS_READY
+} arm_motors_status_t;
+
 // extern static struct arm_motor_t arm_motor_array[4];
 // extern static struct motor_t arm_motor_subarray[4];
 
 void arm_init();
 void arm_handle_state(void);
+void stop_arm();
+arm_motors_status_t arm_motors_state_handler(bool base, bool elbow, bool wrist);
+arm_state_t recalibrate();
 void move_home();
 void arm_handle_state_debug();
 void validate_angle_set(int16_t base_angle, int16_t elbow_angle,

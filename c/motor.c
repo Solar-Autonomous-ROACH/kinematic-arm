@@ -41,6 +41,13 @@ int motor_update(uint8_t motor_index) {
   set_motor_position(motor_index, motor->abs_pos);
 
   motor->velocity = motor->abs_pos - last_long;
+  if (motor->velocity == 0) {
+    motor->stopped_duration = motor->stopped_duration == UINT16_MAX
+                                  ? UINT16_MAX
+                                  : motor->stopped_duration + 1;
+  } else {
+    motor->stopped_duration = 0;
+  }
 
   return 0; // Return success code
 }
