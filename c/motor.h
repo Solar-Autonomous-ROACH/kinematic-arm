@@ -28,6 +28,7 @@ typedef struct {
   uint8_t raw_pos;
   long position_fifo[POSITION_FIFO_SIZE];
   uint8_t position_fifo_idx;
+  uint16_t stopped_duration; // time in ms motor has been stopped
 } motor_t;
 
 char get_raw_pos(uint8_t motor_index);

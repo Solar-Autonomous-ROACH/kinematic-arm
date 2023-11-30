@@ -1,9 +1,13 @@
 {
-    "files.associations": {
-        "arm_motor.h": "c",
-        "motor.h": "c",
-        "locale": "c",
-        "string": "c"
-    },
-    "C_Cpp.clang_format_fallbackStyle": "LLVM"
+  "files.associations": {
+    "arm_motor.h": "c",
+    "motor.h": "c",
+    "locale": "c",
+    "string": "c",
+    "vector": "cpp",
+    "stdio.h": "c",
+    "logger.h": "c",
+    "kinematic_engine.h": "c"
+  },
+  "C_Cpp.clang_format_fallbackStyle": "LLVM"
 }
