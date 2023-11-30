@@ -71,6 +71,7 @@ void arm_init();
 void arm_handle_state(void);
 void stop_arm();
 arm_motors_status_t arm_motors_state_handler(bool base, bool elbow, bool wrist);
+arm_state_t recalibrate();
 void move_home();
 void arm_handle_state_debug();
 void validate_angle_set(int16_t base_angle, int16_t elbow_angle,

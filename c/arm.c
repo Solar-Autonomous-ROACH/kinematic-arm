@@ -110,6 +110,8 @@ void validate_angle_set(int16_t base_angle, int16_t elbow_angle,
 }
 
 void arm_handle_state() {
+  arm_motors_status_t status;
+
   switch (arm_state) {
   case CALIBRATE:
     // //Temp stuff for now
@@ -140,21 +142,24 @@ void arm_handle_state() {
     break;
 
   case MOVE_TARGET_BE1:
-    arm_motors_state_handler(true, true, false);
-    // arm_motor_handle_state(&BASE_MOTOR);
-    // arm_motor_handle_state(&ELBOW_MOTOR);
-    double elbow_angle = get_motor_angle(&ELBOW_MOTOR);
-    if (elbow_angle >= elbow_target_angle / 2) {
-      set_joints_angle(base_target_angle, elbow_target_angle,
-                       wrist_target_angle);
-      arm_state = MOVE_TARGET_WRIST;
+    status = arm_motors_state_handler(true, true, false);
+    if (status == ARM_MOTORS_ERROR) {
+      arm_state = recalibrate();
+    } else {
+      double elbow_angle = get_motor_angle(&ELBOW_MOTOR);
+      if (elbow_angle >= elbow_target_angle / 2) {
+        set_joints_angle(base_target_angle, elbow_target_angle,
+                         wrist_target_angle);
+        arm_state = MOVE_TARGET_WRIST;
+      }
     }
     break;
 
   case MOVE_TARGET_WRIST:
-    if (arm_motors_state_handler(true, true, true) == ARM_MOTORS_READY) {
-      // set_joints_angle(base_target_angle, elbow_target_angle,
-      // wrist_target_angle);
+    status = arm_motors_state_handler(true, true, true);
+    if (status == ARM_MOTORS_ERROR) {
+      arm_state = recalibrate();
+    } else if (status == ARM_MOTORS_READY) {
       log_message(LOG_INFO,
                   "MOVE_TARGET complete, heading to WAIT_FOR_INPUT\nInput: ");
       arm_state = WAIT_FOR_INPUT;
@@ -204,6 +209,11 @@ void move_home() {
     set_joints_angle(BASE_HOME_ANGLE, ELBOW_HOME_ANGLE_1, WRIST_HOME_ANGLE);
   }
   arm_state = MOVE_HOME_1;
+}
+
+arm_state_t recalibrate() {
+  arms_calibrate_state = ARM_CALIBRATE_START;
+  return CALIBRATE;
 }
 
 /**
@@ -270,20 +280,6 @@ void arm_handle_state_debug() {
   }
 }
 
-// #define GEAR_RATIO 171.7877
-// #define GEAR_RATIO 172
-// #define CPR 48
-
-bool arm_movement_complete() {
-  arm_motor_state_t base_state = arm_motor_handle_state(&BASE_MOTOR);
-  arm_motor_state_t elbow_state = arm_motor_handle_state(&ELBOW_MOTOR);
-  arm_motor_state_t wrist_state = arm_motor_handle_state(&WRIST_MOTOR);
-
-  return (base_state == ARM_MOTOR_CHECK_POSITION &&
-          elbow_state == ARM_MOTOR_CHECK_POSITION &&
-          wrist_state == ARM_MOTOR_CHECK_POSITION);
-}
-
 /**
  * @brief Stops all the joints of the arm. used for errors.
  */
@@ -296,9 +292,9 @@ void stop_arm() {
 /**
  * @brief call the state handlers of selected motors
  *
- * @param base in
- * @param elbow
- * @param wrist
+ * @param base handle state for base
+ * @param elbow handle state for elbow
+ * @param wrist handle state for wrist
  * @return arm_motor_state_t state of motors with following priority.
  *         ARM_MOTOR_ERROR>ARM_MOTOR_MOVING_TO_TARGET>ARM_MOTOR_CHECK_POSITION
  */
