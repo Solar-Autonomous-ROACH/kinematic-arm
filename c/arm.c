@@ -92,7 +92,7 @@ arms_calibrate_state_t arm_calibrate_debug() {
   }
   return arms_calibrate_state;
 #elif defined DEBUG_CLAW
-    
+
 #endif
   return ARM_CALIBRATE_READY;
 }
@@ -183,9 +183,12 @@ void arm_handle_state() {
     
     break;
   case CLAW_CHECK:
-    if (arm_movement_complete() && true){//REPLACE "true" WITH VISION TEAMS LOCATION CHECK
-      set_joints_angle(BASE_PLACE_ANGLE, ELBOW_PLACE_ANGLE, WRIST_PLACE_ANGLE);
-      arm_state = PLACE_TARGET;
+    status = arm_motors_state_handler(true, false, false);
+    if (status == ARM_MOTORS_ERROR) {
+      arm_state = recalibrate();
+    } else if (status == ARM_MOTORS_READY && true) {//REPLACE "true" WITH VISION TEAMS LOCATION CHECK
+        set_joints_angle(BASE_PLACE_ANGLE, ELBOW_PLACE_ANGLE, WRIST_PLACE_ANGLE);
+        arm_state = PLACE_TARGET;
     }
     
     break;
