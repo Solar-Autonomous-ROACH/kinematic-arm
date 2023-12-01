@@ -50,6 +50,7 @@ int isr(int signum) {
   arm_handle_state_debug();
 #else
   arm_handle_state();
+  // set_motor_speed(3, -50);
 #endif
 
   millis++;

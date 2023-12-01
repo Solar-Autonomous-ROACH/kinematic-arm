@@ -9,22 +9,27 @@
 #define CLAW_SPEED 30
 
 typedef enum {
-  ROTATE_TARGET,
-  CLOSE,
-  ROTATE_ZERO_AND_OPEN
+  CLAW_CHECK_POSITION,
+  CLAW_ROTATING,
+  CLAW_OPENING_CLOSING
 } claw_state_t;
 
 typedef struct {
     claw_state_t state;
     uint8_t index;
     motor_t *motor;
-
+    bool is_open;
+    double gear_ratio;
+    uint16_t CPR;
+    long current_angle_ticks;
+    long target_angle_ticks;
+    bool target_is_open;
 } claw_motor_t;
 
 claw_state_t claw_handle_state(claw_motor_t * c_motor);
 void set_claw_angle(claw_motor_t * c_motor, uint16_t angle);
-bool claw_open(void);
-bool claw_close(void);
+void open_claw(claw_motor_t *c_motor);
+void close_claw(claw_motor_t *c_motor);
 bool claw_rotation_complete(claw_motor_t * c_motor);
 
 

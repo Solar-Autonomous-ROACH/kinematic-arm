@@ -25,13 +25,12 @@
 #define WRIST_PREP_ANGLE 0
 
 #define BASE_HOME_ANGLE 0
-#define ELBOW_HOME_ANGLE_1 45
-#define ELBOW_HOME_ANGLE_2 0
+#define ELBOW_HOME_ANGLE 0
 #define WRIST_HOME_ANGLE 0
 
-#define BASE_PLACE_ANGLE 0
-#define ELBOW_PLACE_ANGLE 0
-#define WRIST_PLACE_ANGLE 0
+#define BASE_PLACE_ANGLE 40
+#define ELBOW_PLACE_ANGLE 45
+#define WRIST_PLACE_ANGLE 200
 
 /** only one of these should be true at a time */
 // #define DEBUG_WRIST
@@ -45,9 +44,9 @@ typedef enum {
   MOVE_TARGET_WRIST,
   CLAW_ACQUIRE,
   CLAW_CHECK,
-  PLACE_TARGET,
-  MOVE_HOME_1,
-  MOVE_HOME_2
+  MOVE_PLACE_1,
+  MOVE_PLACE_2,
+  MOVE_HOME
 } arm_state_t;
 
 typedef enum {
