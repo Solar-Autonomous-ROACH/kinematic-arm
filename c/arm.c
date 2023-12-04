@@ -7,7 +7,6 @@
 arm_motor_t BASE_MOTOR;
 arm_motor_t ELBOW_MOTOR;
 arm_motor_t WRIST_MOTOR;
-claw_motor_t CLAW_MOTOR;
 
 bool input_ready = false;
 arm_state_t arm_state = CALIBRATE;
@@ -143,8 +142,8 @@ void arm_handle_state() {
           "FOR MOVE\n",
           base_target_angle, elbow_target_angle, wrist_target_angle);
       set_joints_angle(base_target_angle, elbow_target_angle, 0);
-      // set_claw_angle(&CLAW_MOTOR, claw_target_angle);
-      open_claw(&CLAW_MOTOR);
+      // set_claw_angle(claw_target_angle);
+      open_claw();
       if (base_target_angle == 0 && elbow_target_angle == 0 &&
           wrist_target_angle == 0) {
         move_home();
@@ -161,7 +160,7 @@ void arm_handle_state() {
     } else {
       double elbow_angle = get_motor_angle(&ELBOW_MOTOR);
       if (elbow_angle >= elbow_target_angle / 2 &&
-          claw_handle_state(&CLAW_MOTOR) == CLAW_CHECK_POSITION) {
+          claw_handle_state() == CLAW_CHECK_POSITION) {
         set_joints_angle(base_target_angle, elbow_target_angle,
                          wrist_target_angle);
         arm_state = MOVE_TARGET_WRIST;
@@ -177,12 +176,12 @@ void arm_handle_state() {
       log_message(LOG_INFO,
                   "MOVE_TARGET complete, heading to CLAW_ACQUIRE\nInput: ");
       arm_state = CLAW_ACQUIRE;
-      close_claw(&CLAW_MOTOR);
+      close_claw();
     }
     break;
 
   case CLAW_ACQUIRE:
-    if (claw_handle_state(&CLAW_MOTOR) == CLAW_CHECK_POSITION) {
+    if (claw_handle_state() == CLAW_CHECK_POSITION) {
       double current_base_angle = get_motor_angle(&BASE_MOTOR);
       set_joint_angle(&BASE_MOTOR, -current_base_angle - 20);
       log_message(LOG_INFO,
@@ -207,8 +206,8 @@ void arm_handle_state() {
       set_joints_angle(BASE_PLACE_ANGLE, ELBOW_PLACE_ANGLE, 0);
       arm_state = MOVE_PLACE_1;
       log_message(LOG_INFO, "CLAW_CHECK complete, heading to MOVE_PLACE_1\n");
-      // set_claw_angle(&CLAW_MOTOR, 0);
-      open_claw(&CLAW_MOTOR);
+      // set_claw_angle(0);
+      open_claw();
     }
 
     break;
@@ -224,8 +223,14 @@ void arm_handle_state() {
     break;
 
   case MOVE_PLACE_2:
-    if (arm_motors_state_handler(false, false, true) == ARM_MOTORS_READY &&
-        claw_handle_state(&CLAW_MOTOR) == CLAW_CHECK_POSITION) {
+    if (arm_motors_state_handler(false, false, true) == ARM_MOTORS_READY) {
+      arm_state = CLAW_DROPOFF;
+    }
+    break;
+
+  case CLAW_DROPOFF:
+    if (time_in_state > 500 && claw_handle_state() == CLAW_CHECK_POSITION &&
+        time_in_state > 1000) {
       set_joints_angle(BASE_HOME_ANGLE, ELBOW_HOME_ANGLE, WRIST_HOME_ANGLE);
       arm_state = MOVE_HOME;
     }
@@ -282,7 +287,7 @@ void move_home() {
     set_joints_angle(BASE_HOME_ANGLE, ELBOW_HOME_ANGLE, WRIST_HOME_ANGLE);
   }
   // set_claw_angle(&CLAW_MOTOR, 0);
-  CLAW_MOTOR.state = CLAW_CHECK_POSITION;
+  open_claw();
   arm_state = MOVE_HOME;
 }
 
@@ -471,43 +476,10 @@ void arm_init() {
   BASE_MOTOR.CPR = 12;
   BASE_MOTOR.calibration_speed = 40;
   BASE_MOTOR.min_speed = 30;
-
-  CLAW_MOTOR.index = 3;
-  CLAW_MOTOR.motor =
-      get_motor(CLAW_MOTOR_PIN); // TODO: Change to correct motor value
-  // CLAW_MOTOR.pos_angle = 0;
-  // CLAW_MOTOR.stopper_pos = 0;
-  // CLAW_MOTOR.is_calibrated = false; // TODO: set me back
-  // CLAW_MOTOR.move_bits = 0xFFFF;    // default to all 1s=>assume arm was
-  CLAW_MOTOR.state = CLAW_CHECK_POSITION; // TODO: set me back
-  CLAW_MOTOR.CPR = 12;
-  CLAW_MOTOR.gear_ratio = 19.225;
-  // CLAW_MOTOR.gear_ratio = 20;
-  CLAW_MOTOR.current_angle_ticks = 0; // assume claw is at 0 degrees and closed
-  CLAW_MOTOR.is_open = true;
-  CLAW_MOTOR.target_angle_ticks = 0;
-  CLAW_MOTOR.target_is_open = true;
-
-  // steer_FR.index = BASE;
-  // steer_FR.state = STATE_INITIALIZE;
-
-  // steer_RR.index = ELBOW;
-  // steer_RR.state = STATE_INITIALIZE;
-
-  // steer_FL.index = WRIST;
-  // steer_FL.state = STATE_INITIALIZE;
-
-  // steer_RL.index = CLAW;
-  // steer_RL.state = STATE_INITIALIZE;
-
-  // steering_motor_handle_state(&steer_BASE);
-  // steering_motor_handle_state(&steer_ELBOW);
-  // steering_motor_handle_state(&steer_WRIST);
-  // steering_motor_handle_state(&steer_CLAW);
-
-  // arm_state = ARM_CALIBRATE_WAITING;
   BASE_MOTOR.kp = 1;
   BASE_MOTOR.kd = 1;
   BASE_MOTOR.ki = 0.1;
   BASE_MOTOR.integral_threshold = 1000;
+
+  claw_init();
 }
