@@ -48,13 +48,14 @@ arm_motor_state_t arm_motor_handle_state(arm_motor_t *a_motor) {
     /** Before doing anything check if motor stopped moving
      * start checking after motor has been started for 200ms
      */
-    if (a_motor->moving_time_ms > 200 && check_stopped(a_motor, 10)) {
-      // motor stopped for 10 ms
-      log_message(LOG_WARNING, "%s collision detected\n", a_motor->name);
-      set_motor_speed(a_motor->index, 0); // stop motor
-      a_motor->state = ARM_MOTOR_ERROR;
-    } else {
-      if (abs_diff > MOTOR_TICKS_ERROR_MARGIN) {
+    if (abs_diff > MOTOR_TICKS_ERROR_MARGIN) {
+      if (a_motor->moving_time_ms > MOTOR_STALL_START_CHECKING_TIME_MS &&
+          check_stopped(a_motor, MOTOR_STALL_DURATION)) {
+        // motor stopped for 10 ms
+        log_message(LOG_WARNING, "%s collision detected\n", a_motor->name);
+        set_motor_speed(a_motor->index, 0); // stop motor
+        a_motor->state = ARM_MOTOR_ERROR;
+      } else {
         abs_speed = a_motor->kp * abs_diff;
         if (abs_diff < a_motor->integral_threshold) {
           a_motor->integral += abs_diff * a_motor->ki;
@@ -70,11 +71,11 @@ arm_motor_state_t arm_motor_handle_state(arm_motor_t *a_motor) {
         } else {
           set_motor_speed(a_motor->index, -abs_speed);
         }
-      } else {
-        a_motor->state = ARM_MOTOR_CHECK_POSITION;
-        log_message(LOG_INFO, "%s reached position\n", a_motor->name);
-        set_motor_speed(a_motor->index, 0);
       }
+    } else {
+      a_motor->state = ARM_MOTOR_CHECK_POSITION;
+      log_message(LOG_INFO_2, "%s reached position\n", a_motor->name);
+      set_motor_speed(a_motor->index, 0);
     }
     if (a_motor->moving_time_ms % 100 == 0) {
       log_message(

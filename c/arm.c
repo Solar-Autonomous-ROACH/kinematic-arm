@@ -104,7 +104,7 @@ void validate_angle_set(int16_t base_angle, int16_t elbow_angle,
   // add more tests in future
   if (base_angle > 10) {
     // base_angle correction
-    base_angle += 5;
+    base_angle += 7;
   }
   if (base_angle < 360 && elbow_angle < 360 && wrist_angle < 360) {
     input_ready = true;
@@ -173,8 +173,7 @@ void arm_handle_state() {
     if (status == ARM_MOTORS_ERROR) {
       arm_state = recalibrate();
     } else if (status == ARM_MOTORS_READY) {
-      log_message(LOG_INFO,
-                  "MOVE_TARGET complete, heading to CLAW_ACQUIRE\nInput: ");
+      log_message(LOG_INFO, "MOVE_TARGET complete, heading to CLAW_ACQUIRE\n");
       arm_state = CLAW_ACQUIRE;
       close_claw();
     }
