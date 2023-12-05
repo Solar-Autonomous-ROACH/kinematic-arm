@@ -13,11 +13,13 @@
 
 #define PI 3.1416
 #define RAD_TO_DEG (180.0 / PI)
-#define WRIST_CONST (280.0 / 180.0 * PI - 3 * PI / 2)
 /*This is the 270 deg that is used to finish the triangle
   and the compensator for where the wrist starts measuring from*/
-#define SHOULDER_CONST 0.0
+#define WRIST_CONST (280.0 / 180.0 * PI - 3 * PI / 2)
 /*This is for any tilts in the robot body itself*/
+#define SHOULDER_CONST (0.0 / 180.0 * PI)
+
+
 #define SMALL_DOUBLE 0.000001
 
 double law_of_cosines(double a, double b, double c);
