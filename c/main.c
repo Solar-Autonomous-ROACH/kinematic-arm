@@ -52,7 +52,8 @@ int main() {
       break;
 
     case 'C':
-      if (scanf("%hd %hd %hd\n", &input1, &input2, &input3) > 0) {
+      if (scanf("%hd %hd\n", &input1, &input2) > 0) {
+        input3 = 0;
         kinematic_engine(input1, input2, input3, &calc_base_angle,
                          &calc_elbow_angle, &calc_wrist_angle, &turn_angle);
         // claw_angle = input4;

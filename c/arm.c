@@ -104,7 +104,7 @@ void validate_angle_set(int16_t base_angle, int16_t elbow_angle,
   // add more tests in future
   if (base_angle > 10) {
     // base_angle correction
-    base_angle += 7;
+    base_angle += 12;
   }
   if (base_angle < 360 && elbow_angle < 360 && wrist_angle < 360) {
     input_ready = true;
