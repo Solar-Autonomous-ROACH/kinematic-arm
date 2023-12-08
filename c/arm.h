@@ -46,6 +46,7 @@ typedef enum {
   CLAW_CHECK,
   MOVE_PLACE_1,
   MOVE_PLACE_2,
+  CLAW_DROPOFF,
   MOVE_HOME
 } arm_state_t;
 

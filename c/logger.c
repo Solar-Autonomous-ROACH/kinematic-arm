@@ -15,6 +15,9 @@ int log_message(LogLevel level, char *restrict format, ...) {
   case LOG_DEBUG:
     level_str = "DEBUG";
     break;
+  case LOG_INFO_2:
+    level_str = "INFO_2";
+    break;
   case LOG_INFO:
     level_str = "INFO";
     break;

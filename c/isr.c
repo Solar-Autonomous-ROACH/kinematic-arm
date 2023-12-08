@@ -46,11 +46,11 @@ int isr(int signum) {
   for (int i = 0; i < 14; i++) {
     motor_update(i);
   }
-#if defined(DEBUG_WRIST) || defined(DEBUG_ELBOW) || defined(DEBUG_BASE) || defined(DEBUG_CLAW)
+#if defined(DEBUG_WRIST) || defined(DEBUG_ELBOW) || defined(DEBUG_BASE) ||     \
+    defined(DEBUG_CLAW)
   arm_handle_state_debug();
 #else
   arm_handle_state();
-  // set_motor_speed(3, -50);
 #endif
 
   millis++;
