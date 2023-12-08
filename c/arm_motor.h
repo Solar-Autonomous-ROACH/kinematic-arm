@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#define MOTOR_TICKS_ERROR_MARGIN 5
+#define MOTOR_TICKS_ERROR_MARGIN 3
 #define MAX_SPEED 65 // motor max_speed
 // time (ms) to hold speed before checking for stop
 #define CALIBRATE_MOVE_HOLD_DURATION 1000
@@ -12,9 +12,9 @@
 #define CALIBRATION_STOP_DURATION 16
 
 // time (ms) to wait after motor starts moving before checking for stalls
-#define MOTOR_STALL_START_CHECKING_TIME_MS 200
+#define MOTOR_STALL_START_CHECKING_TIME_MS 500
 // time (ms) motor has to be stopped to determine a stall
-#define MOTOR_STALL_DURATION 10
+#define MOTOR_STALL_DURATION 100
 
 typedef enum {
   ARM_MOTOR_CALIBRATE_INIT,

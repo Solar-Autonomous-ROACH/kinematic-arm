@@ -15,10 +15,10 @@ bool kinematic_engine(float x_pos, float y_pos, float z_pos,
   double magnitude, theta_1, theta_2, shoulder_rad, elbow_rad;
   clock_t start_time, end_time;
 
-  start_time = clock();
+  start_time = clock(); //For timing the whole thing
 
   if (!((0 - SMALL_DOUBLE) <= z_pos && z_pos <= SMALL_DOUBLE)) {
-    // If Z is something other than 0
+    // If Z is something other than 0, get angle and new x distance
     *turn_angle = to_deg(atan(z_pos / x_pos));
     x_pos = sqrt(x_pos * x_pos + z_pos * z_pos);
   } else {
@@ -26,7 +26,7 @@ bool kinematic_engine(float x_pos, float y_pos, float z_pos,
     *turn_angle = 0;
   }
 
-  y_pos += W_C_LENGTH;
+  y_pos += W_C_LENGTH; //accounting for claw position, as should be same
 
   // printf("YPos: %f", y_pos);
 
@@ -36,14 +36,17 @@ bool kinematic_engine(float x_pos, float y_pos, float z_pos,
     return false;
   }
 
+  // Get the angles from the SEW triangle
   theta_1 = law_of_cosines(E_W_LENGTH, magnitude, S_E_LENGTH);
   theta_2 = law_of_cosines(S_E_LENGTH, magnitude, E_W_LENGTH);
   // printf("Thetas: %d, %d", to_deg(theta_1), to_deg(theta_2));
 
+  //add angles of two triangles together
   shoulder_rad = theta_1 + atan(y_pos / x_pos);
   elbow_rad = PI - theta_1 - theta_2;
 
-  *shoulder_angle = to_deg(PI - shoulder_rad);
+  //get the angles in respect to the servo directions
+  *shoulder_angle = to_deg(PI - shoulder_rad + SHOULDER_CONST);
   *elbow_angle = to_deg(elbow_rad);
   *wrist_angle = to_deg(WRIST_CONST + shoulder_rad + elbow_rad);
 

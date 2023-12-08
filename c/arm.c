@@ -13,6 +13,8 @@ arm_state_t arm_state = CALIBRATE;
 int16_t base_target_angle = 0;
 int16_t elbow_target_angle = 0;
 int16_t wrist_target_angle = 0;
+int16_t claw_target_angle = 0;
+int claw_ready = false;
 static arms_calibrate_state_t arms_calibrate_state = ARM_CALIBRATE_START;
 
 /**
@@ -60,10 +62,11 @@ arms_calibrate_state_t arm_calibrate() {
   return arms_calibrate_state;
 }
 
-/** only one of these should be true at a time */
+/** none or only one of these should be true at a time */
 // #define DEBUG_WRIST
 // #define DEBUG_ELBOW
 // #define DEBUG_BASE
+// #define DEBUG_CLAW
 /**
  * @brief State machine which goes through the motors and calibrates them
  * @return arms_calibrate_state_t return the state of arm
@@ -87,6 +90,8 @@ arms_calibrate_state_t arm_calibrate_debug() {
     arms_calibrate_state = ARM_CALIBRATE_READY;
   }
   return arms_calibrate_state;
+#elif defined DEBUG_CLAW
+
 #endif
   return ARM_CALIBRATE_READY;
 }
@@ -94,23 +99,28 @@ arms_calibrate_state_t arm_calibrate_debug() {
 // validate the set of angles
 // eventually move this to be with the kinematic engine
 void validate_angle_set(int16_t base_angle, int16_t elbow_angle,
-                        int16_t wrist_angle) {
+                        int16_t wrist_angle, int16_t claw_angle) {
   // if ((base_angle >= 0 && elbow_angle >= 0 && wrist_angle >= 0) &&
   // add more tests in future
   if (base_angle > 10) {
     // base_angle correction
-    base_angle += 5;
+    base_angle += 12;
   }
   if (base_angle < 360 && elbow_angle < 360 && wrist_angle < 360) {
     input_ready = true;
     base_target_angle = base_angle;
     elbow_target_angle = elbow_angle;
     wrist_target_angle = wrist_angle;
+    claw_target_angle = claw_angle % 360;
   }
 }
 
 void arm_handle_state() {
+  static unsigned long time_in_state = 0; // ms
   arm_motors_status_t status;
+  arm_state_t prev_state = arm_state;
+
+  time_in_state++;
 
   switch (arm_state) {
   case CALIBRATE:
@@ -132,6 +142,8 @@ void arm_handle_state() {
           "FOR MOVE\n",
           base_target_angle, elbow_target_angle, wrist_target_angle);
       set_joints_angle(base_target_angle, elbow_target_angle, 0);
+      // set_claw_angle(claw_target_angle);
+      open_claw();
       if (base_target_angle == 0 && elbow_target_angle == 0 &&
           wrist_target_angle == 0) {
         move_home();
@@ -147,7 +159,8 @@ void arm_handle_state() {
       arm_state = recalibrate();
     } else {
       double elbow_angle = get_motor_angle(&ELBOW_MOTOR);
-      if (elbow_angle >= elbow_target_angle / 2) {
+      if (elbow_angle >= elbow_target_angle / 2 &&
+          claw_handle_state() == CLAW_CHECK_POSITION) {
         set_joints_angle(base_target_angle, elbow_target_angle,
                          wrist_target_angle);
         arm_state = MOVE_TARGET_WRIST;
@@ -160,55 +173,121 @@ void arm_handle_state() {
     if (status == ARM_MOTORS_ERROR) {
       arm_state = recalibrate();
     } else if (status == ARM_MOTORS_READY) {
-      log_message(LOG_INFO,
-                  "MOVE_TARGET complete, heading to WAIT_FOR_INPUT\nInput: ");
-      arm_state = WAIT_FOR_INPUT;
+      log_message(LOG_INFO, "MOVE_TARGET complete, heading to CLAW_ACQUIRE\n");
+      arm_state = CLAW_ACQUIRE;
+      close_claw();
     }
     break;
 
   case CLAW_ACQUIRE:
-    // grab the object
-    arm_state = PLACE_TARGET;
-    break;
+    if (claw_handle_state() == CLAW_CHECK_POSITION) {
+      double current_base_angle = get_motor_angle(&BASE_MOTOR);
+      set_joint_angle(&BASE_MOTOR, -current_base_angle - 20);
+      log_message(LOG_INFO,
+                  "CLAW_ACQUIRE complete, heading to CLAW_CHECK and raising "
+                  "base by 20 degrees, current base angle: %f\n",
+                  current_base_angle);
+      arm_state = CLAW_CHECK;
+    }
 
-  case PLACE_TARGET:
-    // motor angles for placing object will be constant so just move to those
-    // angles open the claw?
-    set_joints_angle(BASE_PLACE_ANGLE, ELBOW_PLACE_ANGLE, WRIST_PLACE_ANGLE);
-    if (arm_motors_state_handler(true, true, true) == ARM_MOTORS_READY) {
-      arm_state = MOVE_HOME_1;
+    break;
+  case CLAW_CHECK:
+    if (time_in_state < 1000) {
+      return;
+    }
+    status = arm_motors_state_handler(true, false, false);
+    if (status == ARM_MOTORS_ERROR) {
+      arm_state = recalibrate();
+    } else if (status == ARM_MOTORS_READY &&
+               true) { // REPLACE "true" WITH VISION TEAMS LOCATION CHECK
+      // set_joints_angle(BASE_PLACE_ANGLE, ELBOW_PLACE_ANGLE,
+      // WRIST_PLACE_ANGLE);
+      set_joints_angle(BASE_PLACE_ANGLE, ELBOW_PLACE_ANGLE, 0);
+      arm_state = MOVE_PLACE_1;
+      log_message(LOG_INFO, "CLAW_CHECK complete, heading to MOVE_PLACE_1\n");
+      // set_claw_angle(0);
+      open_claw();
     }
 
     break;
 
-  case MOVE_HOME_1:
+  case MOVE_PLACE_1:
+    if (time_in_state < 1000) {
+      return;
+    }
     if (arm_motors_state_handler(true, true, true) == ARM_MOTORS_READY) {
-      set_joint_angle(&ELBOW_MOTOR, ELBOW_HOME_ANGLE_2);
-      arm_state = MOVE_HOME_2;
+      set_joints_angle(BASE_PLACE_ANGLE, ELBOW_PLACE_ANGLE, WRIST_PLACE_ANGLE);
+      arm_state = MOVE_PLACE_2;
     }
     break;
 
-  case MOVE_HOME_2:
+  case MOVE_PLACE_2:
+    if (arm_motors_state_handler(false, false, true) == ARM_MOTORS_READY) {
+      arm_state = CLAW_DROPOFF;
+    }
+    break;
+
+  case CLAW_DROPOFF:
+    if (time_in_state > 500 && claw_handle_state() == CLAW_CHECK_POSITION &&
+        time_in_state > 1000) {
+      set_joints_angle(BASE_HOME_ANGLE, ELBOW_HOME_ANGLE, WRIST_HOME_ANGLE);
+      arm_state = MOVE_HOME;
+    }
+    break;
+
+  case MOVE_HOME:
     if (arm_motors_state_handler(true, true, true) == ARM_MOTORS_READY) {
       arm_state = WAIT_FOR_INPUT;
       log_message(LOG_INFO,
                   "MOVE_HOME complete, heading to WAIT_FOR_INPUT\nInput: ");
     }
     break;
+    // case PLACE_TARGET:
+    //   // motor angles for placing object will be constant so just move to
+    //   those
+    //   // angles open the claw?
+    //   if (arm_motors_state_handler(true, true, true) == ARM_MOTORS_READY &&
+    //   claw_handle_state(&CLAW_MOTOR) == ROTATE_TARGET) {
+    //     arm_state = MOVE_HOME_1;
+    //   }
+
+    //   break;
+
+    // case MOVE_HOME_1:
+    //   if (arm_motors_state_handler(true, true, true) == ARM_MOTORS_READY) {
+    //     set_joint_angle(&ELBOW_MOTOR, ELBOW_HOME_ANGLE_2);
+    //     arm_state = MOVE_HOME_2;
+    //   }
+    //   break;
+
+    // case MOVE_HOME_2:
+    //   if (arm_motors_state_handler(true, true, true) == ARM_MOTORS_READY) {
+    //     arm_state = WAIT_FOR_INPUT;
+    //     log_message(LOG_INFO,
+    //                 "MOVE_HOME complete, heading to WAIT_FOR_INPUT\nInput:
+    //                 ");
+    //   }
+    //   break;
 
   default:
     break;
+  }
+
+  if (prev_state != arm_state) {
+    time_in_state = 0;
   }
 }
 
 void move_home() {
   double elbow_angle = get_motor_angle(&ELBOW_MOTOR);
-  if (elbow_angle < ELBOW_HOME_ANGLE_1) {
+  if (elbow_angle < ELBOW_HOME_ANGLE) {
     set_joints_angle(BASE_HOME_ANGLE, elbow_angle, WRIST_HOME_ANGLE);
   } else {
-    set_joints_angle(BASE_HOME_ANGLE, ELBOW_HOME_ANGLE_1, WRIST_HOME_ANGLE);
+    set_joints_angle(BASE_HOME_ANGLE, ELBOW_HOME_ANGLE, WRIST_HOME_ANGLE);
   }
-  arm_state = MOVE_HOME_1;
+  // set_claw_angle(&CLAW_MOTOR, 0);
+  open_claw();
+  arm_state = MOVE_HOME;
 }
 
 arm_state_t recalibrate() {
@@ -400,4 +479,6 @@ void arm_init() {
   BASE_MOTOR.kd = 1;
   BASE_MOTOR.ki = 0.1;
   BASE_MOTOR.integral_threshold = 1000;
+
+  claw_init();
 }

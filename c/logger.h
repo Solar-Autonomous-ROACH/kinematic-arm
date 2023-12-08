@@ -4,7 +4,13 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-typedef enum { LOG_DEBUG, LOG_INFO, LOG_WARNING, LOG_ERROR } LogLevel;
+typedef enum {
+  LOG_DEBUG,
+  LOG_INFO_2,
+  LOG_INFO,
+  LOG_WARNING,
+  LOG_ERROR
+} LogLevel;
 void set_log_level(LogLevel level);
 int log_message(LogLevel level, char *restrict format, ...);
 

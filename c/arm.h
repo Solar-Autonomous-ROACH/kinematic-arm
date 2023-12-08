@@ -2,6 +2,7 @@
 #define ARM_H
 
 #include "arm_motor.h"
+#include "claw.h"
 #include "steering_motor.h"
 #include <stdint.h>
 
@@ -24,13 +25,12 @@
 #define WRIST_PREP_ANGLE 0
 
 #define BASE_HOME_ANGLE 0
-#define ELBOW_HOME_ANGLE_1 45
-#define ELBOW_HOME_ANGLE_2 0
+#define ELBOW_HOME_ANGLE 0
 #define WRIST_HOME_ANGLE 0
 
-#define BASE_PLACE_ANGLE 0
-#define ELBOW_PLACE_ANGLE 0
-#define WRIST_PLACE_ANGLE 0
+#define BASE_PLACE_ANGLE 40
+#define ELBOW_PLACE_ANGLE 45
+#define WRIST_PLACE_ANGLE 200
 
 /** only one of these should be true at a time */
 // #define DEBUG_WRIST
@@ -43,9 +43,11 @@ typedef enum {
   MOVE_TARGET_BE1,
   MOVE_TARGET_WRIST,
   CLAW_ACQUIRE,
-  PLACE_TARGET,
-  MOVE_HOME_1,
-  MOVE_HOME_2
+  CLAW_CHECK,
+  MOVE_PLACE_1,
+  MOVE_PLACE_2,
+  CLAW_DROPOFF,
+  MOVE_HOME
 } arm_state_t;
 
 typedef enum {
@@ -75,7 +77,7 @@ arm_state_t recalibrate();
 void move_home();
 void arm_handle_state_debug();
 void validate_angle_set(int16_t base_angle, int16_t elbow_angle,
-                        int16_t wrist_angle);
+                        int16_t wrist_angle, int16_t claw_angle);
 
 arms_calibrate_state_t arm_calibrate();
 
