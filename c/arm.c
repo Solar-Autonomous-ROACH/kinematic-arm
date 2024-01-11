@@ -15,6 +15,7 @@ int16_t elbow_target_angle = 0;
 int16_t wrist_target_angle = 0;
 int16_t claw_target_angle = 0;
 int claw_ready = false;
+vision_info_t * vision_info;
 static arms_calibrate_state_t arms_calibrate_state = ARM_CALIBRATE_START;
 
 /**
@@ -98,7 +99,7 @@ arms_calibrate_state_t arm_calibrate_debug() {
 
 // validate the set of angles
 // eventually move this to be with the kinematic engine
-void validate_angle_set(int16_t base_angle, int16_t elbow_angle,
+bool validate_angle_set(int16_t base_angle, int16_t elbow_angle,
                         int16_t wrist_angle, int16_t claw_angle) {
   // if ((base_angle >= 0 && elbow_angle >= 0 && wrist_angle >= 0) &&
   // add more tests in future
@@ -112,7 +113,9 @@ void validate_angle_set(int16_t base_angle, int16_t elbow_angle,
     elbow_target_angle = elbow_angle;
     wrist_target_angle = wrist_angle;
     claw_target_angle = claw_angle % 360;
+    return true;
   }
+  return false;
 }
 
 void arm_handle_state() {
@@ -127,32 +130,51 @@ void arm_handle_state() {
     // //Temp stuff for now
     // set_motor_speed(CURMOTOR, 30);
     if (arm_calibrate() == ARM_CALIBRATE_READY) {
-      arm_state = WAIT_FOR_INPUT;
+      arm_state = CAPTURE_VISION_INFO;
       printf("Input: ");
     }
+    break;
+  
+  case CAPTURE_VISION_INFO:
+    //send signal to vision python program
+    vision_request_coordinates();
+    arm_state = WAIT_FOR_INPUT;
     break;
 
   case WAIT_FOR_INPUT:
     // wait for coordinates and orientation info from vision team
-    if (input_ready) {
-      input_ready = false;
-      log_message(
+    if (vision_get_status() == VISION_SUCCESS) {
+      vision_info = vision_get_coordinates();
+      kinematic_engine(vision_info.x, vision_info.y, vision_info.z, &base_target_angle, &elbow_target_angle, &wrist_target_angle, &claw_target_angle);
+      if (!validate_angle_set(base_target_angle, elbow_target_angle, wrist_target_angle, claw_target_angle)){
+        //USE ROVER API TO MOVE 
+        arm_state = ROVER_MOVING;
+      } else {
+        log_message(
           LOG_INFO,
           "Got input, Base: %hd, Elbow: %hd, Wrist: %hd, heading to PREPARE "
           "FOR MOVE\n",
           base_target_angle, elbow_target_angle, wrist_target_angle);
-      set_joints_angle(base_target_angle, elbow_target_angle, 0);
-      // set_claw_angle(claw_target_angle);
-      open_claw();
-      if (base_target_angle == 0 && elbow_target_angle == 0 &&
-          wrist_target_angle == 0) {
-        move_home();
-      } else {
-        arm_state = MOVE_TARGET_BE1;
+        set_joints_angle(base_target_angle, elbow_target_angle, 0);
+        // set_claw_angle(claw_target_angle);
+        open_claw();
+        if (base_target_angle == 0 && elbow_target_angle == 0 && wrist_target_angle == 0) {
+          move_home();
+        } else {
+          arm_state = MOVE_TARGET_BE1;
+        }
       }
+      //input_ready = false;
+      
     }
     break;
 
+  case ROVER_MOVING:
+    if (rover_movement_done()){
+      arm_state = CAPTURE_VISION_INFO;
+    }
+    break;
+  
   case MOVE_TARGET_BE1:
     status = arm_motors_state_handler(true, true, false);
     if (status == ARM_MOTORS_ERROR) {
@@ -237,9 +259,9 @@ void arm_handle_state() {
 
   case MOVE_HOME:
     if (arm_motors_state_handler(true, true, true) == ARM_MOTORS_READY) {
-      arm_state = WAIT_FOR_INPUT;
+      arm_state = CAPTURE_VISION_INFO;
       log_message(LOG_INFO,
-                  "MOVE_HOME complete, heading to WAIT_FOR_INPUT\nInput: ");
+                  "MOVE_HOME complete, heading to CAPTURE_VISION_INFO\n");
     }
     break;
     // case PLACE_TARGET:
@@ -276,6 +298,10 @@ void arm_handle_state() {
   if (prev_state != arm_state) {
     time_in_state = 0;
   }
+}
+
+void get_vision_information(void){
+
 }
 
 void move_home() {

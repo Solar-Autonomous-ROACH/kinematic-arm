@@ -36,6 +36,11 @@ int main() {
       claw_angle;
   while (1) {
     // scanf("%d", &speed1);
+    vision_status_t vision_status = vision_receive_coordinates();
+    if (vision_status == VISION_SUCCESS) {
+      // call kinematic engine
+      // call validate angle_set
+    }
     char c = getchar();
     if (c < 0) {
       continue;

@@ -4,6 +4,7 @@
 #include "arm_motor.h"
 #include "claw.h"
 #include "steering_motor.h"
+#include "vision.h"
 #include <stdint.h>
 
 // The motor value on the board
@@ -39,7 +40,9 @@
 
 typedef enum {
   CALIBRATE,
+  CAPTURE_VISION_INFO,
   WAIT_FOR_INPUT,
+  ROVER_MOVING,
   MOVE_TARGET_BE1,
   MOVE_TARGET_WRIST,
   CLAW_ACQUIRE,

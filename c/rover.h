@@ -1,10 +1,13 @@
-// #ifndef ROVERCORE_ROVER_H
-// #define ROVERCORE_ROVER_H
+#ifndef ROVERCORE_ROVER_H
+#define ROVERCORE_ROVER_H
 
 // #include <stdint.h>
 // #include "steering_motor.h"
 // #include "motor.h"
 // #include "move.h"
+#include "logger.h"
+#include <stdint.h>
+#include <bool.h>
 
 // #define RRS                     0x0
 // #define REAR_RIGHT_STEERING     0x0
@@ -79,8 +82,12 @@
 
 // void rover_steer_point();
 
+bool rover_movement_done();
 
+void tank_turn(int16_t target_angle);
 
+void move_forward(int16_t dist);
 
+void move_right(int16_t dist);
 
-// #endif //ROVERCORE_ROVER_H
+#endif // ROVERCORE_ROVER_H
