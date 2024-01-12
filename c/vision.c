@@ -14,11 +14,6 @@ vision_status_t vision_state;
 
 int pipefd[2];
 
-typedef enum {
-  VISION_IN_PROGRESS,
-  VISION_SAMPLE_NOT_FOUND,
-  VISION_SUCCESS
-} vision_status_t;
 
 void vision_init() {
   if (pipe(pipefd) == -1) {

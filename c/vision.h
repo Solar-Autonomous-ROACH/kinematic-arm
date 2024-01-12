@@ -11,6 +11,11 @@ typedef struct
     int16_t angle;  //0 to 179
 }  vision_info_t;
 
+typedef enum {
+  VISION_IN_PROGRESS,
+  VISION_SAMPLE_NOT_FOUND,
+  VISION_SUCCESS
+} vision_status_t;
 
 void vision_init();
 void vision_request_coordinates();

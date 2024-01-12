@@ -5,6 +5,8 @@
 #include "claw.h"
 #include "steering_motor.h"
 #include "vision.h"
+#include "kinematic_engine.h"
+#include "rover.h"
 #include <stdint.h>
 
 // The motor value on the board
@@ -81,7 +83,7 @@ arm_motors_status_t arm_motors_state_handler(bool base, bool elbow, bool wrist);
 arm_state_t recalibrate();
 void move_home();
 void arm_handle_state_debug();
-void validate_angle_set(int16_t base_angle, int16_t elbow_angle,
+bool validate_angle_set(int16_t base_angle, int16_t elbow_angle,
                         int16_t wrist_angle, int16_t claw_angle);
 
 arms_calibrate_state_t arm_calibrate();
@@ -91,6 +93,8 @@ void set_joints_angle(int16_t base_angle, int16_t elbow_angle,
 void set_joint_angle(arm_motor_t *arm_motor, uint16_t angle);
 
 bool arm_movement_complete();
+bool verify_pickup(vision_info_t *original_vision_info,
+                   vision_info_t *moved_vision_info);
 
 // extern arm_motor_t BASE_MOTOR;
 // extern arm_motor_t ELBOW_MOTOR;

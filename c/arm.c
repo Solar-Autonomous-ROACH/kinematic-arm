@@ -145,8 +145,8 @@ void arm_handle_state() {
   case WAIT_FOR_INPUT:
     // wait for coordinates and orientation info from vision team
     if (vision_get_status() == VISION_SUCCESS) {
-      vision_info = vision_get_coordinates();
-      kinematic_engine(vision_info.x, vision_info.y, vision_info.z, &base_target_angle, &elbow_target_angle, &wrist_target_angle, &claw_target_angle);
+      original_vision_info = vision_get_coordinates();
+      kinematic_engine(original_vision_info->x, original_vision_info->y, original_vision_info->z, &base_target_angle, &elbow_target_angle, &wrist_target_angle, &claw_target_angle);
       if (!validate_angle_set(base_target_angle, elbow_target_angle, wrist_target_angle, claw_target_angle)){
         //USE ROVER API TO MOVE 
         arm_state = ROVER_MOVING;
