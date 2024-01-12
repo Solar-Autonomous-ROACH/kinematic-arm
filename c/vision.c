@@ -31,16 +31,17 @@ void vision_init() {
   if (vision_pid == -1) {
     perror("fork vision");
     exit(1);
-  } else if (vision_pid == 0) { /** parent */
-    FILE *vision_stdout = fdopen(pipefd[READ_END], 'r');
-    close(pipefd[WRITE_END]);
-  } else {
+  } else if (vision_pid == 0) { /** child */
     dup2(pipefd[WRITE_END], STDOUT_FILENO);
     close(pipefd[READ_END]);
 
     if (execlp("python3", "../python/vision.py", NULL) == -1) {
       perror("exec vision") exit(1);
     }
+
+  } else {
+    FILE *vision_stdout = fdopen(pipefd[READ_END], 'r');
+    close(pipefd[WRITE_END]);
   }
 }
 
@@ -70,4 +71,4 @@ vision_status_t vision_receive_coordinates() {
 
 vision_status_t vision_get_status() { return vision_state; }
 
-vision_info_t *vision_get_coordinates() { return &vision_info; }
+vision_info_t *vision_get_coordinates() { return vision_info; }

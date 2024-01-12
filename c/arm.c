@@ -15,7 +15,8 @@ int16_t elbow_target_angle = 0;
 int16_t wrist_target_angle = 0;
 int16_t claw_target_angle = 0;
 int claw_ready = false;
-vision_info_t * vision_info;
+vision_info_t *original_vision_info;
+vision_info_t *moved_vision_info;
 static arms_calibrate_state_t arms_calibrate_state = ARM_CALIBRATE_START;
 
 /**
@@ -134,9 +135,9 @@ void arm_handle_state() {
       printf("Input: ");
     }
     break;
-  
+
   case CAPTURE_VISION_INFO:
-    //send signal to vision python program
+    // send signal to vision python program
     vision_request_coordinates();
     arm_state = WAIT_FOR_INPUT;
     break;
@@ -209,10 +210,12 @@ void arm_handle_state() {
                   "CLAW_ACQUIRE complete, heading to CLAW_CHECK and raising "
                   "base by 20 degrees, current base angle: %f\n",
                   current_base_angle);
+      vision_request_coordinates(); //assuming the arm moves to its position before the vision returns the coordinates
       arm_state = CLAW_CHECK;
     }
 
     break;
+  
   case CLAW_CHECK:
     if (time_in_state < 1000) {
       return;
@@ -220,15 +223,19 @@ void arm_handle_state() {
     status = arm_motors_state_handler(true, false, false);
     if (status == ARM_MOTORS_ERROR) {
       arm_state = recalibrate();
-    } else if (status == ARM_MOTORS_READY &&
-               true) { // REPLACE "true" WITH VISION TEAMS LOCATION CHECK
-      // set_joints_angle(BASE_PLACE_ANGLE, ELBOW_PLACE_ANGLE,
-      // WRIST_PLACE_ANGLE);
-      set_joints_angle(BASE_PLACE_ANGLE, ELBOW_PLACE_ANGLE, 0);
-      arm_state = MOVE_PLACE_1;
-      log_message(LOG_INFO, "CLAW_CHECK complete, heading to MOVE_PLACE_1\n");
-      // set_claw_angle(0);
-      open_claw();
+    } else if (status == ARM_MOTORS_READY && vision_get_status() == VISION_SUCCESS) { // REPLACE "true" WITH VISION TEAMS // LOCATION CHECK
+      moved_vision_info = vision_get_coordinates();
+      if (verify_pickup(original_vision_info, moved_vision_info)) {
+        // set_joints_angle(BASE_PLACE_ANGLE, ELBOW_PLACE_ANGLE,
+        // WRIST_PLACE_ANGLE);
+        set_joints_angle(BASE_PLACE_ANGLE, ELBOW_PLACE_ANGLE, 0);
+        arm_state = MOVE_PLACE_1;
+        log_message(LOG_INFO, "CLAW_CHECK complete, heading to MOVE_PLACE_1\n");
+        // set_claw_angle(0);
+        open_claw();
+      } else {
+        arm_state = CAPTURE_VISION_INFO;  //did not correctly acquire - restart by taking new picture
+      }
     }
 
     break;
@@ -300,8 +307,14 @@ void arm_handle_state() {
   }
 }
 
-void get_vision_information(void){
-
+bool verify_pickup(vision_info_t *original_vision_info,
+                   vision_info_t *moved_vision_info) {
+  int x_diff = moved_vision_info->x - original_vision_info->x;
+  int y_diff = moved_vision_info->y - original_vision_info->y;
+  int z_diff = moved_vision_info->z - original_vision_info->z;
+  int angle_diff = moved_vision_info->angle - original_vision_info->angle;
+  return (x_diff == 0 && y_diff == VERIFICATION_RAISE_DISTANCE && z_diff == 0 &&
+          angle_diff == 0);
 }
 
 void move_home() {

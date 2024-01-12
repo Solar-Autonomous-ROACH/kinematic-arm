@@ -33,6 +33,8 @@
 #define ELBOW_PLACE_ANGLE 45
 #define WRIST_PLACE_ANGLE 200
 
+#define VERIFICATION_RAISE_DISTANCE 20
+
 /** only one of these should be true at a time */
 // #define DEBUG_WRIST
 // #define DEBUG_ELBOW
