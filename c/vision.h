@@ -14,12 +14,14 @@ typedef struct
 typedef enum {
   VISION_IN_PROGRESS,
   VISION_SAMPLE_NOT_FOUND,
-  VISION_SUCCESS
+  VISION_SUCCESS,
+  VISION_ERROR
 } vision_status_t;
 
 void vision_init();
 void vision_request_coordinates();
 vision_status_t vision_receive_coordinates();
+vision_status_t vision_receive_coordinates_isr();
 vision_status_t vision_get_status();
 vision_info_t *vision_get_coordinates();
 

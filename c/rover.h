@@ -7,7 +7,6 @@
 // #include "move.h"
 #include "logger.h"
 #include <stdint.h>
-#include <bool.h>
 
 // #define RRS                     0x0
 // #define REAR_RIGHT_STEERING     0x0

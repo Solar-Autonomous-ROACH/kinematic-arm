@@ -144,7 +144,7 @@ void arm_handle_state() {
 
   case WAIT_FOR_INPUT:
     // wait for coordinates and orientation info from vision team
-    if (vision_get_status() == VISION_SUCCESS) {
+    if (vision_receive_coordinates_isr() == VISION_SUCCESS) {
       original_vision_info = vision_get_coordinates();
       kinematic_engine(original_vision_info->x, original_vision_info->y, original_vision_info->z, &base_target_angle, &elbow_target_angle, &wrist_target_angle, &claw_target_angle);
       if (!validate_angle_set(base_target_angle, elbow_target_angle, wrist_target_angle, claw_target_angle)){
@@ -223,7 +223,7 @@ void arm_handle_state() {
     status = arm_motors_state_handler(true, false, false);
     if (status == ARM_MOTORS_ERROR) {
       arm_state = recalibrate();
-    } else if (status == ARM_MOTORS_READY && vision_get_status() == VISION_SUCCESS) { // REPLACE "true" WITH VISION TEAMS // LOCATION CHECK
+    } else if (status == ARM_MOTORS_READY && vision_receive_coordinates_isr() == VISION_SUCCESS) {
       moved_vision_info = vision_get_coordinates();
       if (verify_pickup(original_vision_info, moved_vision_info)) {
         // set_joints_angle(BASE_PLACE_ANGLE, ELBOW_PLACE_ANGLE,

@@ -1,4 +1,5 @@
 #include "rover.h"
+#include <bool.h>
 
 // static steering_motor_t steer_FR;
 // static steering_motor_t steer_RR;

@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <poll.h>
 
 pid_t vision_pid;
 FILE *vision_stdout;
@@ -13,7 +14,6 @@ vision_status_t vision_state;
 #define WRITE_END 1
 
 int pipefd[2];
-
 
 void vision_init() {
   if (pipe(pipefd) == -1) {
@@ -59,6 +59,36 @@ vision_status_t vision_receive_coordinates() {
   } else if (c == '0') {
     vision_state = VISION_SAMPLE_NOT_FOUND;
   } else {
+    vision_state = VISION_SAMPLE_NOT_FOUND;
+  }
+  return vision_state;
+}
+
+vision_status_t vision_receive_coordinates_isr() {
+  struct pollfd fds[1];
+  int read_char;
+  fds[0].fd = STDIN_FILENO;
+  fds[0].events = POLLIN;
+
+  read_char = poll(fds, 1, 0);
+  if (read_char == -1) {
+    perror("poll error");
+    exit(1);
+  } else if (read_char > 0) {
+    char c;
+    scanf("%c", &c);
+    if (c == 'x') {
+      // x=1,y=20,z=2,a=5
+      if (scanf("=%d,y=%d,z=%d,a=%d\n", &(vision_info.x), &(vision_info.y),
+                &(vision_info.z), &(vision_info.angle)) > 0) {
+        vision_state = VISION_SUCCESS
+      }
+    } else if (c == '0') { //no test tube found by vision
+      vision_state = VISION_SAMPLE_NOT_FOUND;
+    } else {  //vision outputted something unexpected
+      vision_state = VISION_ERROR;
+    }
+  } else { //no input to read (vision engine still running)
     vision_state = VISION_SAMPLE_NOT_FOUND;
   }
   return vision_state;
