@@ -26,7 +26,10 @@ void vision_init() {
   if (vision_pid == -1) {
     perror("fork vision");
     exit(1);
-  } else if (vision_pid == 0) { /** child */
+  } else if (vision_pid != 0) { /** parent */
+    FILE *vision_stdout = fdopen(pipefd[READ_END], 'r');
+    close(pipefd[WRITE_END]);
+  } else {
     dup2(pipefd[WRITE_END], STDOUT_FILENO);
     close(pipefd[READ_END]);
 
