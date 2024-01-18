@@ -138,13 +138,16 @@ void arm_handle_state() {
 
   case CAPTURE_VISION_INFO:
     // send signal to vision python program
-    vision_request_coordinates();
-    arm_state = WAIT_FOR_INPUT;
+    if (vision_receive_input_isr() == VISION_READY_FOR_CAPTURE){
+      vision_request_coordinates();
+      arm_state = WAIT_FOR_INPUT;
+    }
     break;
 
   case WAIT_FOR_INPUT:
     // wait for coordinates and orientation info from vision team
-    if (vision_receive_coordinates_isr() == VISION_SUCCESS) {
+    if (vision_receive_input_isr() == VISION_SUCCESS) {
+      log_message(LOG_INFO, "Vision returned success, processing coordinates...\n");
       original_vision_info = vision_get_coordinates();
       kinematic_engine(original_vision_info->x, original_vision_info->y, original_vision_info->z, &base_target_angle, &elbow_target_angle, &wrist_target_angle, &claw_target_angle);
       if (!validate_angle_set(base_target_angle, elbow_target_angle, wrist_target_angle, claw_target_angle)){
@@ -223,7 +226,7 @@ void arm_handle_state() {
     status = arm_motors_state_handler(true, false, false);
     if (status == ARM_MOTORS_ERROR) {
       arm_state = recalibrate();
-    } else if (status == ARM_MOTORS_READY && vision_receive_coordinates_isr() == VISION_SUCCESS) {
+    } else if (status == ARM_MOTORS_READY && vision_receive_input_isr() == VISION_SUCCESS) {
       moved_vision_info = vision_get_coordinates();
       if (verify_pickup(original_vision_info, moved_vision_info)) {
         // set_joints_angle(BASE_PLACE_ANGLE, ELBOW_PLACE_ANGLE,

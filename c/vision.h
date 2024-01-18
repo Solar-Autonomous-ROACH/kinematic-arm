@@ -26,6 +26,6 @@ vision_status_t vision_receive_input();
 vision_status_t vision_receive_input_isr();
 vision_status_t vision_get_status();
 vision_info_t *vision_get_coordinates();
-void vision_terminate();
+void vision_terminate(bool wait);
 
 #endif

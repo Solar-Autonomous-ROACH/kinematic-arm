@@ -20,61 +20,26 @@ void sigint_handler(int sig) {
     }
   }
   set_brightness(100, 000, 100);
-  vision_terminate();
+  vision_terminate(true);
   exit(0);
 }
 
 int main() {
-  // int num;
-  // TODO: block SIGALRM while handling sigaction
-  signal(SIGINT, sigint_handler); // TODO: @chonein this is bad
+  struct sigaction sa;
+  sa.sa_handler = sigint_handler;
+  sa.sa_flags = 0;
+  sigemptyset(&sa.sa_mask);
+  sigaddset(&sa.sa_mask, SIGALRM);
+  sigaction(SIGINT, &sa, NULL);
+
   mmio_init();
   printf("MMIO INIT DONE\n");
+  vision_init();
   isr_init();
   set_led_status();
   set_brightness(100, 100, 000);
-  speed1 = 0;
-  int16_t input1, input2, input3, input4;
-  int16_t calc_base_angle, calc_elbow_angle, calc_wrist_angle, turn_angle,
-      claw_angle;
-  while (1) {
-    // scanf("%d", &speed1);
-    // vision_status_t vision_status = vision_receive_coordinates();
-    // if (vision_status == VISION_SUCCESS) {
-    //   // call kinematic engine
-    //   // call validate angle_set
-    // }
-    char c = getchar();
-    if (c < 0) {
-      continue;
-    }
-    switch (c) {
-    case 'H':
-      validate_angle_set(0, 0, 0, 0);
-      break;
 
-    case 'A':
-      if (scanf("%hd %hd %hd %hd\n", &input1, &input2, &input3, &input4) > 0) {
-        validate_angle_set(input1, input2, input3, input4);
-      }
-      break;
-
-    case 'C':
-      if (scanf("%hd %hd\n", &input1, &input2) > 0) {
-        input3 = 0;
-        kinematic_engine(input1, input2, input3, &calc_base_angle,
-                         &calc_elbow_angle, &calc_wrist_angle, &turn_angle);
-        // claw_angle = input4;
-        claw_angle = 0;
-        validate_angle_set(calc_base_angle, calc_elbow_angle, calc_wrist_angle,
-                           claw_angle);
-      }
-      break;
-
-    default:
-      break;
-    }
-  }
+  pause();
 
   close_mem();
 }

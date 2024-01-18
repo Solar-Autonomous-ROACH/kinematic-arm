@@ -2,10 +2,10 @@
 #include "logger.h"
 #include <poll.h>
 #include <signal.h>
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <stdbool.h>
 
 pid_t vision_pid;
 int vision_fd;
@@ -128,6 +128,7 @@ vision_status_t vision_receive_input() {
     vision_state = VISION_ERROR;
     break;
   }
+  return vision_state;
 }
 
 /**
@@ -144,7 +145,7 @@ vision_status_t vision_receive_input_isr() {
     perror("poll error");
     exit(1);
   } else if (poll_out > 0) {
-    vision_receive_input();
+    vision_state = vision_receive_input();
   }
 
   return vision_state;
@@ -172,16 +173,18 @@ vision_info_t *vision_get_coordinates() {
  * @brief terminates vision process
  *
  */
-void vision_terminate() {
+void vision_terminate(bool wait) {
   kill(vision_pid, SIGTERM);
-  int status;
-  pid_t wait_ret = waitpid(vision_pid, &status, 0);
-  if (wait_ret == -1) {
-    perror("waitpid vision");
-    exit(1);
-  } else if (wait_ret > 0) {
-    fclose(vision_stdout);
-    close(vision_fd);
-    vision_state = VISION_TERMINATED;
+  if (wait) {
+    int status;
+    pid_t wait_ret = waitpid(vision_pid, &status, 0);
+    if (wait_ret == -1) {
+      perror("waitpid vision");
+      exit(1);
+    } else if (wait_ret > 0) {
+      fclose(vision_stdout);
+      close(vision_fd);
+      vision_state = VISION_TERMINATED;
+    }
   }
 }
