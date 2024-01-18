@@ -7,10 +7,20 @@
 #include <stdio.h>
 #include <time.h>
 
+/*Constants for Arm Length and Approach*/
 #define S_E_LENGTH 238
 #define E_W_LENGTH 273
 #define W_C_LENGTH 140
+/*Currently set to be 80 deg*/
+#define CLAW_X 24
+#define CLAW_Y 138
 
+/*Constants for Vaild Pickup Area / Boundaries*/
+#define LOWER_AREA_BOUND -120
+#define BACK_AREA_BOUND 20
+#define UPPER_AREA_BOUND 100
+
+/*Constants for Math /Kine Stuff*/
 #define PI 3.1416
 #define RAD_TO_DEG (180.0 / PI)
 /*This is the 270 deg that is used to finish the triangle

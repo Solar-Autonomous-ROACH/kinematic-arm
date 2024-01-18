@@ -26,13 +26,22 @@ bool kinematic_engine(float x_pos, float y_pos, float z_pos,
     *turn_angle = 0;
   }
 
-  y_pos += W_C_LENGTH; //accounting for claw position, as should be same
+  // y_pos += W_C_LENGTH; //accounting for claw position, as should be same
+  y_pos += CLAW_Y; //2D Claw angle coming in to grab
+  x_pos += CLAW_X;
 
   // printf("YPos: %f", y_pos);
 
   magnitude = sqrt(x_pos * x_pos + y_pos * y_pos);
   // printf("Mag: %f\n", magnitude);
+  /*Do Checks to see if position is in range and within bounding lines*/
   if (magnitude * .99 > S_E_LENGTH + E_W_LENGTH) { // check if in range
+    return false;
+  } elif (LOWER_AREA_BOUND > (x_pos - CLAW_X)) { // Lower Bound
+    return false;
+  } elif (BACK_AREA_BOUND > (y_pos - CLAW_Y)) { // Back Bound
+    return false;
+  } elif (UPPER_AREA_BOUND < (x_pos - CLAW_X)) { // Upper Bound
     return false;
   }
 
