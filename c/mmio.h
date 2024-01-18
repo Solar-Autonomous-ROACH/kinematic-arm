@@ -1,34 +1,18 @@
-//
-// Created by Tyler Bovenzi on 3/23/23.
-//
 #ifndef ROVERCORE_MMIO_H
 #define ROVERCORE_MMIO_H
 
+#include <fcntl.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <fcntl.h>
 #include <sys/mman.h>
 #include <unistd.h>
-#include <stdint.h>
-
-// Memory address of the I/O register
-#define IOMEM_ADDRESS 0x41200000
-#define ADDRESS_OFFSET 8
-#define READ_OFFSET 2
-#define WATCHDOG_REG 0x50
-#define DEBUG_REG 0x80
-
-
 
 // Function prototypes
-volatile unsigned int *mmio_init(void);
+volatile unsigned int *mmio_init(off_t iomem_address);
 
-int close_mem();
+void close_mem(volatile unsigned int *mmio);
 
-uint8_t mmio_is_valid();
+uint8_t mmio_is_valid(volatile unsigned int *mmio);
 
-void set_PL_register(uint8_t address, uint8_t value);
-
-uint8_t get_PL_register(uint8_t address);
-
-#endif //ROVERCORE_MMIO_H
+#endif

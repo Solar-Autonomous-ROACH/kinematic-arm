@@ -1,4 +1,5 @@
 #include "motor.h" // Include the header file "motor.h"
+#include "rover.h"
 
 // static long motor_abs_pos[MAX_MOTORS];
 // static long long motor_target_pos[MAX_MOTORS];
@@ -7,6 +8,53 @@
 // static uint8_t motor_raw_pos[MAX_MOTORS];
 static motor_t motors[MAX_MOTORS];
 // static uint8_t motor_pwm[MAX_MOTORS];
+
+int MotorController_init(MotorController *motor, off_t mmio_address) {
+  // Initialize MMIO
+  volatile unsigned int *mmio = mmio_init(mmio_address);
+
+  if (!mmio_is_valid(mmio))
+    return -1;
+
+  // Initialize motor controller
+  motor->mmio = mmio;
+  motor->duty_cycle = 0;
+  motor->clk_divisor = 4;
+  motor->dir = 1;
+  motor->en_motor = 1;
+  motor->clear_enc = 1;
+  motor->en_enc = 1;
+
+  // Clear encoder counter
+  MotorController_write(motor);
+  motor->clear_enc = 0;
+  MotorController_write(motor);
+
+  return 0;
+}
+
+void MotorController_close(MotorController *motor) {
+  // Disable motor controller
+  motor->en_motor = 0;
+  motor->en_enc = 0;
+  MotorController_write(motor);
+
+  // Release MMIO
+  close_mem(motor->mmio);
+}
+
+void MotorController_write(MotorController *motor) {
+  // Write to MMIO
+  *(motor->mmio) = motor->duty_cycle + (motor->clk_divisor << 8) +
+                   (motor->dir << 11) + (motor->en_motor << 12) +
+                   (motor->clear_enc << 13) + (motor->en_enc << 14);
+}
+
+//motor encoder value
+void MotorController_read(MotorController *motor) {
+  // Read MMIO
+  motor->counts = *(motor->mmio + 2);
+}
 
 // This function updates the position of a motor with the given index.
 int motor_update(uint8_t motor_index) {
@@ -23,8 +71,11 @@ int motor_update(uint8_t motor_index) {
 
   last = motor->raw_pos; // Save the last position of the motor
   last_long = motor->abs_pos;
-  // Read the current position of the motor from the I/O register
-  motor->raw_pos = get_PL_register(MOTOR_READ_REG + motor_index);
+
+  // Read the current position of the motor from the MMIO
+  MotorController_read(&(motor->motor_controller));
+  motor->raw_pos = motor->motor_controller.counts;
+
   // Check if the motor has crossed a threshold in either direction
   if ((last > HIGH_THRESH) && (motor->raw_pos < LOW_THRESH)) {
     motor->abs_pos +=
@@ -57,14 +108,18 @@ int set_motor_speed(uint8_t motor_index, int speed) {
     fprintf(stderr, "Motor Index Out Of Range"); // Print an error message
     return -1;                                   // Return an error code
   }
+  motor_t *motor = &motors[motor_index];
   if (speed > 127)
     speed = 127;
   if (speed < -127)
     speed = -127;
   if (speed >= 0)
-    set_PL_register(MOTOR_WRITE_REG + motor_index, speed);
+    // set_PL_register(MOTOR_WRITE_REG + motor_index, speed);
+    MotorController_set_speed(&(motor->motor_controller), speed);
+
   else
-    set_PL_register(MOTOR_WRITE_REG + motor_index, 0xFF + speed);
+    MotorController_set_speed(&(motor->motor_controller), 0xFF + speed);
+    // set_PL_register(MOTOR_WRITE_REG + motor_index, 0xFF + speed);
   return 0;
 }
 
@@ -141,6 +196,6 @@ motor_t *get_motor(uint8_t motor_index) {
   if (motor_index >= MAX_MOTORS) {
     fprintf(stderr, "Motor Index Out Of Range");
     return NULL;
-  }
+  } 
   return &motors[motor_index];
 }

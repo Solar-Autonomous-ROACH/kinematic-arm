@@ -32,11 +32,6 @@ long ticks_to_distance(long ticks);
 int update_distance(int update);
 int finished_moving();
 
-
 int rover_move();
-
-
-
-
 
 #endif //ROVERCORE_MOVE_H

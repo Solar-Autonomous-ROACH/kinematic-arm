@@ -2,6 +2,7 @@
 #define ROVERCORE_MOTOR_H
 
 #include "mmio.h"
+#include <aio.h>
 #include <stdint.h>
 
 #define MOTOR_READ_REG 0x30
@@ -13,19 +14,43 @@
 #define UPPER_MASK 0xFFFFFF00
 #define LOWER_MASK 0x000000FF
 
-#define HIGH_THRESH 206 // 256-50
-#define LOW_THRESH 50
-
 #define KP 2
 #define KV 2
 
 #define POSITION_FIFO_SIZE 10
+#define HIGH_THRESH 206 // 256-50
+#define LOW_THRESH 50
+
+typedef struct {
+  // MMIO
+  volatile unsigned int *mmio;
+
+  // GPIO Output Control Signals
+  uint8_t duty_cycle;  // 8 bits
+  uint8_t clk_divisor; // 3 bits
+  uint8_t dir;         // 1 bit
+  uint8_t en_motor;    // 1 bit
+  uint8_t clear_enc;   // 1 bit
+  uint8_t en_enc;      // 1 bit
+
+  // GPIO Input Control Signals
+  int16_t counts; // 16 bits
+
+} MotorController;
+
+int MotorController_init(MotorController *motor, off_t mmio_address);
+void MotorController_close(MotorController *motor);
+
+void MotorController_write(MotorController *motor);
+void MotorController_read(MotorController *motor);
 
 typedef struct {
   long abs_pos;
   long long target_pos;
   int velocity;
-  uint8_t raw_pos;
+  off_t MMIO_addr;
+  uint16_t raw_pos;
+  MotorController motor_controller;
   long position_fifo[POSITION_FIFO_SIZE];
   uint8_t position_fifo_idx;
   uint16_t stopped_duration; // time in ms motor has been stopped
