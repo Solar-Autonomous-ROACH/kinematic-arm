@@ -7,6 +7,7 @@
 #include "kinematic_engine.h"
 #include "led.h"
 #include "mmio.h"
+#include "vision.h"
 #include <signal.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -19,12 +20,14 @@ void sigint_handler(int sig) {
     }
   }
   set_brightness(100, 000, 100);
+  vision_terminate();
   exit(0);
 }
 
 int main() {
   // int num;
-  signal(SIGINT, sigint_handler);
+  // TODO: block SIGALRM while handling sigaction
+  signal(SIGINT, sigint_handler); // TODO: @chonein this is bad
   mmio_init();
   printf("MMIO INIT DONE\n");
   isr_init();

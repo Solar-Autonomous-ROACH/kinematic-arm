@@ -11,19 +11,21 @@ typedef struct {
 } vision_info_t;
 
 typedef enum {
+  VISION_TERMINATED,
+  VISION_STARTING,
   VISION_READY_FOR_CAPTURE,
   VISION_IN_PROGRESS,
   VISION_SAMPLE_NOT_FOUND,
   VISION_SUCCESS,
-  VISION_TERMINATED,
   VISION_ERROR
 } vision_status_t;
 
 void vision_init();
 void vision_request_coordinates();
-vision_status_t vision_receive_coordinates();
-vision_status_t vision_receive_coordinates_isr();
+vision_status_t vision_receive_input();
+vision_status_t vision_receive_input_isr();
 vision_status_t vision_get_status();
 vision_info_t *vision_get_coordinates();
+void vision_terminate();
 
 #endif
