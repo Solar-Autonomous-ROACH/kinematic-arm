@@ -4,8 +4,9 @@
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <unistd.h>
-#include <stdbool.h>
 
 pid_t vision_pid;
 int vision_fd;
@@ -22,7 +23,7 @@ struct sigaction sa;
 
 int pipefd[2];
 
-void handler(int signo) {
+void handler(int signo __attribute__((unused))) {
   int status;
   pid_t wait_ret = waitpid(vision_pid, &status, WNOHANG);
   if (wait_ret == -1) {
@@ -61,17 +62,23 @@ void vision_init() {
     // plumbing work
     vision_fd = pipefd[READ_END];
     close(pipefd[WRITE_END]);
+    log_message(LOG_INFO, "Opened vision fd %d\n", vision_fd);
     // setup poll
     fds[0].fd = vision_fd;
     fds[0].events = POLLIN;
     // use stdio FILE instead of fd
-    vision_stdout = fdopen(pipefd[READ_END], 'r');
+    vision_stdout = fdopen(pipefd[READ_END], "r");
+    if (vision_stdout == NULL) {
+      perror("fdopen vision");
+      exit(1);
+    }
     vision_state = VISION_STARTING;
+    log_message(LOG_INFO, "Vision init complete\n");
   } else {
     dup2(pipefd[WRITE_END], STDOUT_FILENO);
     close(pipefd[READ_END]);
 
-    if (execlp("python3", "../python/vision.py", NULL) == -1) {
+    if (execlp("../python/vision.py", "../python/vision.py", NULL) == -1) {
       perror("exec vision");
       exit(1);
     }
@@ -101,30 +108,52 @@ void vision_request_coordinates() {
  * @return vision_status_t
  */
 vision_status_t vision_receive_input() {
-  char c = fgetc(vision_stdout);
+  int c = fgetc(vision_stdout);
+  int dummy;
   if (c == EOF) {
     return vision_state;
   }
+  log_message(LOG_INFO, "Received from vision %c\n", c);
   switch (c) {
   case 'r': /** vision startup complete */
     vision_state = VISION_READY_FOR_CAPTURE;
+    dummy = fgetc(vision_stdout); // get rid of edxtra
+    if (dummy != '\n') {
+      log_message(LOG_ERROR, "Vision error\n");
+    }
     break;
 
   case 'x': /** coordinates start with x */
-    if (fscanf(vision_stdout, "=%d,y=%d,z=%d,a=%d\n", &(vision_info.x),
+    // fscanf(vision_stdout, "=%hd,", &(vision_info.x));
+    // log_message(LOG_INFO, "x = %hd\n", vision_info.x);
+    // fscanf(vision_stdout, "y=%hd,", &(vision_info.y));
+    // log_message(LOG_INFO, "y = %hd\n", vision_info.y);
+    // fscanf(vision_stdout, "z=%hd,", &(vision_info.z));
+    // log_message(LOG_INFO, "z = %hd\n", vision_info.z);
+    // fscanf(vision_stdout, "a=%hd\n", &(vision_info.angle));
+    // log_message(LOG_INFO, "a = %hd\n", vision_info.angle);
+    // exit(0);
+    if (fscanf(vision_stdout, "=%hd,y=%hd,z=%hd,a=%hd", &(vision_info.x),
                &(vision_info.y), &(vision_info.z), &(vision_info.angle)) > 0) {
+      log_message(LOG_INFO, "x=%hd,y=%hd,z=%hd,a=%hd\n", (vision_info.x),
+                  vision_info.y, vision_info.z, vision_info.angle);
       vision_state = VISION_SUCCESS;
     } else {
+      log_message(LOG_INFO, "vision fscan error\n");
       vision_state = VISION_ERROR;
     }
     break;
 
   case '0': /** no sample tube found */
     vision_state = VISION_SAMPLE_NOT_FOUND;
+    dummy = fgetc(vision_stdout); // get rid of edxtra
+    if (dummy != '\n') {
+      log_message(LOG_ERROR, "Vision error\n");
+    }
     break;
 
   default:
-    log_message(LOG_DEBUG, "Vision error\n");
+    log_message(LOG_ERROR, "Vision error\n");
     vision_state = VISION_ERROR;
     break;
   }
@@ -145,6 +174,7 @@ vision_status_t vision_receive_input_isr() {
     perror("poll error");
     exit(1);
   } else if (poll_out > 0) {
+    log_message(LOG_INFO, "read character from poll\n");
     vision_state = vision_receive_input();
   }
 

@@ -1,7 +1,8 @@
 #ifndef VISION_H
 #define VISION_H
 
-#include <signal.h>
+#include <stdbool.h>
+#include <stdint.h>
 
 typedef struct {
   int16_t x; // centimeters

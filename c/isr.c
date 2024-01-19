@@ -40,7 +40,7 @@ int isr_init() {
   return 0;
 }
 
-int isr(int signum) {
+int isr(int signum __attribute__((unused))) {
   set_PL_register(WATCHDOG_REG, watchdog_flag);
   // set_PL_register(DEBUG_REG, 0xFF);
   for (int i = 0; i < 14; i++) {

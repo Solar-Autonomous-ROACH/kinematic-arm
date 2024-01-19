@@ -39,7 +39,9 @@ int main() {
   set_led_status();
   set_brightness(100, 100, 000);
 
-  pause();
+  while (1) {
+    pause();
+  }
 
   close_mem();
 }

@@ -132,13 +132,14 @@ void arm_handle_state() {
     // set_motor_speed(CURMOTOR, 30);
     if (arm_calibrate() == ARM_CALIBRATE_READY) {
       arm_state = CAPTURE_VISION_INFO;
-      printf("Input: ");
+      log_message(LOG_INFO, "going to capture vision info state\n");
     }
     break;
 
   case CAPTURE_VISION_INFO:
     // send signal to vision python program
-    if (vision_receive_input_isr() == VISION_READY_FOR_CAPTURE){
+    if (vision_receive_input_isr() == VISION_READY_FOR_CAPTURE) {
+      log_message(LOG_INFO, "Requesting vision coordinates\n");
       vision_request_coordinates();
       arm_state = WAIT_FOR_INPUT;
     }
@@ -147,38 +148,44 @@ void arm_handle_state() {
   case WAIT_FOR_INPUT:
     // wait for coordinates and orientation info from vision team
     if (vision_receive_input_isr() == VISION_SUCCESS) {
-      log_message(LOG_INFO, "Vision returned success, processing coordinates...\n");
+      log_message(LOG_INFO,
+                  "Vision returned success, processing coordinates...\n");
       original_vision_info = vision_get_coordinates();
-      kinematic_engine(original_vision_info->x, original_vision_info->y, original_vision_info->z, &base_target_angle, &elbow_target_angle, &wrist_target_angle, &claw_target_angle);
-      if (!validate_angle_set(base_target_angle, elbow_target_angle, wrist_target_angle, claw_target_angle)){
-        //USE ROVER API TO MOVE 
+      kinematic_engine(original_vision_info->x, original_vision_info->y,
+                       original_vision_info->z, &base_target_angle,
+                       &elbow_target_angle, &wrist_target_angle,
+                       &claw_target_angle);
+      if (!validate_angle_set(base_target_angle, elbow_target_angle,
+                              wrist_target_angle, claw_target_angle)) {
+        // USE ROVER API TO MOVE
         arm_state = ROVER_MOVING;
       } else {
         log_message(
-          LOG_INFO,
-          "Got input, Base: %hd, Elbow: %hd, Wrist: %hd, heading to PREPARE "
-          "FOR MOVE\n",
-          base_target_angle, elbow_target_angle, wrist_target_angle);
+            LOG_INFO,
+            "Got input, Base: %hd, Elbow: %hd, Wrist: %hd, heading to PREPARE "
+            "FOR MOVE\n",
+            base_target_angle, elbow_target_angle, wrist_target_angle);
         set_joints_angle(base_target_angle, elbow_target_angle, 0);
         // set_claw_angle(claw_target_angle);
         open_claw();
-        if (base_target_angle == 0 && elbow_target_angle == 0 && wrist_target_angle == 0) {
+        if (base_target_angle == 0 && elbow_target_angle == 0 &&
+            wrist_target_angle == 0) {
           move_home();
         } else {
           arm_state = MOVE_TARGET_BE1;
         }
       }
-      //input_ready = false;
-      
+      // input_ready = false;
     }
     break;
 
   case ROVER_MOVING:
-    if (rover_movement_done()){
+    // if (rover_movement_done()){
+    if (true) {
       arm_state = CAPTURE_VISION_INFO;
     }
     break;
-  
+
   case MOVE_TARGET_BE1:
     status = arm_motors_state_handler(true, true, false);
     if (status == ARM_MOTORS_ERROR) {
@@ -213,12 +220,13 @@ void arm_handle_state() {
                   "CLAW_ACQUIRE complete, heading to CLAW_CHECK and raising "
                   "base by 20 degrees, current base angle: %f\n",
                   current_base_angle);
-      vision_request_coordinates(); //assuming the arm moves to its position before the vision returns the coordinates
+      vision_request_coordinates(); // assuming the arm moves to its position
+                                    // before the vision returns the coordinates
       arm_state = CLAW_CHECK;
     }
 
     break;
-  
+
   case CLAW_CHECK:
     if (time_in_state < 1000) {
       return;
@@ -226,7 +234,8 @@ void arm_handle_state() {
     status = arm_motors_state_handler(true, false, false);
     if (status == ARM_MOTORS_ERROR) {
       arm_state = recalibrate();
-    } else if (status == ARM_MOTORS_READY && vision_receive_input_isr() == VISION_SUCCESS) {
+    } else if (status == ARM_MOTORS_READY &&
+               vision_receive_input_isr() == VISION_SUCCESS) {
       moved_vision_info = vision_get_coordinates();
       if (verify_pickup(original_vision_info, moved_vision_info)) {
         // set_joints_angle(BASE_PLACE_ANGLE, ELBOW_PLACE_ANGLE,
@@ -237,7 +246,8 @@ void arm_handle_state() {
         // set_claw_angle(0);
         open_claw();
       } else {
-        arm_state = CAPTURE_VISION_INFO;  //did not correctly acquire - restart by taking new picture
+        arm_state = CAPTURE_VISION_INFO; // did not correctly acquire - restart
+                                         // by taking new picture
       }
     }
 

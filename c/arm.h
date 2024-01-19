@@ -3,10 +3,8 @@
 
 #include "arm_motor.h"
 #include "claw.h"
-#include "steering_motor.h"
-#include "vision.h"
 #include "kinematic_engine.h"
-#include "rover.h"
+#include "vision.h"
 #include <stdint.h>
 
 // The motor value on the board
