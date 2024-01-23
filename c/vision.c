@@ -78,7 +78,8 @@ void vision_init() {
     dup2(pipefd[WRITE_END], STDOUT_FILENO);
     close(pipefd[READ_END]);
 
-    if (execlp("../python/vision.py", "../python/vision.py", NULL) == -1) {
+    if (execlp("/home/xilnx/arm_2024/python/vision.py", "vision.py", NULL) ==
+        -1) {
       perror("exec vision");
       exit(1);
     }
