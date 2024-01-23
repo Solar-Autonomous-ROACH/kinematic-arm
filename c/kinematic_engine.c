@@ -45,13 +45,13 @@ void kinematic_engine(float x_pos, float y_pos, float z_pos, kinematic_output_t 
   if (magnitude * .99 > S_E_LENGTH + E_W_LENGTH) { // check if in range
     output->extra_distance = (int) (magnitude - S_E_LENGTH - E_W_LENGTH - DISTANCE_OVERSHOOT);
     return;
-  } elif (LOWER_AREA_BOUND > (x_pos - CLAW_X)) { // Lower Bound
+  } else if (LOWER_AREA_BOUND > (y_pos - CLAW_Y)) { // Lower Bound
     output->error = true;
     return;
-  } elif (BACK_AREA_BOUND > (y_pos - CLAW_Y)) { // Back Bound
+  } else if (BACK_AREA_BOUND > (x_pos - CLAW_X)) { // Back Bound
     output->error = true;
     return;
-  } elif (UPPER_AREA_BOUND < (x_pos - CLAW_X)) { // Upper Bound
+  } else if (UPPER_AREA_BOUND < (y_pos - CLAW_Y)) { // Upper Bound
     output->error = true;
     return;
   }

@@ -11,9 +11,9 @@
 #define S_E_LENGTH 238
 #define E_W_LENGTH 273
 #define W_C_LENGTH 140
-/*Currently set to be 80 deg*/
-#define CLAW_X 24
-#define CLAW_Y 138
+/*Currently set to be 70 deg*/
+#define CLAW_X 48
+#define CLAW_Y 132
 
 /*Constants for Conversions*/
 /*Vision is offset to where camera is mounted*/
@@ -25,7 +25,7 @@
 #define ROACH_Z_OFFSET -20
 
 /*Constants for Vaild Pickup Area / Boundaries*/
-#define LOWER_AREA_BOUND -120
+#define LOWER_AREA_BOUND -420
 #define BACK_AREA_BOUND 20
 #define UPPER_AREA_BOUND 100
 #define DISTANCE_OVERSHOOT 100 //How far we overshoot when we're too far away
@@ -35,7 +35,7 @@
 #define RAD_TO_DEG (180.0 / PI)
 /*This is the 270 deg that is used to finish the triangle
   and the compensator for where the wrist starts measuring from*/
-#define WRIST_CONST (280.0 / 180.0 * PI - 3 * PI / 2)
+#define WRIST_CONST ((280.0 + 20.0) / 180.0 * PI - 3 * PI / 2)
 /*This is for any tilts in the robot body itself*/
 #define SHOULDER_CONST (0.0 / 180.0 * PI)
 
