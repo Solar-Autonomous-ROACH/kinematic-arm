@@ -11,6 +11,8 @@ typedef struct {
   int16_t angle; // 0 to 179
 } vision_info_t;
 
+
+
 typedef enum {
   VISION_TERMINATED,
   VISION_STARTING,
@@ -26,7 +28,7 @@ void vision_request_coordinates();
 vision_status_t vision_receive_input();
 vision_status_t vision_receive_input_isr();
 vision_status_t vision_get_status();
-vision_info_t *vision_get_coordinates();
+bool vision_get_coordinates(vision_info_t *v);
 void vision_terminate(bool wait);
 
 #endif

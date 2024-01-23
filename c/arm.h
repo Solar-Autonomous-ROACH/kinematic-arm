@@ -33,7 +33,10 @@
 #define ELBOW_PLACE_ANGLE 45
 #define WRIST_PLACE_ANGLE 200
 
-#define VERIFICATION_RAISE_DISTANCE 20
+#define VERIFICATION_RAISE_DISTANCE 100
+#define X_VERIFICATION_ERROR 5
+#define Z_VERIFICATION_ERROR 5
+#define ANGLE_VERIFICATION_ERROR 5
 
 /** only one of these should be true at a time */
 // #define DEBUG_WRIST
@@ -91,8 +94,8 @@ void set_joints_angle(int16_t base_angle, int16_t elbow_angle,
 void set_joint_angle(arm_motor_t *arm_motor, uint16_t angle);
 
 bool arm_movement_complete();
-bool verify_pickup(vision_info_t *original_vision_info,
-                   vision_info_t *moved_vision_info);
+bool verify_pickup(vision_info_t original_vision_info,
+                   vision_info_t moved_vision_info);
 
 // extern arm_motor_t BASE_MOTOR;
 // extern arm_motor_t ELBOW_MOTOR;

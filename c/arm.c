@@ -1,5 +1,6 @@
 #include "arm.h"
 #include "logger.h"
+#include <stdlib.h>
 
 // static struct arm_motor_t arm_motor_array[4];
 
@@ -15,8 +16,8 @@ int16_t elbow_target_angle = 0;
 int16_t wrist_target_angle = 0;
 int16_t claw_target_angle = 0;
 int claw_ready = false;
-vision_info_t *original_vision_info;
-vision_info_t *moved_vision_info;
+vision_info_t original_vision_info;
+vision_info_t moved_vision_info;
 static arms_calibrate_state_t arms_calibrate_state = ARM_CALIBRATE_START;
 
 /**
@@ -150,9 +151,12 @@ void arm_handle_state() {
     if (vision_receive_input_isr() == VISION_SUCCESS) {
       log_message(LOG_INFO,
                   "Vision returned success, processing coordinates...\n");
-      original_vision_info = vision_get_coordinates();
-      kinematic_engine(original_vision_info->x, original_vision_info->y,
-                       original_vision_info->z, &base_target_angle,
+      if (!vision_get_coordinates(&original_vision_info)) {
+        perror("read original coordinates error");
+        exit(1);
+      }
+      kinematic_engine(original_vision_info.x, original_vision_info.y,
+                       original_vision_info.z, &base_target_angle,
                        &elbow_target_angle, &wrist_target_angle,
                        &claw_target_angle);
       if (!validate_angle_set(base_target_angle, elbow_target_angle,
@@ -236,7 +240,10 @@ void arm_handle_state() {
       arm_state = recalibrate();
     } else if (status == ARM_MOTORS_READY &&
                vision_receive_input_isr() == VISION_SUCCESS) {
-      moved_vision_info = vision_get_coordinates();
+      if (!vision_get_coordinates(&moved_vision_info)) {
+        perror("read moved coordinates error");
+        exit(1);
+      }
       if (verify_pickup(original_vision_info, moved_vision_info)) {
         // set_joints_angle(BASE_PLACE_ANGLE, ELBOW_PLACE_ANGLE,
         // WRIST_PLACE_ANGLE);
@@ -320,14 +327,16 @@ void arm_handle_state() {
   }
 }
 
-bool verify_pickup(vision_info_t *original_vision_info,
-                   vision_info_t *moved_vision_info) {
-  int x_diff = moved_vision_info->x - original_vision_info->x;
-  int y_diff = moved_vision_info->y - original_vision_info->y;
-  int z_diff = moved_vision_info->z - original_vision_info->z;
-  int angle_diff = moved_vision_info->angle - original_vision_info->angle;
-  return (x_diff == 0 && y_diff == VERIFICATION_RAISE_DISTANCE && z_diff == 0 &&
-          angle_diff == 0);
+bool verify_pickup(vision_info_t original_vision_info,
+                   vision_info_t moved_vision_info) {
+  log_message(LOG_INFO, "Original coordinates: x = %d y = %d z = %d angle = %d\n", original_vision_info.x, original_vision_info.y, original_vision_info.z, original_vision_info.angle);
+  log_message(LOG_INFO, "Moved coordinates: x = %d y = %d z = %d angle = %d\n", moved_vision_info.x, moved_vision_info.y, moved_vision_info.z, moved_vision_info.angle);
+  int x_diff = moved_vision_info.x - original_vision_info.x;
+  int y_diff = moved_vision_info.y - original_vision_info.y;
+  int z_diff = moved_vision_info.z - original_vision_info.z;
+  int angle_diff = moved_vision_info.angle - original_vision_info.angle;
+  return (abs(x_diff) < X_VERIFICATION_ERROR && y_diff == VERIFICATION_RAISE_DISTANCE && abs(z_diff) < Z_VERIFICATION_ERROR &&
+          abs(angle_diff) < ANGLE_VERIFICATION_ERROR);
 }
 
 void move_home() {
