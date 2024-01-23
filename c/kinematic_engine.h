@@ -15,10 +15,20 @@
 #define CLAW_X 24
 #define CLAW_Y 138
 
+/*Constants for Conversions*/
+/*Vision is offset to where camera is mounted*/
+#define VISION_X_OFFSET -50
+#define VISION_Y_OFFSET 300
+#define VISION_Z_OFFSET 100
+/*Roach is offset to center of rover*/
+#define ROACH_X_OFFSET -215
+#define ROACH_Z_OFFSET -20
+
 /*Constants for Vaild Pickup Area / Boundaries*/
 #define LOWER_AREA_BOUND -120
 #define BACK_AREA_BOUND 20
 #define UPPER_AREA_BOUND 100
+#define DISTANCE_OVERSHOOT 100 //How far we overshoot when we're too far away
 
 /*Constants for Math /Kine Stuff*/
 #define PI 3.1416
@@ -42,9 +52,10 @@ typedef struct {
 } kinematic_output_t
 
 double law_of_cosines(double a, double b, double c);
-bool kinematic_engine(float x_pos, float y_pos, float z_pos,
-                      int16_t *shoulder_angle, int16_t *elbow_angle,
-                      int16_t *wrist_angle, int16_t *turn_angle);
+void kinematic_engine(float x_pos, float y_pos, float z_pos, kinematic_output_t *output);
+// bool kinematic_engine(float x_pos, float y_pos, float z_pos,
+//                       int16_t *shoulder_angle, int16_t *elbow_angle,
+//                       int16_t *wrist_angle, int16_t *turn_angle);
 int to_deg(double radians);
 
 #endif
