@@ -78,7 +78,7 @@ void vision_init() {
     dup2(pipefd[WRITE_END], STDOUT_FILENO);
     close(pipefd[READ_END]);
 
-    if (execlp("/home/xilnx/arm_2024/python/vision.py", "vision.py", NULL) ==
+    if (execlp("/home/xilinx/arm_2024/python/vision.py", "vision.py", NULL) ==
         -1) {
       perror("exec vision");
       exit(1);
@@ -175,7 +175,7 @@ vision_status_t vision_receive_input_isr() {
     perror("poll error");
     exit(1);
   } else if (poll_out > 0) {
-    log_message(LOG_INFO, "read character from poll\n");
+    // log_message(LOG_INFO, "read character from poll\n");
     vision_state = vision_receive_input();
   }
 
