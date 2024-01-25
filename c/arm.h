@@ -96,6 +96,7 @@ void set_joint_angle(arm_motor_t *arm_motor, uint16_t angle);
 bool arm_movement_complete();
 bool verify_pickup(vision_info_t original_vision_info,
                    vision_info_t moved_vision_info);
+bool validate_kinematic_result(kinematic_output_t kinematic_result);
 
 // extern arm_motor_t BASE_MOTOR;
 // extern arm_motor_t ELBOW_MOTOR;

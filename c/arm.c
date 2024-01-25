@@ -19,6 +19,7 @@ int claw_ready = false;
 vision_info_t original_vision_info;
 vision_info_t moved_vision_info;
 static arms_calibrate_state_t arms_calibrate_state = ARM_CALIBRATE_START;
+kinematic_output_t kinematic_result;
 
 /**
  * @brief State machine which goes through the motors and calibrates them
@@ -156,13 +157,14 @@ void arm_handle_state() {
         exit(1);
       }
       kinematic_engine(original_vision_info.x, original_vision_info.y,
-                       original_vision_info.z, &base_target_angle,
-                       &elbow_target_angle, &wrist_target_angle,
-                       &claw_target_angle);
-      if (!validate_angle_set(base_target_angle, elbow_target_angle,
-                              wrist_target_angle, claw_target_angle)) {
+                       original_vision_info.z, &kinematic_result);
+      // if (!validate_angle_set(base_target_angle, elbow_target_angle,
+      //                         wrist_target_angle, claw_target_angle)) {
+      if (!validate_kinematic_result(kinematic_result)) {
         // USE ROVER API TO MOVE
         arm_state = ROVER_MOVING;
+        //rover_move_x(kinematic_result.extra_distance);  //moving forward
+        //rover_rotate(kinematic_result.turn_angle);  //turn angle is +90 to -90. make sure this is adjusted to whatever rover team provides
       } else {
         log_message(
             LOG_INFO,
@@ -247,6 +249,7 @@ void arm_handle_state() {
       if (verify_pickup(original_vision_info, moved_vision_info)) {
         // set_joints_angle(BASE_PLACE_ANGLE, ELBOW_PLACE_ANGLE,
         // WRIST_PLACE_ANGLE);
+        log_message(LOG_INFO, "verify pickup succeeded\n");
         set_joints_angle(BASE_PLACE_ANGLE, ELBOW_PLACE_ANGLE, 0);
         arm_state = MOVE_PLACE_1;
         log_message(LOG_INFO, "CLAW_CHECK complete, heading to MOVE_PLACE_1\n");
@@ -255,6 +258,7 @@ void arm_handle_state() {
       } else {
         arm_state = CAPTURE_VISION_INFO; // did not correctly acquire - restart
                                          // by taking new picture
+        log_message(LOG_INFO, "verify pickup failed\n");
       }
     }
 
@@ -325,6 +329,28 @@ void arm_handle_state() {
   if (prev_state != arm_state) {
     time_in_state = 0;
   }
+}
+
+bool validate_kinematic_result(kinematic_output_t kinematic_result){
+  if (kinematic_result.extra_distance == 0 && kinematic_result.turn_angle == 0){
+    int base_angle = kinematic_result.base_angle;
+    int elbow_angle = kinematic_result.elbow_angle;
+    int wrist_angle = kinematic_result.wrist_angle;
+    int claw_angle = kinematic_result.claw_angle;
+    if (base_angle > 10) {
+      // base_angle correction
+      base_angle += 12;
+    }
+    if (base_angle < 360 && elbow_angle < 360 && wrist_angle < 360) {
+      input_ready = true;
+      base_target_angle = base_angle;
+      elbow_target_angle = elbow_angle;
+      wrist_target_angle = wrist_angle;
+      claw_target_angle = claw_angle % 360;
+      return true;
+    }
+  }
+  return false;
 }
 
 bool verify_pickup(vision_info_t original_vision_info,

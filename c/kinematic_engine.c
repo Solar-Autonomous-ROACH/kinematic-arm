@@ -8,9 +8,7 @@ double law_of_cosines(double a, double b, double c) {
 
 int to_deg(double radians) { return (int)(radians * RAD_TO_DEG); }
 
-bool kinematic_engine(float x_pos, float y_pos, float z_pos,
-                      int16_t *shoulder_angle, int16_t *elbow_angle,
-                      int16_t *wrist_angle, int16_t *turn_angle) {
+bool kinematic_engine(float x_pos, float y_pos, float z_pos, kinematic_output_t * kinematic_result) {
   // printf("Values: %f, %f, %f\n", x_pos, y_pos, z_pos);
   double magnitude, theta_1, theta_2, shoulder_rad, elbow_rad;
   clock_t start_time, end_time;
@@ -37,11 +35,11 @@ bool kinematic_engine(float x_pos, float y_pos, float z_pos,
   /*Do Checks to see if position is in range and within bounding lines*/
   if (magnitude * .99 > S_E_LENGTH + E_W_LENGTH) { // check if in range
     return false;
-  } elif (LOWER_AREA_BOUND > (x_pos - CLAW_X)) { // Lower Bound
+  } else if (LOWER_AREA_BOUND > (y_pos - CLAW_Y)) { // Lower Bound
     return false;
-  } elif (BACK_AREA_BOUND > (y_pos - CLAW_Y)) { // Back Bound
+  } else if (BACK_AREA_BOUND > (x_pos - CLAW_X)) { // Back Bound
     return false;
-  } elif (UPPER_AREA_BOUND < (x_pos - CLAW_X)) { // Upper Bound
+  } else if (UPPER_AREA_BOUND < (y_pos - CLAW_Y)) { // Upper Bound
     return false;
   }
 
