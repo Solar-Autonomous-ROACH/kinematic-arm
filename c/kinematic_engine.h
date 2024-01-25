@@ -11,21 +11,31 @@
 #define S_E_LENGTH 238
 #define E_W_LENGTH 273
 #define W_C_LENGTH 140
-/*Currently set to be 80 deg*/
+/*Currently set to be 70 deg*/
 #define CLAW_X 48
 #define CLAW_Y 132
+
+/*Constants for Conversions*/
+/*Vision is offset to where camera is mounted*/
+#define VISION_X_OFFSET -50
+#define VISION_Y_OFFSET 300
+#define VISION_Z_OFFSET 100
+/*Roach is offset to center of rover*/
+#define ROACH_X_OFFSET -215
+#define ROACH_Z_OFFSET -20
 
 /*Constants for Vaild Pickup Area / Boundaries*/
 #define LOWER_AREA_BOUND -420
 #define BACK_AREA_BOUND 20
 #define UPPER_AREA_BOUND 100
+#define DISTANCE_OVERSHOOT 0 //How far we overshoot when we're too far away
 
 /*Constants for Math /Kine Stuff*/
 #define PI 3.1416
 #define RAD_TO_DEG (180.0 / PI)
 /*This is the 270 deg that is used to finish the triangle
   and the compensator for where the wrist starts measuring from*/
-#define WRIST_CONST ((280.0 + 20.0) / 180.0 * PI - 3 * PI / 2)
+#define WRIST_CONST (((280.0 + 20.0) + 20.0) / 180.0 * PI - 3 * PI / 2)
 /*This is for any tilts in the robot body itself*/
 #define SHOULDER_CONST (0.0 / 180.0 * PI)
 
@@ -43,8 +53,10 @@ typedef struct {
 } kinematic_output_t;
 
 double law_of_cosines(double a, double b, double c);
-bool kinematic_engine(float x_pos, float y_pos, float z_pos,
-                      kinematic_output_t * kinematic_result);
+void kinematic_engine(float x_pos, float y_pos, float z_pos, kinematic_output_t *output);
+// bool kinematic_engine(float x_pos, float y_pos, float z_pos,
+//                       int16_t *shoulder_angle, int16_t *elbow_angle,
+//                       int16_t *wrist_angle, int16_t *turn_angle);
 int to_deg(double radians);
 
 #endif
