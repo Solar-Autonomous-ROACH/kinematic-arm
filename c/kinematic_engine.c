@@ -15,12 +15,15 @@ void kinematic_engine(float x_pos, float y_pos, float z_pos, kinematic_output_t 
 
   start_time = clock(); //For timing the whole thing
 
+  /*Set output to 0 so no stale values*/
+  output->
+
   /*Convert from vision coords to internal coords*/
   x_pos -= VISION_X_OFFSET;
   y_pos -= VISION_Y_OFFSET;
   z_pos -= VISION_Z_OFFSET; 
 
-  if (!((0 - SMALL_DOUBLE) <= z_pos && z_pos <= SMALL_DOUBLE)) {//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+  if (!((0 - SMALL_DOUBLE) <= z_pos && z_pos <= SMALL_DOUBLE)) {
     // If Z is something other than 0, get angle and new x distance
     x_pos -= ROACH_X_OFFSET;
     z_pos -= ROACH_Z_OFFSET;
