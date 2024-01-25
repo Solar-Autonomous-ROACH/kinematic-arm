@@ -2,7 +2,10 @@
 #include "arm.h"
 #include "arm_motor.h"
 #include "logger.h"
+
+#include "arm_motor_controller.h"
 #include "mmio.h"
+
 static int count_ms = 0;
 static uint64_t total_count = 120000;
 static uint8_t watchdog_flag = 0;

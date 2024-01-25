@@ -433,9 +433,8 @@ void set_joint_angle(arm_motor_t *arm_motor, uint16_t angle) {
 // CLAW_MOTOR_PIN 3
 void arm_init() {
   WRIST_MOTOR.name = "WRIST";
-  WRIST_MOTOR.index = WRIST_MOTOR_PIN;
-  WRIST_MOTOR.motor = get_motor(WRIST_MOTOR_PIN);
-  MotorController_init(&(WRIST_MOTOR.motor->motor_controller), WRIST_MOTOR_ADDRESS);
+  WRIST_MOTOR.index = WRIST_MOTOR_IDX;
+  WRIST_MOTOR.motor = get_motor(WRIST_MOTOR_IDX);
   WRIST_MOTOR.pos_angle = false;
   WRIST_MOTOR.stopper_pos = 0;
   WRIST_MOTOR.is_calibrated = false;
@@ -450,9 +449,8 @@ void arm_init() {
   WRIST_MOTOR.integral_threshold = 133;
 
   ELBOW_MOTOR.name = "ELBOW";
-  ELBOW_MOTOR.index = ELBOW_MOTOR_PIN;
-  ELBOW_MOTOR.motor = get_motor(ELBOW_MOTOR_PIN);
-  MotorController_init(&(ELBOW_MOTOR.motor->motor_controller), ELBOW_MOTOR_ADDRESS);
+  ELBOW_MOTOR.index = ELBOW_MOTOR_IDX;
+  ELBOW_MOTOR.motor = get_motor(ELBOW_MOTOR_IDX);
   ELBOW_MOTOR.pos_angle = true;
   ELBOW_MOTOR.stopper_pos = 0;
   ELBOW_MOTOR.is_calibrated = false;
@@ -467,9 +465,8 @@ void arm_init() {
   ELBOW_MOTOR.integral_threshold = 100;
 
   BASE_MOTOR.name = "BASE";
-  BASE_MOTOR.index = BASE_MOTOR_PIN;
-  BASE_MOTOR.motor = get_motor(BASE_MOTOR_PIN);
-  MotorController_init(&(BASE_MOTOR.motor->motor_controller), BASE_MOTOR_ADDRESS);
+  BASE_MOTOR.index = BASE_MOTOR_IDX;
+  BASE_MOTOR.motor = get_motor(BASE_MOTOR_IDX);
   BASE_MOTOR.pos_angle = false;
   BASE_MOTOR.stopper_pos = 0;
   BASE_MOTOR.is_calibrated = false;
@@ -483,5 +480,6 @@ void arm_init() {
   BASE_MOTOR.ki = 0.1;
   BASE_MOTOR.integral_threshold = 1000;
 
+  motor_init();
   claw_init();
 }

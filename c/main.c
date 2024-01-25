@@ -5,8 +5,10 @@
 #include "arm.h"
 #include "isr.h"
 #include "kinematic_engine.h"
-#include "led.h"
+
+#include "arm_motor_controller.h"
 #include "mmio.h"
+
 #include <signal.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -18,7 +20,6 @@ void sigint_handler(int sig) {
       set_motor_speed(i, 0);
     }
   }
-  set_brightness(100, 000, 100);
   exit(0);
 }
 
@@ -28,8 +29,6 @@ int main() {
   mmio_init();
   printf("MMIO INIT DONE\n");
   isr_init();
-  set_led_status();
-  set_brightness(100, 100, 000);
   speed1 = 0;
   int16_t input1, input2, input3, input4;
   int16_t calc_base_angle, calc_elbow_angle, calc_wrist_angle, turn_angle,

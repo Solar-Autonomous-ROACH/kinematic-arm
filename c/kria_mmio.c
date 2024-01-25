@@ -1,4 +1,4 @@
-#include "mmio.h"
+#include "kria_mmio.h"
 
 volatile unsigned int *mmio_init(off_t iomem_address) {
   // Open the /dev/mem device file

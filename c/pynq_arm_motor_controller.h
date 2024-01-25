@@ -1,63 +1,45 @@
-#ifndef ROVERCORE_MOTOR_H
-#define ROVERCORE_MOTOR_H
+#ifndef PYNQ_ARM_MOTOR_CONTROLLER_H
+#define PYNQ_ARM_MOTOR_CONTROLLER_H
 
-#include "mmio.h"
-#include <aio.h>
+#include "pynq_mmio.h"
 #include <stdint.h>
+
+#define WRIST_MOTOR_IDX 0
+#define ELBOW_MOTOR_IDX 1
+#define BASE_MOTOR_IDX 2
+#define CLAW_MOTOR_IDX 3
+
+#define WRIST_MOTOR_PIN 0
+#define ELBOW_MOTOR_PIN 1
+#define BASE_MOTOR_PIN 2
+#define CLAW_MOTOR_PIN 3
 
 #define MOTOR_READ_REG 0x30
 #define MOTOR_WRITE_REG 0x20
 
-#define MAX_MOTORS 16
+#define MAX_MOTORS 4
 #define MOTOR_DATA_SIZE 8
 
 #define UPPER_MASK 0xFFFFFF00
 #define LOWER_MASK 0x000000FF
 
-#define KP 2
-#define KV 2
-
-#define POSITION_FIFO_SIZE 10
 #define HIGH_THRESH 206 // 256-50
 #define LOW_THRESH 50
 
-typedef struct {
-  // MMIO
-  volatile unsigned int *mmio;
-
-  // GPIO Output Control Signals
-  uint8_t duty_cycle;  // 8 bits
-  uint8_t clk_divisor; // 3 bits
-  uint8_t dir;         // 1 bit
-  uint8_t en_motor;    // 1 bit
-  uint8_t clear_enc;   // 1 bit
-  uint8_t en_enc;      // 1 bit
-
-  // GPIO Input Control Signals
-  int16_t counts; // 16 bits
-
-} MotorController;
-
-int MotorController_init(MotorController *motor, off_t mmio_address);
-void MotorController_close(MotorController *motor);
-
-void MotorController_write(MotorController *motor);
-void MotorController_read(MotorController *motor);
+#define POSITION_FIFO_SIZE 10
 
 typedef struct {
+  uint8_t pin;
   long abs_pos;
   long long target_pos;
   int velocity;
-  off_t MMIO_addr;
-  uint16_t raw_pos;
-  MotorController motor_controller;
+  uint8_t raw_pos;
   long position_fifo[POSITION_FIFO_SIZE];
   uint8_t position_fifo_idx;
   uint16_t stopped_duration; // time in ms motor has been stopped
 } motor_t;
 
-char get_raw_pos(uint8_t motor_index);
-
+void motor_init();
 int motor_update(uint8_t motor_index);
 
 int set_motor_speed(uint8_t motor_index, int speed);

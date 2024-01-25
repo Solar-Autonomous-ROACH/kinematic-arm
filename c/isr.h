@@ -8,19 +8,10 @@
 #include <unistd.h>
 
 #include "mmio.h"
-#include "motor.h"
-#include "move.h"
 #include "stdint.h"
-// #include "rover.h"
-// #include "steering_motor.h"
-#include "led.h"
 
 #ifndef ROVERCORE_ISR_H
 #define ROVERCORE_ISR_H
-
-
-
-
 
 int speed1;
 

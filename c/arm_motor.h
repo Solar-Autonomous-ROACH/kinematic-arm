@@ -1,6 +1,6 @@
 #ifndef ARM_MOTOR_H_
 #define ARM_MOTOR_H_
-#include "motor.h"
+#include "arm_motor_controller.h"
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -15,12 +15,6 @@
 #define MOTOR_STALL_START_CHECKING_TIME_MS 500
 // time (ms) motor has to be stopped to determine a stall
 #define MOTOR_STALL_DURATION 100
-
-//Motors MMIO Addresses
-#define BASE_MOTOR_ADDRESS 0x000
-#define ELBOW_MOTOR_ADDRESS 0x000
-#define WRIST_MOTOR_ADDRESS 0x000
-#define CLAW_MOTOR_ADDRESS 0x000
 
 typedef enum {
   ARM_MOTOR_CALIBRATE_INIT,
