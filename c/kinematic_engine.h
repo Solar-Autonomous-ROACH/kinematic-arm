@@ -17,9 +17,9 @@
 
 /*Constants for Conversions*/
 /*Vision is offset to where camera is mounted*/
-#define VISION_X_OFFSET -50
-#define VISION_Y_OFFSET 300
-#define VISION_Z_OFFSET 100
+#define VISION_X_OFFSET -20//-50
+#define VISION_Y_OFFSET 0//300
+#define VISION_Z_OFFSET 0//100
 /*Roach is offset to center of rover*/
 #define ROACH_X_OFFSET -215
 #define ROACH_Z_OFFSET -20
@@ -28,14 +28,14 @@
 #define LOWER_AREA_BOUND -420
 #define BACK_AREA_BOUND 20
 #define UPPER_AREA_BOUND 100
-#define DISTANCE_OVERSHOOT 0 //How far we overshoot when we're too far away
+#define DISTANCE_OVERSHOOT 50 //How far we overshoot when we're too far away
 
 /*Constants for Math /Kine Stuff*/
 #define PI 3.1416
 #define RAD_TO_DEG (180.0 / PI)
 /*This is the 270 deg that is used to finish the triangle
   and the compensator for where the wrist starts measuring from*/
-#define WRIST_CONST (((280.0 + 20.0) + 20.0) / 180.0 * PI - 3 * PI / 2)
+#define WRIST_CONST ((280.0 + 20.0) / 180.0 * PI - 3 * PI / 2)
 /*This is for any tilts in the robot body itself*/
 #define SHOULDER_CONST (0.0 / 180.0 * PI)
 

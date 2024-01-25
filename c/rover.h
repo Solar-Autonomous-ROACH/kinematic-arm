@@ -7,10 +7,8 @@
 
 bool rover_movement_done();
 
-void tank_turn(int16_t target_angle);
+void rover_rotate(int16_t turn_angle);
 
-void move_forward(int16_t dist);
-
-void move_right(int16_t dist);
+void rover_move_x(int16_t dist);
 
 #endif

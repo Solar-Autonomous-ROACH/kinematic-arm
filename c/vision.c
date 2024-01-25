@@ -118,9 +118,10 @@ vision_status_t vision_receive_input() {
   switch (c) {
   case 'r': /** vision startup complete */
     vision_state = VISION_READY_FOR_CAPTURE;
-    dummy = fgetc(vision_stdout); // get rid of edxtra
+    dummy = fgetc(vision_stdout); // get rid of extra newline
     if (dummy != '\n') {
       log_message(LOG_ERROR, "Vision error\n");
+      vision_state = VISION_ERROR;
     }
     break;
 
@@ -136,7 +137,7 @@ vision_status_t vision_receive_input() {
     // exit(0);
     if (fscanf(vision_stdout, "=%hd,y=%hd,z=%hd,a=%hd", &(vision_info.x),
                &(vision_info.y), &(vision_info.z), &(vision_info.angle)) > 0) {
-      dummy = fgetc(vision_stdout); // get rid of edxtra
+      dummy = fgetc(vision_stdout); // get rid of extra newline
       if (dummy != '\n') {
         log_message(LOG_ERROR, "Vision error\n");
       }

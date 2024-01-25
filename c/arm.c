@@ -163,8 +163,8 @@ void arm_handle_state() {
       if (!validate_kinematic_result(kinematic_result)) {
         // USE ROVER API TO MOVE
         arm_state = ROVER_MOVING;
-        //rover_move_x(kinematic_result.extra_distance);  //moving forward
-        //rover_rotate(kinematic_result.turn_angle);  //turn angle is +90 to -90. make sure this is adjusted to whatever rover team provides
+        rover_move_x(kinematic_result.extra_distance);  //moving forward
+        rover_rotate(kinematic_result.turn_angle);  //turn angle is +90 to -90. make sure this is adjusted to whatever rover team provides
       } else {
         log_message(
             LOG_INFO,
@@ -186,8 +186,8 @@ void arm_handle_state() {
     break;
 
   case ROVER_MOVING:
-    // if (rover_movement_done()){
-    if (true) {
+    if (rover_movement_done()){
+    //if (true) {
       arm_state = CAPTURE_VISION_INFO;
     }
     break;
@@ -332,6 +332,8 @@ void arm_handle_state() {
 }
 
 bool validate_kinematic_result(kinematic_output_t kinematic_result){
+  log_message(LOG_INFO, "Validate kinematic result with extra distance = %d, turn angle = %d, base angle = %d, elbow angle = %d, wrist angle = %d, claw_angle = %d, error = %d\n", 
+  kinematic_result.extra_distance, kinematic_result.turn_angle, kinematic_result.base_angle, kinematic_result.elbow_angle, kinematic_result.wrist_angle, kinematic_result.claw_angle, kinematic_result.error);
   if (kinematic_result.extra_distance == 0 && kinematic_result.turn_angle == 0){
     int base_angle = kinematic_result.base_angle;
     int elbow_angle = kinematic_result.elbow_angle;

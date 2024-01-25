@@ -45,8 +45,14 @@ void kinematic_engine(float x_pos, float y_pos, float z_pos, kinematic_output_t 
   
   output->extra_distance = 0;
   output->error = false;
-  if (magnitude * .99 > S_E_LENGTH + E_W_LENGTH) { // check if in range
-    output->extra_distance = (int) (magnitude - S_E_LENGTH - E_W_LENGTH - DISTANCE_OVERSHOOT);
+  
+  // log_message(LOG_INFO, "Testing1\n");
+  // log_message(LOG_INFO, "Magnitude = %.3f\n", magnitude);
+  // log_message(LOG_INFO, "Arm Length = %.3f\n", (S_E_LENGTH + E_W_LENGTH + 0.0) * 0.98);
+  if (magnitude > (S_E_LENGTH + E_W_LENGTH + 0.0) * 0.98) { // check if in range
+    // output->extra_distance = (int) (magnitude - S_E_LENGTH - E_W_LENGTH - DISTANCE_OVERSHOOT);
+    // log_message(LOG_INFO, "Testing2\n");
+    output->extra_distance = ((int) (magnitude - S_E_LENGTH - E_W_LENGTH + DISTANCE_OVERSHOOT));
     return;
   } else if (LOWER_AREA_BOUND > (y_pos - CLAW_Y)) { // Lower Bound
     output->error = true;

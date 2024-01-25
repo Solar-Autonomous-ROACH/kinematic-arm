@@ -5,15 +5,14 @@ bool rover_movement_done() {
   return true;
 }
 
-void tank_turn(int16_t target_angle) {
-  log_message(LOG_INFO, "PERFORMING TANK TURN, ROTATING %s DEGREES\n",
-              target_angle);
+void rover_rotate(int16_t turn_angle) {
+  if (turn_angle > 90 || turn_angle < -90) {
+    log_message(LOG_ERROR, "Invalid turn angle\n");
+  } else {
+    log_message(LOG_INFO, "Rover rotating to target angle %d\n", turn_angle);
+  }
 }
 
-void move_forward(int16_t dist) {
-  log_message(LOG_INFO, "MOVING FORWARD BY DISTANCE %s CENTIMETERS\n", dist);
-}
-
-void move_right(int16_t dist) {
-  log_message(LOG_INFO, "MOVING RIGHT BY DISTANCE %s CENTIMETERS\n", dist);
+void rover_move_x(int16_t dist) {
+  log_message(LOG_INFO, "Rover moving %s by distance %d\n", dist > 0 ? "forward" : "backward", dist > 0 ? dist : -dist);
 }

@@ -5,6 +5,7 @@
 #include "claw.h"
 #include "kinematic_engine.h"
 #include "vision.h"
+#include "rover.h"
 #include <stdint.h>
 
 // The motor value on the board
