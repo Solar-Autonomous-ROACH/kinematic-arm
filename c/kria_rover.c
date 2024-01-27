@@ -1,4 +1,4 @@
-#include "rover.h"
+#include "kria_rover.h"
 
 int MotorController_init(MotorController *motor, off_t mmio_address) {
   // Initialize MMIO
@@ -50,11 +50,25 @@ void MotorController_read(MotorController *motor) {
 void MotorController_set_speed(MotorController *motor __attribute__((unused)),
                                int speed __attribute__((unused))) {}
 
-void rover_move_x(MotorController *rover __attribute__((unused)),
-                  int distance __attribute__((unused))) {}
+bool rover_movement_done() {
+  log_message(LOG_INFO, "CHECKING IF ROVER IS DONE MOVING\n");
+  return true;
+}
 
-void rover_move_y(MotorController *rover __attribute__((unused)),
-                  int distance __attribute__((unused))) {}
+void rover_rotate(int16_t turn_angle) {
+  if (turn_angle > 90 || turn_angle < -90) {
+    log_message(LOG_ERROR, "Invalid turn angle\n");
+  } else {
+    log_message(LOG_INFO, "Rover rotating to target angle %d\n", turn_angle);
+  }
+}
 
-void rover_rotate(MotorController *rover __attribute__((unused)),
-                  int angle __attribute__((unused))) {}
+void rover_move_x(int16_t dist) {
+  log_message(LOG_INFO, "Rover moving %s by distance %d\n",
+              dist > 0 ? "forward" : "backward", dist > 0 ? dist : -dist);
+}
+
+void rover_move_y(int16_t dist) {
+  log_message(LOG_INFO, "Rover moving %s by distance %d\n",
+              dist > 0 ? "right" : "left", dist > 0 ? dist : -dist);
+}

@@ -35,7 +35,7 @@ int isr_init() {
   return 0;
 }
 
-int isr(int signum) {
+int isr(int signum __attribute__((unused))) {
   handle_watchdog();
   for (int i = 0; i < 14; i++) {
     motor_update(i);

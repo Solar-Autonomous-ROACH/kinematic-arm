@@ -7,7 +7,17 @@
     "vector": "cpp",
     "stdio.h": "c",
     "logger.h": "c",
-    "kinematic_engine.h": "c"
+    "kinematic_engine.h": "c",
+    "signal.h": "c",
+    "unistd.h": "c",
+    "stdbool.h": "c",
+    "arm.h": "c",
+    "steering_motor.h": "c",
+    "kria_mmio.h": "c",
+    "kria_motor.h": "c",
+    "pynq_rover.h": "c",
+    "kria_rover.h": "c",
+    "kria_arm_motor_controller.h": "c"
   },
   "C_Cpp.clang_format_fallbackStyle": "LLVM"
 }

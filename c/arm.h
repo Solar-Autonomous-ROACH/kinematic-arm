@@ -4,6 +4,9 @@
 #include "arm_motor.h"
 #include "arm_motor_controller.h"
 #include "claw.h"
+#include "kinematic_engine.h"
+#include "rover.h"
+#include "vision.h"
 #include <stdint.h>
 
 // #define STEERING_GEAR_RATIO 172
@@ -21,6 +24,11 @@
 #define ELBOW_PLACE_ANGLE 45
 #define WRIST_PLACE_ANGLE 200
 
+#define VERIFICATION_RAISE_DISTANCE 100
+#define X_VERIFICATION_ERROR 5
+#define Z_VERIFICATION_ERROR 5
+#define ANGLE_VERIFICATION_ERROR 5
+
 /** only one of these should be true at a time */
 // #define DEBUG_WRIST
 // #define DEBUG_ELBOW
@@ -28,7 +36,9 @@
 
 typedef enum {
   CALIBRATE,
+  CAPTURE_VISION_INFO,
   WAIT_FOR_INPUT,
+  ROVER_MOVING,
   MOVE_TARGET_BE1,
   MOVE_TARGET_WRIST,
   CLAW_ACQUIRE,
@@ -65,7 +75,7 @@ arm_motors_status_t arm_motors_state_handler(bool base, bool elbow, bool wrist);
 arm_state_t recalibrate();
 void move_home();
 void arm_handle_state_debug();
-void validate_angle_set(int16_t base_angle, int16_t elbow_angle,
+bool validate_angle_set(int16_t base_angle, int16_t elbow_angle,
                         int16_t wrist_angle, int16_t claw_angle);
 
 arms_calibrate_state_t arm_calibrate();
@@ -75,6 +85,9 @@ void set_joints_angle(int16_t base_angle, int16_t elbow_angle,
 void set_joint_angle(arm_motor_t *arm_motor, uint16_t angle);
 
 bool arm_movement_complete();
+bool verify_pickup(vision_info_t original_vision_info,
+                   vision_info_t moved_vision_info);
+bool validate_kinematic_result(kinematic_output_t kinematic_result);
 
 // extern arm_motor_t BASE_MOTOR;
 // extern arm_motor_t ELBOW_MOTOR;
