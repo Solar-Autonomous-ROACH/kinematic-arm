@@ -13,7 +13,6 @@ void motor_init() {
                        CLAW_MOTOR_ADDRESS);
 }
 
-
 // This function updates the position of a motor with the given index.
 int motor_update(uint8_t motor_index) {
   motor_t *motor = &motors[motor_index];
@@ -35,19 +34,17 @@ int motor_update(uint8_t motor_index) {
   MotorController_read(&(motor->motor_controller));
   motor->raw_pos = motor->motor_controller.counts;
 
+  int32_t diff = (int32_t)motor->raw_pos - (int32_t)last;
   // Check if the motor has crossed a threshold in either direction
-  if ((last > HIGH_THRESH) && (motor->raw_pos < LOW_THRESH)) {
-    motor->abs_pos +=
-        1 << MOTOR_DATA_SIZE; // Increment the absolute position of the motor
-  }
-  if ((last < LOW_THRESH) && (motor->raw_pos > HIGH_THRESH)) {
-    motor->abs_pos -=
-        1 << MOTOR_DATA_SIZE; // Decrement the absolute position of the motor
+  if (diff > ENCODER_RESOLUTION_TICKS / 2) {
+    motor->abs_pos += ENCODER_RESOLUTION_TICKS - diff;
+  } else if (diff < -ENCODER_RESOLUTION_TICKS / 2) {
+    // Decrement the absolute position of the motor
+    motor->abs_pos -= (ENCODER_RESOLUTION_TICKS + diff);
+  } else {
+    motor->abs_pos += diff;
   }
 
-  motor->abs_pos &= UPPER_MASK; // Mask the upper bits of the absolute position
-  motor->abs_pos += motor->raw_pos; // Add the raw position to the absolute
-                                    // position
   set_motor_position(motor_index, motor->abs_pos);
 
   motor->velocity = motor->abs_pos - last_long;
@@ -72,13 +69,11 @@ int set_motor_speed(uint8_t motor_index, int speed) {
     speed = 127;
   if (speed < -127)
     speed = -127;
-  if (speed >= 0)
-    // set_PL_register(MOTOR_WRITE_REG + motor_index, speed);
+  if (speed >= 0) {
     MotorController_set_speed(&(motor->motor_controller), speed);
-
-  else
+  } else {
     MotorController_set_speed(&(motor->motor_controller), 0xFF + speed);
-  // set_PL_register(MOTOR_WRITE_REG + motor_index, 0xFF + speed);
+  }
   return 0;
 }
 
