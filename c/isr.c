@@ -6,15 +6,7 @@
 #include "arm_motor_controller.h"
 #include "mmio.h"
 
-static int count_ms = 0;
-static uint64_t total_count = 120000;
-static uint8_t watchdog_flag = 0;
 static unsigned long millis; // stores number of milliseconds since startup
-
-int new_inc = 4;
-int temp = 0;
-#define CURMOTOR 0
-#define ERROR_MARGIN 5
 
 int isr_init() {
   struct sigaction sa;
@@ -44,8 +36,7 @@ int isr_init() {
 }
 
 int isr(int signum) {
-  set_PL_register(WATCHDOG_REG, watchdog_flag);
-  // set_PL_register(DEBUG_REG, 0xFF);
+  handle_watchdog();
   for (int i = 0; i < 14; i++) {
     motor_update(i);
   }
@@ -57,8 +48,5 @@ int isr(int signum) {
 #endif
 
   millis++;
-  watchdog_flag = !watchdog_flag;
-  count_ms++;
-  total_count++;
   return 0;
 }
