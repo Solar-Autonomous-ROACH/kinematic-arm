@@ -31,5 +31,6 @@ claw_state_t claw_handle_state();
 void set_claw_angle(uint16_t angle);
 void open_claw();
 void close_claw();
+void toggle_claw();
 
 #endif

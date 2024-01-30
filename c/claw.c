@@ -7,7 +7,7 @@
 claw_motor_t CLAW_MOTOR;
 
 void claw_init() {
-  CLAW_MOTOR.index = 3;
+  CLAW_MOTOR.index = CLAW_MOTOR_IDX;
   CLAW_MOTOR.motor =
       get_motor(CLAW_MOTOR_PIN); // TODO: Change to correct motor value
   CLAW_MOTOR.state = CLAW_CHECK_POSITION;
@@ -42,11 +42,8 @@ claw_state_t claw_handle_state() {
       set_motor_speed(CLAW_MOTOR.index, -CLAW_SPEED);
       CLAW_MOTOR.state = CLAW_ROTATING;
     } else if (CLAW_MOTOR.target_is_open != CLAW_MOTOR.is_open) {
-      // assume turning positive opens/closes the claw
-      long turn_90_deg = CLAW_MOTOR.CPR * CLAW_MOTOR.gear_ratio / 4;
-      CLAW_MOTOR.motor->target_pos = CLAW_MOTOR.motor->abs_pos + turn_90_deg;
-      CLAW_MOTOR.state = CLAW_OPENING_CLOSING;
-      set_motor_speed(CLAW_MOTOR.index, CLAW_SPEED);
+      toggle_claw();
+      // set_motor_speed(CLAW_MOTOR.index, CLAW_SPEED);
     }
     break;
 
@@ -61,11 +58,8 @@ claw_state_t claw_handle_state() {
           CLAW_MOTOR.target_angle_ticks; // TODO: add a -diff
       // check if we need to open/close claw
       if (CLAW_MOTOR.target_is_open != CLAW_MOTOR.is_open) {
-        // assume turning positive opens/closes the claw
-        long turn_90_deg = CLAW_MOTOR.CPR * CLAW_MOTOR.gear_ratio / 4;
-        CLAW_MOTOR.motor->target_pos = CLAW_MOTOR.motor->abs_pos + turn_90_deg;
-        CLAW_MOTOR.state = CLAW_OPENING_CLOSING;
-        set_motor_speed(CLAW_MOTOR.index, CLAW_SPEED);
+        toggle_claw();
+        // set_motor_speed(CLAW_MOTOR.index, CLAW_SPEED);
       } else {
         CLAW_MOTOR.state = CLAW_CHECK_POSITION;
       }
@@ -89,6 +83,7 @@ claw_state_t claw_handle_state() {
 }
 
 void set_claw_angle(uint16_t angle) {
+  log_message(LOG_INFO, "setting claw angle to %d\n", angle);
   if (CLAW_MOTOR.state == CLAW_CHECK_POSITION) {
     long ticks = angle * CLAW_MOTOR.CPR * CLAW_MOTOR.gear_ratio / 360;
     CLAW_MOTOR.target_angle_ticks = ticks;
@@ -105,4 +100,12 @@ void close_claw() {
   if (CLAW_MOTOR.state == CLAW_CHECK_POSITION) {
     CLAW_MOTOR.target_is_open = false;
   }
+}
+
+void toggle_claw() {
+  // assume turning positive opens/closes the claw
+  long turn_90_deg = CLAW_MOTOR.CPR * CLAW_MOTOR.gear_ratio / 4;
+  CLAW_MOTOR.motor->target_pos = CLAW_MOTOR.motor->abs_pos + turn_90_deg;
+  CLAW_MOTOR.state = CLAW_OPENING_CLOSING;
+  set_motor_speed(CLAW_MOTOR.index, CLAW_SPEED);
 }
