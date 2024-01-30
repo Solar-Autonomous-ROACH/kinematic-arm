@@ -1,7 +1,6 @@
 #ifndef KRIA_ARM_MOTOR_CONTROLLER_H
 #define KRIA_ARM_MOTOR_CONTROLLER_H
 
-#include "arm_motor.h"
 #include "rover.h"
 #include <aio.h>
 #include <stdint.h>

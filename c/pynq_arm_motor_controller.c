@@ -9,10 +9,15 @@ static motor_t motors[MAX_MOTORS];
 // static uint8_t motor_pwm[MAX_MOTORS];
 
 void motor_init() {
+  mmio_init();
   motors[WRIST_MOTOR_IDX].pin = WRIST_MOTOR_PIN;
   motors[ELBOW_MOTOR_IDX].pin = ELBOW_MOTOR_PIN;
   motors[BASE_MOTOR_IDX].pin = BASE_MOTOR_PIN;
   motors[CLAW_MOTOR_IDX].pin = CLAW_MOTOR_PIN;
+  for (int i = 0; i < MAX_MOTORS; i++) {
+    set_motor_speed(i, 0);
+    motor_update(i);
+  }
 }
 
 // This function updates the position of a motor with the given index.

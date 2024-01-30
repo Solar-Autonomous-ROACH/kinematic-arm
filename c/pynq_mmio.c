@@ -42,3 +42,9 @@ uint8_t get_PL_register(uint8_t address) {
   *mmio = (address << ADDRESS_OFFSET);
   return *mmio_read;
 }
+
+void handle_watchdog() {
+  static uint8_t watchdog_flag = 0;
+  set_PL_register(WATCHDOG_REG, watchdog_flag);
+  watchdog_flag = !watchdog_flag;
+}

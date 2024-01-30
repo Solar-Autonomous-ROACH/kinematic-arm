@@ -14,5 +14,6 @@ volatile unsigned int *mmio_init(off_t iomem_address);
 void close_mem(volatile unsigned int *mmio);
 
 uint8_t mmio_is_valid(volatile unsigned int *mmio);
+void handle_watchdog();
 
 #endif

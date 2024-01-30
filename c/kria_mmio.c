@@ -26,3 +26,5 @@ void close_mem(volatile unsigned int *mmio) {
 }
 
 uint8_t mmio_is_valid(volatile unsigned int *mmio) { return mmio ? 1 : 0; }
+
+void handle_watchdog() {}
