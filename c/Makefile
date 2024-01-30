@@ -3,7 +3,7 @@
 
 # Compiler options
 CC = gcc
-CFLAGS = -Wall -Wextra
+CFLAGS = -Wall -Wextra -O1
 
 # Source files
 # SRCS = main.c mmio.c led.c move.c isr.c motor.c steering_motor.c rover.c

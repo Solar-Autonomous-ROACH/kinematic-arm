@@ -5,22 +5,6 @@
 #include <aio.h>
 #include <stdint.h>
 
-#define MOTOR_READ_REG 0x30
-#define MOTOR_WRITE_REG 0x20
-
-#define MAX_MOTORS 4
-#define MOTOR_DATA_SIZE 16
-
-#define UPPER_MASK 0xFFFFFF00
-#define LOWER_MASK 0x000000FF
-
-#define KP 2
-#define KV 2
-
-#define POSITION_FIFO_SIZE 10
-#define HIGH_THRESH 206 // 256-50
-#define LOW_THRESH 50
-
 #define WRIST_MOTOR_IDX 0
 #define ELBOW_MOTOR_IDX 1
 #define BASE_MOTOR_IDX 2
@@ -31,6 +15,12 @@
 #define ELBOW_MOTOR_ADDRESS 0x000
 #define WRIST_MOTOR_ADDRESS 0x000
 #define CLAW_MOTOR_ADDRESS 0x000
+
+#define MAX_MOTORS 4
+#define ENCODER_RESOLUTION_NUM_BITS 16
+#define ENCODER_RESOLUTION_TICKS 65536
+
+#define POSITION_FIFO_SIZE 10
 
 typedef struct {
   long abs_pos;

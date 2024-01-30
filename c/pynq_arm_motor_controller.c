@@ -37,19 +37,18 @@ int motor_update(uint8_t motor_index) {
   last_long = motor->abs_pos;
   // Read the current position of the motor from the I/O register
   motor->raw_pos = get_PL_register(MOTOR_READ_REG + motor->pin);
+
+  int16_t diff = (int16_t)motor->raw_pos - (int16_t)last;
   // Check if the motor has crossed a threshold in either direction
-  if ((last > HIGH_THRESH) && (motor->raw_pos < LOW_THRESH)) {
-    motor->abs_pos +=
-        1 << MOTOR_DATA_SIZE; // Increment the absolute position of the motor
-  }
-  if ((last < LOW_THRESH) && (motor->raw_pos > HIGH_THRESH)) {
-    motor->abs_pos -=
-        1 << MOTOR_DATA_SIZE; // Decrement the absolute position of the motor
+  if (diff > ENCODER_RESOLUTION_TICKS / 2) {
+    motor->abs_pos += ENCODER_RESOLUTION_TICKS - diff;
+  } else if (diff < -ENCODER_RESOLUTION_TICKS / 2) {
+    // Decrement the absolute position of the motor
+    motor->abs_pos -= (ENCODER_RESOLUTION_TICKS + diff);
+  } else {
+    motor->abs_pos += diff;
   }
 
-  motor->abs_pos &= UPPER_MASK; // Mask the upper bits of the absolute position
-  motor->abs_pos += motor->raw_pos; // Add the raw position to the absolute
-                                    // position
   set_motor_position(motor_index, motor->abs_pos);
 
   motor->velocity = motor->abs_pos - last_long;
