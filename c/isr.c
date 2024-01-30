@@ -25,10 +25,6 @@ int isr_init() {
   timer.it_value.tv_usec = 1000; // was 1000
   setitimer(ITIMER_REAL, &timer, NULL);
   set_target_position(0, 0);
-  for (int i = 0; i < 14; i++) {
-    set_motor_speed(i, 0);
-    motor_update(i);
-  }
 
   arm_init();
   log_message(LOG_INFO, "Initialization done\n");
@@ -37,7 +33,7 @@ int isr_init() {
 
 int isr(int signum __attribute__((unused))) {
   handle_watchdog();
-  for (int i = 0; i < 14; i++) {
+  for (int i = 0; i < MAX_MOTORS; i++) {
     motor_update(i);
   }
 #if defined(DEBUG_WRIST) || defined(DEBUG_ELBOW) || defined(DEBUG_BASE) ||     \
