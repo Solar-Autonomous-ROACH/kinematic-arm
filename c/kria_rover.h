@@ -28,7 +28,6 @@ int MotorController_init(MotorController *motor, off_t mmio_address);
 void MotorController_close(MotorController *motor);
 void MotorController_write(MotorController *motor);
 void MotorController_read(MotorController *motor);
-void MotorController_set_speed(MotorController *motor, int speed);
 
 bool rover_movement_done();
 void rover_rotate(int16_t turn_angle);

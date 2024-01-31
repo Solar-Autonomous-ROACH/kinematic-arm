@@ -20,6 +20,12 @@ void motor_init() {
   }
 }
 
+void motor_update_all() {
+  for (int i = 0; i < MAX_MOTORS; i++) {
+    motor_update(i);
+  }
+}
+
 // This function updates the position of a motor with the given index.
 int motor_update(uint8_t motor_index) {
   motor_t *motor = &motors[motor_index];

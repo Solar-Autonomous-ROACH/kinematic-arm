@@ -35,6 +35,7 @@ typedef struct {
 } motor_t;
 
 void motor_init();
+void motor_update_all();
 int motor_update(uint8_t motor_index);
 
 int set_motor_speed(uint8_t motor_index, int speed);

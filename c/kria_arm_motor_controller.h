@@ -1,6 +1,8 @@
 #ifndef KRIA_ARM_MOTOR_CONTROLLER_H
 #define KRIA_ARM_MOTOR_CONTROLLER_H
 
+#define KRIA_BOARD
+
 #include "rover.h"
 #include <aio.h>
 #include <stdint.h>
@@ -34,7 +36,9 @@ typedef struct {
   uint16_t stopped_duration; // time in ms motor has been stopped
 } motor_t;
 
+void motor_init();
 int motor_update(uint8_t motor_index);
+void motor_update_all();
 
 int set_motor_speed(uint8_t motor_index, int speed);
 

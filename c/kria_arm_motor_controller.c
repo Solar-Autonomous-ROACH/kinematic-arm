@@ -11,6 +11,13 @@ void motor_init() {
                        BASE_MOTOR_ADDRESS);
   MotorController_init(&(motors[CLAW_MOTOR_IDX]).motor_controller,
                        CLAW_MOTOR_ADDRESS);
+  motor_update_all();
+}
+
+void motor_update_all() {
+  for (int i = 0; i < MAX_MOTORS; i++) {
+    motor_update(i);
+  }
 }
 
 // This function updates the position of a motor with the given index.
@@ -65,15 +72,16 @@ int set_motor_speed(uint8_t motor_index, int speed) {
     return -1;                                   // Return an error code
   }
   motor_t *motor = &motors[motor_index];
-  if (speed > 127)
+  if (speed > 127) {
     speed = 127;
-  if (speed < -127)
+  } else if (speed < -127) {
     speed = -127;
-  if (speed >= 0) {
-    MotorController_set_speed(&(motor->motor_controller), speed);
-  } else {
-    MotorController_set_speed(&(motor->motor_controller), 0xFF + speed);
   }
+  // convert sign of speed to direction
+  motor->motor_controller.dir = speed >= 0;
+  // map from 0-127 to 0-255
+  motor->motor_controller.duty_cycle = abs(speed) << 1;
+  MotorController_write(&motor->motor_controller);
   return 0;
 }
 

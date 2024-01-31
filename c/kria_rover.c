@@ -47,26 +47,6 @@ void MotorController_read(MotorController *motor) {
   motor->counts = *(motor->mmio + 2);
 }
 
-void MotorController_set_speed(MotorController *motor __attribute__((unused)),
-                               int speed __attribute__((unused))) {
-  if (speed > 255) {
-    speed = 255;
-  } else if (speed < 0) {
-    speed = 0;
-  }
-  if (speed == 127) {
-    motor->duty_cycle = 0;
-  } else if (speed > 127) {
-    motor->dir = 1; // might need to be swapped
-    motor->duty_cycle = speed;
-    // map 8 bity dity cycle
-  } else {
-    motor->dir = 0;
-    motor->duty_cycle = -speed;
-
-  }
-}
-
 bool rover_movement_done() {
   log_message(LOG_INFO, "CHECKING IF ROVER IS DONE MOVING\n");
   return true;
