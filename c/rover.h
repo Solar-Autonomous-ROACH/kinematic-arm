@@ -1,14 +1,10 @@
-#ifndef ROVERCORE_ROVER_H
-#define ROVERCORE_ROVER_H
+#ifndef ROVER_H
+#define ROVER_H
 
-#include "logger.h"
-#include <stdbool.h>
-#include <stdint.h>
-
-bool rover_movement_done();
-
-void rover_rotate(int16_t turn_angle);
-
-void rover_move_x(int16_t dist);
+#ifdef KRIA_BOARD
+#include "kria_rover.h"
+#else
+#include "pynq_rover.h"
+#endif
 
 #endif

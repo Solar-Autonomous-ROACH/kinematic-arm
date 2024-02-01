@@ -160,11 +160,17 @@ void arm_handle_state() {
                        original_vision_info.z, &kinematic_result);
       // if (!validate_angle_set(base_target_angle, elbow_target_angle,
       //                         wrist_target_angle, claw_target_angle)) {
+      claw_target_angle = original_vision_info.angle % 360;
+      log_message(LOG_INFO, "Claw target angle from vision = %d\n",
+                  claw_target_angle);
       if (!validate_kinematic_result(kinematic_result)) {
         // USE ROVER API TO MOVE
         arm_state = ROVER_MOVING;
-        rover_move_x(kinematic_result.extra_distance);  //moving forward
-        rover_rotate(kinematic_result.turn_angle);  //turn angle is +90 to -90. make sure this is adjusted to whatever rover team provides
+        rover_move_x(kinematic_result.extra_distance); // moving forward
+        rover_rotate(
+            kinematic_result
+                .turn_angle); // turn angle is +90 to -90. make sure this is
+                              // adjusted to whatever rover team provides
       } else {
         log_message(
             LOG_INFO,
@@ -172,7 +178,7 @@ void arm_handle_state() {
             "FOR MOVE\n",
             base_target_angle, elbow_target_angle, wrist_target_angle);
         set_joints_angle(base_target_angle, elbow_target_angle, 0);
-        // set_claw_angle(claw_target_angle);
+        set_claw_angle(claw_target_angle);
         open_claw();
         if (base_target_angle == 0 && elbow_target_angle == 0 &&
             wrist_target_angle == 0) {
@@ -186,8 +192,8 @@ void arm_handle_state() {
     break;
 
   case ROVER_MOVING:
-    if (rover_movement_done()){
-    //if (true) {
+    if (rover_movement_done()) {
+      // if (true) {
       arm_state = CAPTURE_VISION_INFO;
     }
     break;
@@ -253,8 +259,8 @@ void arm_handle_state() {
         set_joints_angle(BASE_PLACE_ANGLE, ELBOW_PLACE_ANGLE, 0);
         arm_state = MOVE_PLACE_1;
         log_message(LOG_INFO, "CLAW_CHECK complete, heading to MOVE_PLACE_1\n");
-        // set_claw_angle(0);
-        open_claw();
+        set_claw_angle(0);
+        
       } else {
         arm_state = CAPTURE_VISION_INFO; // did not correctly acquire - restart
                                          // by taking new picture
@@ -268,7 +274,8 @@ void arm_handle_state() {
     if (time_in_state < 1000) {
       return;
     }
-    if (arm_motors_state_handler(true, true, true) == ARM_MOTORS_READY) {
+    if (claw_handle_state() == CLAW_CHECK_POSITION &&
+        arm_motors_state_handler(true, true, true) == ARM_MOTORS_READY) {
       set_joints_angle(BASE_PLACE_ANGLE, ELBOW_PLACE_ANGLE, WRIST_PLACE_ANGLE);
       arm_state = MOVE_PLACE_2;
     }
@@ -277,6 +284,7 @@ void arm_handle_state() {
   case MOVE_PLACE_2:
     if (arm_motors_state_handler(false, false, true) == ARM_MOTORS_READY) {
       arm_state = CLAW_DROPOFF;
+      open_claw();
     }
     break;
 
@@ -331,14 +339,19 @@ void arm_handle_state() {
   }
 }
 
-bool validate_kinematic_result(kinematic_output_t kinematic_result){
-  log_message(LOG_INFO, "Validate kinematic result with extra distance = %d, turn angle = %d, base angle = %d, elbow angle = %d, wrist angle = %d, claw_angle = %d, error = %d\n", 
-  kinematic_result.extra_distance, kinematic_result.turn_angle, kinematic_result.base_angle, kinematic_result.elbow_angle, kinematic_result.wrist_angle, kinematic_result.claw_angle, kinematic_result.error);
-  if (kinematic_result.extra_distance == 0 && kinematic_result.turn_angle == 0){
+bool validate_kinematic_result(kinematic_output_t kinematic_result) {
+  log_message(LOG_INFO,
+              "Validate kinematic result with extra distance = %d, turn angle "
+              "= %d, base angle = %d, elbow angle = %d, wrist angle = %d, "
+              "error = %d\n",
+              kinematic_result.extra_distance, kinematic_result.turn_angle,
+              kinematic_result.base_angle, kinematic_result.elbow_angle,
+              kinematic_result.wrist_angle, kinematic_result.error);
+  if (kinematic_result.extra_distance == 0 &&
+      kinematic_result.turn_angle == 0) {
     int base_angle = kinematic_result.base_angle;
     int elbow_angle = kinematic_result.elbow_angle;
     int wrist_angle = kinematic_result.wrist_angle;
-    int claw_angle = kinematic_result.claw_angle;
     if (base_angle > 10) {
       // base_angle correction
       base_angle += 12;
@@ -348,7 +361,6 @@ bool validate_kinematic_result(kinematic_output_t kinematic_result){
       base_target_angle = base_angle;
       elbow_target_angle = elbow_angle;
       wrist_target_angle = wrist_angle;
-      claw_target_angle = claw_angle % 360;
       return true;
     }
   }
@@ -357,13 +369,20 @@ bool validate_kinematic_result(kinematic_output_t kinematic_result){
 
 bool verify_pickup(vision_info_t original_vision_info,
                    vision_info_t moved_vision_info) {
-  log_message(LOG_INFO, "Original coordinates: x = %d y = %d z = %d angle = %d\n", original_vision_info.x, original_vision_info.y, original_vision_info.z, original_vision_info.angle);
-  log_message(LOG_INFO, "Moved coordinates: x = %d y = %d z = %d angle = %d\n", moved_vision_info.x, moved_vision_info.y, moved_vision_info.z, moved_vision_info.angle);
+  log_message(LOG_INFO,
+              "Original coordinates: x = %d y = %d z = %d angle = %d\n",
+              original_vision_info.x, original_vision_info.y,
+              original_vision_info.z, original_vision_info.angle);
+  log_message(LOG_INFO, "Moved coordinates: x = %d y = %d z = %d angle = %d\n",
+              moved_vision_info.x, moved_vision_info.y, moved_vision_info.z,
+              moved_vision_info.angle);
   int x_diff = moved_vision_info.x - original_vision_info.x;
   int y_diff = moved_vision_info.y - original_vision_info.y;
   int z_diff = moved_vision_info.z - original_vision_info.z;
   int angle_diff = moved_vision_info.angle - original_vision_info.angle;
-  return (abs(x_diff) < X_VERIFICATION_ERROR && y_diff == VERIFICATION_RAISE_DISTANCE && abs(z_diff) < Z_VERIFICATION_ERROR &&
+  return (abs(x_diff) < X_VERIFICATION_ERROR &&
+          y_diff == VERIFICATION_RAISE_DISTANCE &&
+          abs(z_diff) < Z_VERIFICATION_ERROR &&
           abs(angle_diff) < ANGLE_VERIFICATION_ERROR);
 }
 
@@ -374,7 +393,7 @@ void move_home() {
   } else {
     set_joints_angle(BASE_HOME_ANGLE, ELBOW_HOME_ANGLE, WRIST_HOME_ANGLE);
   }
-  // set_claw_angle(&CLAW_MOTOR, 0);
+  set_claw_angle(0);
   open_claw();
   arm_state = MOVE_HOME;
 }
@@ -522,8 +541,8 @@ void set_joint_angle(arm_motor_t *arm_motor, uint16_t angle) {
 // CLAW_MOTOR_PIN 3
 void arm_init() {
   WRIST_MOTOR.name = "WRIST";
-  WRIST_MOTOR.index = WRIST_MOTOR_PIN;
-  WRIST_MOTOR.motor = get_motor(WRIST_MOTOR_PIN);
+  WRIST_MOTOR.index = WRIST_MOTOR_IDX;
+  WRIST_MOTOR.motor = get_motor(WRIST_MOTOR_IDX);
   WRIST_MOTOR.pos_angle = false;
   WRIST_MOTOR.stopper_pos = 0;
   WRIST_MOTOR.is_calibrated = false;
@@ -538,8 +557,8 @@ void arm_init() {
   WRIST_MOTOR.integral_threshold = 133;
 
   ELBOW_MOTOR.name = "ELBOW";
-  ELBOW_MOTOR.index = ELBOW_MOTOR_PIN;
-  ELBOW_MOTOR.motor = get_motor(ELBOW_MOTOR_PIN);
+  ELBOW_MOTOR.index = ELBOW_MOTOR_IDX;
+  ELBOW_MOTOR.motor = get_motor(ELBOW_MOTOR_IDX);
   ELBOW_MOTOR.pos_angle = true;
   ELBOW_MOTOR.stopper_pos = 0;
   ELBOW_MOTOR.is_calibrated = false;
@@ -554,8 +573,8 @@ void arm_init() {
   ELBOW_MOTOR.integral_threshold = 100;
 
   BASE_MOTOR.name = "BASE";
-  BASE_MOTOR.index = BASE_MOTOR_PIN;
-  BASE_MOTOR.motor = get_motor(BASE_MOTOR_PIN);
+  BASE_MOTOR.index = BASE_MOTOR_IDX;
+  BASE_MOTOR.motor = get_motor(BASE_MOTOR_IDX);
   BASE_MOTOR.pos_angle = false;
   BASE_MOTOR.stopper_pos = 0;
   BASE_MOTOR.is_calibrated = false;
@@ -569,5 +588,6 @@ void arm_init() {
   BASE_MOTOR.ki = 0.1;
   BASE_MOTOR.integral_threshold = 1000;
 
+  motor_init();
   claw_init();
 }

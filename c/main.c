@@ -5,7 +5,8 @@
 #include "arm.h"
 #include "isr.h"
 #include "kinematic_engine.h"
-#include "led.h"
+
+#include "arm_motor_controller.h"
 #include "mmio.h"
 #include "vision.h"
 #include <signal.h>
@@ -15,11 +16,10 @@
 void sigint_handler(int sig) {
   printf("Received SIGINT signal %d\n", sig);
   if (mmio_is_valid()) {
-    for (int i = 0; i < 14; i++) {
+    for (int i = 0; i < MAX_MOTORS; i++) {
       set_motor_speed(i, 0);
     }
   }
-  set_brightness(100, 000, 100);
   vision_terminate(true);
   exit(0);
 }
@@ -32,12 +32,8 @@ int main() {
   sigaddset(&sa.sa_mask, SIGALRM);
   sigaction(SIGINT, &sa, NULL);
 
-  mmio_init();
-  printf("MMIO INIT DONE\n");
   vision_init();
   isr_init();
-  set_led_status();
-  set_brightness(100, 100, 000);
 
   while (1) {
     pause();

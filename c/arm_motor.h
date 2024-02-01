@@ -1,6 +1,6 @@
 #ifndef ARM_MOTOR_H_
 #define ARM_MOTOR_H_
-#include "motor.h"
+#include "arm_motor_controller.h"
 #include <stdbool.h>
 #include <stdint.h>
 

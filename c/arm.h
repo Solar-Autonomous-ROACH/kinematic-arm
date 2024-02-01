@@ -2,22 +2,12 @@
 #define ARM_H
 
 #include "arm_motor.h"
+#include "arm_motor_controller.h"
 #include "claw.h"
 #include "kinematic_engine.h"
-#include "vision.h"
 #include "rover.h"
+#include "vision.h"
 #include <stdint.h>
-
-// The motor value on the board
-#define BASE 0xA
-#define ELBOW 0xB
-#define WRIST 0xC
-#define CLAW 0xD
-
-#define WRIST_MOTOR_PIN 0
-#define ELBOW_MOTOR_PIN 1
-#define BASE_MOTOR_PIN 2
-#define CLAW_MOTOR_PIN 3
 
 // #define STEERING_GEAR_RATIO 172
 // #define WHEEL_GEAR_RATIO 212
