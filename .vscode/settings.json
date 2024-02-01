@@ -17,7 +17,8 @@
     "kria_motor.h": "c",
     "pynq_rover.h": "c",
     "kria_rover.h": "c",
-    "kria_arm_motor_controller.h": "c"
+    "kria_arm_motor_controller.h": "c",
+    "rover.h": "c"
   },
   "C_Cpp.clang_format_fallbackStyle": "LLVM"
 }

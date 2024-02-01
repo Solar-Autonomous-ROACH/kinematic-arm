@@ -36,8 +36,5 @@ kria_arm_motor_controller.o: kria_arm_motor_controller.c
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-%.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
-
 clean:
 	rm -f $(OBJS) $(KRIA_OBJS) $(TARGET)
