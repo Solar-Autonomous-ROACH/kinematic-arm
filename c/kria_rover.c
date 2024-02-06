@@ -47,6 +47,10 @@ void MotorController_read(MotorController *motor) {
   motor->counts = *(motor->mmio + 2);
 }
 
+uint8_t gpio_read(uint16_t pin __attribute__((unused))) {
+  return GPIO_READ_NOT_IMPLEMENTED; // TODO: get implementation
+}
+
 bool rover_movement_done() {
   log_message(LOG_INFO, "CHECKING IF ROVER IS DONE MOVING\n");
   return true;

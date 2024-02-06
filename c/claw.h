@@ -1,14 +1,22 @@
 #ifndef CLAW_H
 #define CLAW_H
 
-#include "arm.h"
+#include "arm_motor_controller.h"
+#include "rover.h"
 #include <stdbool.h>
 #include <stdint.h>
 
 #define CLAW_ERROR_MARGIN 1
 #define CLAW_SPEED 30
+#define CLAW_CALIBRATION_PERIOD 3
 
 typedef enum {
+  CLAW_CALIBRATE_START,
+  CLAW_CALIBRATE_WAIT_FOR_MAGNET,
+  CLAW_CALIBRATE_WAIT_FOR_TURN,
+  CLAW_CALIBRATE_VERIFY_OPEN_CLOSE_MAGNET,
+  CLAW_CALIBRATE_GOTO_OPEN_CLOSE_MAGNET,
+  CLAW_CALIBRATE_OPEN_CLAW,
   CLAW_CHECK_POSITION,
   CLAW_ROTATING,
   CLAW_OPENING_CLOSING
@@ -28,6 +36,8 @@ typedef struct {
 
 void claw_init();
 claw_state_t claw_handle_state();
+void set_claw_speed(uint8_t speed, bool openclose);
+void claw_goto_calibrate();
 void set_claw_angle(uint16_t angle);
 void open_claw();
 void close_claw();

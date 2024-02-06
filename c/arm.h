@@ -35,7 +35,8 @@
 // #define DEBUG_BASE
 
 typedef enum {
-  CALIBRATE,
+  ARM_CALIBRATE,
+  CLAW_CALIBRATE,
   CAPTURE_VISION_INFO,
   WAIT_FOR_INPUT,
   ROVER_MOVING,
@@ -72,13 +73,14 @@ void arm_init();
 void arm_handle_state(void);
 void stop_arm();
 arm_motors_status_t arm_motors_state_handler(bool base, bool elbow, bool wrist);
-arm_state_t recalibrate();
 void move_home();
 void arm_handle_state_debug();
 bool validate_angle_set(int16_t base_angle, int16_t elbow_angle,
                         int16_t wrist_angle, int16_t claw_angle);
 
 arms_calibrate_state_t arm_calibrate();
+arm_state_t arm_recalibrate();
+arm_state_t claw_recalibrate();
 
 void set_joints_angle(int16_t base_angle, int16_t elbow_angle,
                       int16_t wrist_angle);

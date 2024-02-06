@@ -7,6 +7,9 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#define GPIO_READ_NOT_IMPLEMENTED 0xFF
+#define GPIO_HALL_EFFECT_PIN 0
+
 typedef struct {
   // MMIO
   volatile unsigned int *mmio;
@@ -28,6 +31,8 @@ int MotorController_init(MotorController *motor, off_t mmio_address);
 void MotorController_close(MotorController *motor);
 void MotorController_write(MotorController *motor);
 void MotorController_read(MotorController *motor);
+
+uint8_t gpio_read(uint16_t pin);
 
 bool rover_movement_done();
 void rover_rotate(int16_t turn_angle);

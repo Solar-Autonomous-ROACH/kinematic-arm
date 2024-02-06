@@ -135,14 +135,16 @@ vision_status_t vision_receive_input() {
     // fscanf(vision_stdout, "a=%hd\n", &(vision_info.angle));
     // log_message(LOG_INFO, "a = %hd\n", vision_info.angle);
     // exit(0);
-    if (fscanf(vision_stdout, "=%hd,y=%hd,z=%hd,a=%hd", &(vision_info.x),
-               &(vision_info.y), &(vision_info.z), &(vision_info.angle)) > 0) {
+    if (fscanf(vision_stdout, "=%hd,y=%hd,z=%hd,a=%hd,c=%lf", &(vision_info.x),
+               &(vision_info.y), &(vision_info.z), &(vision_info.angle),
+               &(vision_info.confidence)) > 0) {
       dummy = fgetc(vision_stdout); // get rid of extra newline
       if (dummy != '\n') {
         log_message(LOG_ERROR, "Vision error\n");
       }
-      log_message(LOG_INFO, "x=%hd,y=%hd,z=%hd,a=%hd\n", (vision_info.x),
-                  vision_info.y, vision_info.z, vision_info.angle);
+      log_message(LOG_INFO, "x=%hd,y=%hd,z=%hd,a=%hd,c=%lf\n", vision_info.x,
+                  vision_info.y, vision_info.z, vision_info.angle,
+                  vision_info.confidence);
       vision_state = VISION_SUCCESS;
     } else {
       log_message(LOG_INFO, "vision fscan error\n");
@@ -201,6 +203,7 @@ bool vision_get_coordinates(vision_info_t *v) {
     v->y = vision_info.y;
     v->z = vision_info.z;
     v->angle = vision_info.angle;
+    v->confidence = vision_info.confidence;
     return true;
   }
   if (vision_state != VISION_SAMPLE_NOT_FOUND) {
