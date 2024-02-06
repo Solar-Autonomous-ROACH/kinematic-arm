@@ -140,7 +140,7 @@ vision_status_t vision_receive_input() {
                &(vision_info.confidence)) > 0) {
       dummy = fgetc(vision_stdout); // get rid of extra newline
       if (dummy != '\n') {
-        log_message(LOG_ERROR, "Vision error\n");
+        log_message_line(LOG_ERROR, __LINE__, "Vision error\n");
       }
       log_message(LOG_INFO, "x=%hd,y=%hd,z=%hd,a=%hd,c=%lf\n", vision_info.x,
                   vision_info.y, vision_info.z, vision_info.angle,
@@ -156,12 +156,12 @@ vision_status_t vision_receive_input() {
     vision_state = VISION_SAMPLE_NOT_FOUND;
     dummy = fgetc(vision_stdout); // get rid of edxtra
     if (dummy != '\n') {
-      log_message(LOG_ERROR, "Vision error\n");
+      log_message_line(LOG_ERROR, __LINE__, "Vision error\n");
     }
     break;
 
   default:
-    log_message(LOG_ERROR, "Vision error\n");
+    log_message_line(LOG_ERROR, __LINE__, "Vision error\n");
     vision_state = VISION_ERROR;
     break;
   }

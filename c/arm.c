@@ -164,6 +164,8 @@ void arm_handle_state() {
         perror("read original coordinates error");
         exit(1);
       }
+      log_message(LOG_INFO, "Confidence level = %lf\n",
+                  original_vision_info.confidence);
       if (original_vision_info.confidence < VISION_CONFIDENCE_MINIMUM) {
         arm_state = ROVER_MOVING;
         log_message(LOG_WARNING, "Confidence level %lf is too low\n",
