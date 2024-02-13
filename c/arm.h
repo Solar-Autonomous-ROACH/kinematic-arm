@@ -24,10 +24,15 @@
 #define ELBOW_PLACE_ANGLE 45
 #define WRIST_PLACE_ANGLE 200
 
+//all in millimeters, for pickup verification
 #define VERIFICATION_RAISE_DISTANCE 100
+#define VERIFICATION_RAISE_MINIMUM 50
 #define X_VERIFICATION_ERROR 5
-#define Z_VERIFICATION_ERROR 5
-#define ANGLE_VERIFICATION_ERROR 5
+#define Y_VERIFICATION_ERROR 20
+#define Z_VERIFICATION_ERROR 0
+#define ANGLE_VERIFICATION_ERROR 0
+
+#define CONSECUTIVE_PICKUP_FAILURE_MAX 3
 
 /** only one of these should be true at a time */
 // #define DEBUG_WRIST
@@ -75,8 +80,6 @@ void stop_arm();
 arm_motors_status_t arm_motors_state_handler(bool base, bool elbow, bool wrist);
 void move_home();
 void arm_handle_state_debug();
-bool validate_angle_set(int16_t base_angle, int16_t elbow_angle,
-                        int16_t wrist_angle, int16_t claw_angle);
 
 arms_calibrate_state_t arm_calibrate();
 arm_state_t arm_recalibrate();

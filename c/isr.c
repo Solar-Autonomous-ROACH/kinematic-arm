@@ -42,7 +42,7 @@ int isr(int signum __attribute__((unused))) {
 #else
   arm_handle_state();
 #endif
-  // set_motor_speed(CLAW_MOTOR_IDX, -30);
+  // set_motor_speed(BASE_MOTOR_IDX, -50);
 
   millis++;
   return 0;

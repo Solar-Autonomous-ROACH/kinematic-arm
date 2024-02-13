@@ -17,8 +17,10 @@ int16_t wrist_target_angle = 0;
 int16_t claw_target_angle = 0;
 int claw_ready = false;
 int cycles_since_claw_calibration = 0;
+int consecutive_pickup_failures = 0;
 vision_info_t original_vision_info;
 vision_info_t moved_vision_info;
+vision_status_t vision_result;
 static arms_calibrate_state_t arms_calibrate_state = ARM_CALIBRATE_START;
 kinematic_output_t kinematic_result;
 
@@ -101,26 +103,6 @@ arms_calibrate_state_t arm_calibrate_debug() {
   return ARM_CALIBRATE_READY;
 }
 
-// validate the set of angles
-// eventually move this to be with the kinematic engine
-bool validate_angle_set(int16_t base_angle, int16_t elbow_angle,
-                        int16_t wrist_angle, int16_t claw_angle) {
-  // if ((base_angle >= 0 && elbow_angle >= 0 && wrist_angle >= 0) &&
-  // add more tests in future
-  if (base_angle > 10) {
-    // base_angle correction
-    base_angle += 12;
-  }
-  if (base_angle < 360 && elbow_angle < 360 && wrist_angle < 360) {
-    input_ready = true;
-    base_target_angle = base_angle;
-    elbow_target_angle = elbow_angle;
-    wrist_target_angle = wrist_angle;
-    claw_target_angle = claw_angle % 360;
-    return true;
-  }
-  return false;
-}
 
 void arm_handle_state() {
   static unsigned long time_in_state = 0; // ms
@@ -148,7 +130,8 @@ void arm_handle_state() {
 
   case CAPTURE_VISION_INFO:
     // send signal to vision python program
-    if (vision_receive_input_isr() == VISION_READY_FOR_CAPTURE) {
+    vision_result = vision_receive_input_isr();
+    if (vision_result == VISION_READY_FOR_CAPTURE || vision_result == VISION_SUCCESS || vision_result == VISION_SAMPLE_NOT_FOUND) {
       log_message(LOG_INFO, "Requesting vision coordinates\n");
       vision_request_coordinates();
       arm_state = WAIT_FOR_INPUT;
@@ -157,55 +140,77 @@ void arm_handle_state() {
 
   case WAIT_FOR_INPUT:
     // wait for coordinates and orientation info from vision team
-    if (vision_receive_input_isr() == VISION_SUCCESS) {
-      log_message(LOG_INFO,
-                  "Vision returned success, processing coordinates...\n");
-      if (!vision_get_coordinates(&original_vision_info)) {
-        perror("read original coordinates error");
-        exit(1);
-      }
-      log_message(LOG_INFO, "Confidence level = %lf\n",
-                  original_vision_info.confidence);
-      if (original_vision_info.confidence < VISION_CONFIDENCE_MINIMUM) {
+    vision_result = vision_receive_input_isr();
+    switch (vision_result) {
+      case VISION_TERMINATED:
+      case VISION_ERROR:
+        log_message(LOG_INFO, "Vision terminated or error, re-initializing\n");
+        vision_init();
+        break;
+      case VISION_IN_PROGRESS:
+        //do nothing, just waiting for capture to finish
+        break;
+      case VISION_SAMPLE_NOT_FOUND:
         arm_state = ROVER_MOVING;
-        log_message(LOG_WARNING, "Confidence level %lf is too low\n",
+        log_message(LOG_WARNING, "No test tube found\n",
                     original_vision_info.confidence);
-        // move the rover to some place idk
-        // rover_move_x()
-        // rover_rotate_x()
-      } else {
-        kinematic_engine(original_vision_info.x, original_vision_info.y,
-                         original_vision_info.z, &kinematic_result);
-        claw_target_angle = original_vision_info.angle % 360;
-        log_message(LOG_INFO, "Claw target angle from vision = %d\n",
-                    claw_target_angle);
-        if (!validate_kinematic_result(kinematic_result)) {
-          // USE ROVER API TO MOVE
+          // move the rover to some place idk
+          // rover_move_x()
+          // rover_rotate()
+        break;
+      case VISION_SUCCESS:
+        log_message(LOG_INFO,
+                  "Vision returned success, processing coordinates...\n");
+        if (!vision_get_coordinates(&original_vision_info)) {
+          perror("read original coordinates error");
+          exit(1);
+        }
+        log_message(LOG_INFO, "Confidence level = %lf\n",
+                    original_vision_info.confidence);
+        if (original_vision_info.confidence < VISION_CONFIDENCE_MINIMUM) {
           arm_state = ROVER_MOVING;
-          rover_move_x(kinematic_result.extra_distance); // moving forward
-          rover_rotate(
+          log_message(LOG_WARNING, "Confidence level %lf is too low\n",
+                    original_vision_info.confidence);
+          // move the rover to some place idk
+          // rover_move_x()
+          // rover_rotate()
+        } else {
+          kinematic_engine(original_vision_info.x, original_vision_info.y,
+                          original_vision_info.z, &kinematic_result);
+          claw_target_angle = original_vision_info.angle % 360;
+          log_message(LOG_INFO, "Claw target angle from vision = %d\n",
+                      claw_target_angle);
+          if (!validate_kinematic_result(kinematic_result)) {
+            // USE ROVER API TO MOVE - can't reach the object
+            arm_state = ROVER_MOVING;
+            rover_move_x(kinematic_result.extra_distance); // moving forward
+            rover_rotate(
               kinematic_result
                   .turn_angle); // turn angle is +90 to -90. make sure this is
                                 // adjusted to whatever rover team provides
-        } else {
-          log_message(LOG_INFO,
-                      "Got input, Base: %hd, Elbow: %hd, Wrist: %hd, heading "
-                      "to PREPARE "
-                      "FOR MOVE\n",
-                      base_target_angle, elbow_target_angle,
-                      wrist_target_angle);
-          set_joints_angle(base_target_angle, elbow_target_angle, 0);
-          set_claw_angle(claw_target_angle);
-          open_claw();
-          if (base_target_angle == 0 && elbow_target_angle == 0 &&
-              wrist_target_angle == 0) {
-            move_home();
           } else {
-            arm_state = MOVE_TARGET_BE1;
+            log_message(LOG_INFO,
+                        "Got input, Base: %hd, Elbow: %hd, Wrist: %hd, heading "
+                        "to PREPARE "
+                        "FOR MOVE\n",
+                        base_target_angle, elbow_target_angle,
+                        wrist_target_angle);
+            set_joints_angle(base_target_angle, elbow_target_angle, 0);
+            set_claw_angle(claw_target_angle);
+            open_claw();
+            if (base_target_angle == 0 && elbow_target_angle == 0 &&
+                wrist_target_angle == 0) {
+              move_home();
+            } else {
+              arm_state = MOVE_TARGET_BE1;
+            }
           }
         }
-        // input_ready = false;
-      }
+        break;
+      default:
+        //should never be STARTING or READY_FOR_CAPTURE
+        log_message(LOG_ERROR, "Vision returned an unexpected status in WAIT_FOR_INPUT\n");
+        break;
     }
     break;
 
@@ -278,11 +283,21 @@ void arm_handle_state() {
         arm_state = MOVE_PLACE_1;
         log_message(LOG_INFO, "CLAW_CHECK complete, heading to MOVE_PLACE_1\n");
         set_claw_angle(0);
+        consecutive_pickup_failures = 0;
 
       } else {
-        arm_state = CAPTURE_VISION_INFO; // did not correctly acquire - restart
-                                         // by taking new picture
         log_message(LOG_INFO, "verify pickup failed\n");
+        consecutive_pickup_failures++;
+        if (consecutive_pickup_failures == CONSECUTIVE_PICKUP_FAILURE_MAX){
+          arm_state = ROVER_MOVING;
+          consecutive_pickup_failures = 0;
+          // rover_move_x()
+          // rover_rotate()
+          //probably move somewhere else since we can't pick up the current tube
+        } else {
+          arm_state = CAPTURE_VISION_INFO; // did not correctly acquire - restart
+                                          // by taking new picture
+        }        
       }
     }
 
@@ -329,32 +344,6 @@ void arm_handle_state() {
       }
     }
     break;
-    // case PLACE_TARGET:
-    //   // motor angles for placing object will be constant so just move to
-    //   those
-    //   // angles open the claw?
-    //   if (arm_motors_state_handler(true, true, true) == ARM_MOTORS_READY &&
-    //   claw_handle_state(&CLAW_MOTOR) == ROTATE_TARGET) {
-    //     arm_state = MOVE_HOME_1;
-    //   }
-
-    //   break;
-
-    // case MOVE_HOME_1:
-    //   if (arm_motors_state_handler(true, true, true) == ARM_MOTORS_READY) {
-    //     set_joint_angle(&ELBOW_MOTOR, ELBOW_HOME_ANGLE_2);
-    //     arm_state = MOVE_HOME_2;
-    //   }
-    //   break;
-
-    // case MOVE_HOME_2:
-    //   if (arm_motors_state_handler(true, true, true) == ARM_MOTORS_READY) {
-    //     arm_state = WAIT_FOR_INPUT;
-    //     log_message(LOG_INFO,
-    //                 "MOVE_HOME complete, heading to WAIT_FOR_INPUT\nInput:
-    //                 ");
-    //   }
-    //   break;
 
   default:
     break;
@@ -433,7 +422,7 @@ arm_state_t arm_recalibrate() {
 
 arm_state_t claw_recalibrate() {
   claw_goto_calibrate();
-  return ARM_CALIBRATE;
+  return CLAW_CALIBRATE;
 }
 
 /**

@@ -69,7 +69,3 @@ void rover_move_x(int16_t dist) {
               dist > 0 ? "forward" : "backward", dist > 0 ? dist : -dist);
 }
 
-void rover_move_y(int16_t dist) {
-  log_message(LOG_INFO, "Rover moving %s by distance %d\n",
-              dist > 0 ? "right" : "left", dist > 0 ? dist : -dist);
-}
