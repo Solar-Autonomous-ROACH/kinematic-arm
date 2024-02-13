@@ -36,6 +36,8 @@ void MotorController_close(MotorController *motor) {
 
 void MotorController_write(MotorController *motor) {
   // Write to MMIO
+  log_message(LOG_INFO, "Sending motor write with clear_enc: %d, en_enc: %d\n",
+              motor->clear_enc, motor->en_enc);
   *(motor->mmio) = motor->duty_cycle + (motor->clk_divisor << 8) +
                    (motor->dir << 11) + (motor->en_motor << 12) +
                    (motor->clear_enc << 13) + (motor->en_enc << 14);
@@ -45,6 +47,8 @@ void MotorController_write(MotorController *motor) {
 void MotorController_read(MotorController *motor) {
   // Read MMIO
   motor->counts = *(motor->mmio + 2);
+  log_message(LOG_INFO, "Duty: %u, Read %d\n", motor->duty_cycle,
+              motor->counts);
 }
 
 bool rover_movement_done() {

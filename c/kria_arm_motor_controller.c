@@ -23,7 +23,7 @@ void motor_update_all() {
 // This function updates the position of a motor with the given index.
 int motor_update(uint8_t motor_index) {
   motor_t *motor = &motors[motor_index];
-  uint8_t last;   // Variable to store the last position of the motor
+  uint16_t last;  // Variable to store the last position of the motor
   long last_long; // Variable to store the last position of the motor as a long
                   // integer
 
@@ -78,7 +78,7 @@ int set_motor_speed(uint8_t motor_index, int speed) {
     speed = -127;
   }
   // convert sign of speed to direction
-  motor->motor_controller.dir = speed >= 0;
+  motor->motor_controller.dir = speed < 0;
   // map from 0-127 to 0-255
   motor->motor_controller.duty_cycle = abs(speed) << 1;
   MotorController_write(&motor->motor_controller);

@@ -8,6 +8,8 @@
 
 static unsigned long millis; // stores number of milliseconds since startup
 
+#define KRIA_BOARD
+
 int isr_init() {
   struct sigaction sa;
   struct itimerval timer;
@@ -34,15 +36,19 @@ int isr_init() {
 int isr(int signum __attribute__((unused))) {
   handle_watchdog();
   for (int i = 0; i < MAX_MOTORS; i++) {
+    printf("i: %d, ", i);
     motor_update(i);
   }
+  printf("\n");
+// #define DEBUG_WRIST
 #if defined(DEBUG_WRIST) || defined(DEBUG_ELBOW) || defined(DEBUG_BASE) ||     \
     defined(DEBUG_CLAW)
   arm_handle_state_debug();
 #else
-  arm_handle_state();
+  // arm_handle_state();
 #endif
-  // set_motor_speed(CLAW_MOTOR_IDX, -30);
+  // motor_update(CLAW_MOTOR_IDX);
+  // set_motor_speed(CLAW_MOTOR_IDX, 30);
 
   millis++;
   return 0;

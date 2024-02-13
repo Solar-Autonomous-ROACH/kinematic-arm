@@ -27,4 +27,14 @@ void close_mem(volatile unsigned int *mmio) {
 
 uint8_t mmio_is_valid(volatile unsigned int *mmio) { return mmio ? 1 : 0; }
 
-void handle_watchdog() {}
+#define WATCHDOG_REG 0x80100000
+
+void handle_watchdog() {
+  static volatile unsigned int *watchdog_flag = NULL;
+  if (watchdog_flag == NULL) {
+    // init
+    watchdog_flag = mmio_init((off_t)WATCHDOG_REG);
+  } else {
+    *watchdog_flag = !*watchdog_flag;
+  }
+}
