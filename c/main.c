@@ -3,11 +3,11 @@
 //
 
 #include "arm.h"
-#include "isr.h"
 #include "kinematic_engine.h"
+#include "rover_isr.h"
 
 #include "arm_motor_controller.h"
-#include "mmio.h"
+#include "rover.h"
 #include "vision.h"
 #include <signal.h>
 #include <stdio.h>

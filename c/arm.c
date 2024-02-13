@@ -166,7 +166,7 @@ void arm_handle_state() {
       if (!validate_kinematic_result(kinematic_result)) {
         // USE ROVER API TO MOVE
         arm_state = ROVER_MOVING;
-        rover_move_x(kinematic_result.extra_distance); // moving forward
+        rover_move_x(kinematic_result.extra_distance, 20.0); // moving forward
         rover_rotate(
             kinematic_result
                 .turn_angle); // turn angle is +90 to -90. make sure this is
@@ -192,7 +192,7 @@ void arm_handle_state() {
     break;
 
   case ROVER_MOVING:
-    if (rover_movement_done()) {
+    if (check_rover_done()) {
       // if (true) {
       arm_state = CAPTURE_VISION_INFO;
     }
@@ -260,7 +260,7 @@ void arm_handle_state() {
         arm_state = MOVE_PLACE_1;
         log_message(LOG_INFO, "CLAW_CHECK complete, heading to MOVE_PLACE_1\n");
         set_claw_angle(0);
-        
+
       } else {
         arm_state = CAPTURE_VISION_INFO; // did not correctly acquire - restart
                                          // by taking new picture

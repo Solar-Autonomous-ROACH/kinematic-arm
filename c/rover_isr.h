@@ -7,7 +7,7 @@
 #include <sys/time.h>
 #include <unistd.h>
 
-#include "mmio.h"
+#include "rover.h"
 #include "stdint.h"
 
 #ifndef ROVERCORE_ISR_H

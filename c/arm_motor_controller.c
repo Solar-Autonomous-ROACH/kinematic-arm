@@ -1,8 +1,9 @@
-#include "kria_arm_motor_controller.h" // Include the header file "motor.h"
+#include "arm_motor_controller.h" // Include the header file "motor.h"
 
 static motor_t motors[MAX_MOTORS];
 
 void motor_init() {
+  printf("Initialized motors\n");
   MotorController_init(&(motors[WRIST_MOTOR_IDX].motor_controller),
                        WRIST_MOTOR_ADDRESS);
   MotorController_init(&(motors[ELBOW_MOTOR_IDX].motor_controller),
