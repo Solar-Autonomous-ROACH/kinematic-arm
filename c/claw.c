@@ -63,38 +63,34 @@ claw_state_t claw_handle_state() {
     diff = CLAW_MOTOR.target_angle_ticks - CLAW_MOTOR.current_angle_ticks;
     abs_diff = diff < 0 ? -diff : diff;
     if (abs_diff > CLAW_ERROR_MARGIN) {
+      long ticks;
       // assuming turning negative turns the claw
       if (diff <= 0) {
         // positive angle->we can directly turn to the difference
-        CLAW_MOTOR.motor->target_pos = CLAW_MOTOR.motor->abs_pos - abs_diff;
+        ticks = abs_diff;
       } else {
-        long full_turn = CLAW_MOTOR.CPR * CLAW_MOTOR.gear_ratio;
-        CLAW_MOTOR.motor->target_pos =
-            CLAW_MOTOR.motor->abs_pos - (full_turn - abs_diff);
+        // TODO: christian: cam this be changed to -180 + abs diff instead of
+        // 360 - abs diff aka ticks = - CLAW_MOTOR.CPR * CLAW_MOTOR.gear_ratio /
+        // 2 + abs_diff;
+        ticks = CLAW_MOTOR.CPR * CLAW_MOTOR.gear_ratio - abs_diff;
       }
-      set_claw_speed(CLAW_SPEED, false);
-      // set_motor_speed(CLAW_MOTOR.index, -CLAW_SPEED);
+      claw_relative_turn(ticks, false);
       CLAW_MOTOR.state = CLAW_ROTATING;
     } else if (CLAW_MOTOR.target_is_open != CLAW_MOTOR.is_open) {
       toggle_claw();
-      // set_motor_speed(CLAW_MOTOR.index, CLAW_SPEED);
     }
     break;
 
   case CLAW_ROTATING:
-    // this diff has to be non-positive!
-    diff = CLAW_MOTOR.motor->target_pos - CLAW_MOTOR.motor->abs_pos;
     // update current_angle_ticks
-    if (diff >= -CLAW_ERROR_MARGIN) {
+    if (claw_turn_done(NULL, false)) {
       // we are there!
-      // set_motor_speed(CLAW_MOTOR.index, 0);
       set_claw_speed(0, false);
       CLAW_MOTOR.current_angle_ticks =
           CLAW_MOTOR.target_angle_ticks; // TODO: add a -diff
       // check if we need to open/close claw
       if (CLAW_MOTOR.target_is_open != CLAW_MOTOR.is_open) {
         toggle_claw();
-        // set_motor_speed(CLAW_MOTOR.index, CLAW_SPEED);
       } else {
         CLAW_MOTOR.state = CLAW_CHECK_POSITION;
       }
@@ -106,7 +102,6 @@ claw_state_t claw_handle_state() {
     if (diff <= CLAW_ERROR_MARGIN) {
       // we are there!
       CLAW_MOTOR.is_open = CLAW_MOTOR.target_is_open;
-      // set_motor_speed(CLAW_MOTOR.index, 0);
       set_claw_speed(0, false);
       CLAW_MOTOR.state = CLAW_CHECK_POSITION;
     }
@@ -116,17 +111,6 @@ claw_state_t claw_handle_state() {
     break;
   }
   return CLAW_MOTOR.state;
-}
-
-/**
- * @brief Set the claw speed object
- *
- * @param speed
- * @param openclose if true open/close claw. false rotates everything
- * openclose doesn't matter if speed is 0
- */
-void set_claw_speed(uint8_t speed, bool openclose) {
-  set_motor_speed(CLAW_MOTOR.index, openclose ? speed : -speed);
 }
 
 void claw_goto_calibrate() { CLAW_MOTOR.state = CLAW_CALIBRATE_START; }
@@ -151,11 +135,52 @@ void close_claw() {
   }
 }
 
-void toggle_claw() {
+/**
+ * @brief Set the claw speed object
+ *
+ * @param speed
+ * @param openclose if true open/close claw. false rotates everything
+ * openclose doesn't matter if speed is 0
+ */
+void set_claw_speed(uint8_t speed, bool openclose) {
   // assume turning positive opens/closes the claw
+  // turning positive should increase abs_pos
+  set_motor_speed(CLAW_MOTOR.index, openclose ? speed : -speed);
+}
+
+bool claw_turn_done(long *diff_pt, bool openclose) {
+  long diff = CLAW_MOTOR.motor->target_pos - CLAW_MOTOR.motor->abs_pos;
+
+  if (openclose && diff <= CLAW_ERROR_MARGIN ||
+      !openclose && diff >= -CLAW_ERROR_MARGIN) {
+    if (diff_pt) {
+      *diff_pt = diff;
+    }
+    return true;
+  }
+  return false;
+}
+
+/**
+ * @brief Turn the claw ticks from current position
+ *
+ * @param ticks
+ * @param openclose
+ */
+void claw_relative_turn(uint16_t ticks, bool openclose) {
+  CLAW_MOTOR.motor->target_pos = openclose ? CLAW_MOTOR.motor->abs_pos + ticks
+                                           : CLAW_MOTOR.motor->abs_pos - ticks;
+
+  long abs_diff =
+      labs(CLAW_MOTOR.motor->target_pos - CLAW_MOTOR.motor->abs_pos);
+
+  if (abs_diff > CLAW_ERROR_MARGIN) {
+    set_claw_speed(CLAW_SPEED, openclose);
+  }
+}
+
+void toggle_claw() {
   long turn_90_deg = CLAW_MOTOR.CPR * CLAW_MOTOR.gear_ratio / 4;
-  CLAW_MOTOR.motor->target_pos = CLAW_MOTOR.motor->abs_pos + turn_90_deg;
   CLAW_MOTOR.state = CLAW_OPENING_CLOSING;
-  set_claw_speed(CLAW_SPEED, true);
-  // set_motor_speed(CLAW_MOTOR.index, CLAW_SPEED);
+  claw_relative_turn(turn_90_deg, true);
 }
