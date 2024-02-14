@@ -430,7 +430,7 @@ void arm_handle_state_debug() {
   case CALIBRATE:
     if (arm_calibrate_debug() == ARM_CALIBRATE_READY) {
       arm_state = WAIT_FOR_INPUT;
-      printf("Calibrate done, heading to WAIT_FOR_INPUT\n");
+      log_message(LOG_INFO, "Calibrate done, heading to WAIT_FOR_INPUT\n");
     }
     break;
 
@@ -439,7 +439,7 @@ void arm_handle_state_debug() {
       input_ready = false;
       set_joints_angle(base_target_angle, elbow_target_angle,
                        wrist_target_angle);
-      printf("Got input, heading to PREPARE FOR MOVE\n");
+      log_message(LOG_INFO, "Got input, heading to PREPARE FOR MOVE\n");
       arm_state = MOVE_TARGET_BE1;
     }
     break;
@@ -447,19 +447,19 @@ void arm_handle_state_debug() {
   case MOVE_TARGET_BE1:
 #ifdef DEBUG_WRIST
     if (arm_motor_handle_state(&WRIST_MOTOR) == ARM_MOTOR_CHECK_POSITION) {
-      printf("MOVE_TARGET complete, Waiting for input\n");
+      log_message(LOG_INFO, "MOVE_TARGET complete, Waiting for input\n");
       arm_state = WAIT_FOR_INPUT;
     }
     break;
 #elif defined DEBUG_ELBOW
     if (arm_motor_handle_state(&ELBOW_MOTOR) == ARM_MOTOR_CHECK_POSITION) {
-      printf("MOVE_TARGET complete, Waiting for input\n");
+      log_message(LOG_INFO, "MOVE_TARGET complete, Waiting for input\n");
       arm_state = WAIT_FOR_INPUT;
     }
     break;
 #elif defined DEBUG_BASE
     if (arm_motor_handle_state(&BASE_MOTOR) == ARM_MOTOR_CHECK_POSITION) {
-      printf("MOVE_TARGET complete, Waiting for input\n");
+      log_message(LOG_INFO, "MOVE_TARGET complete, Waiting for input\n");
       arm_state = WAIT_FOR_INPUT;
     }
     break;
@@ -538,10 +538,11 @@ void set_joint_angle(arm_motor_t *arm_motor, uint16_t angle) {
 
 void arm_isr() {
   static unsigned long millis; // stores number of milliseconds since startup
-  for (int i = 0; i < MAX_MOTORS; i++) {
-    // printf("i: %d, ", i);
-    motor_update(i);
-  }
+  motor_update_all();
+  // for (int i = 0; i < MAX_MOTORS; i++) {
+  //   // printf("i: %d, ", i);
+  //   motor_update(i);
+  // }
   // printf("\n");
 // #define DEBUG_WRIST
 #if defined(DEBUG_WRIST) || defined(DEBUG_ELBOW) || defined(DEBUG_BASE) ||     \

@@ -9,9 +9,6 @@
 #include "vision.h"
 #include <stdint.h>
 
-// #define STEERING_GEAR_RATIO 172
-// #define WHEEL_GEAR_RATIO 212
-
 #define MAX_STEERING_TICKS 300
 
 #define WRIST_PREP_ANGLE 0
@@ -89,29 +86,5 @@ bool arm_movement_complete();
 bool verify_pickup(vision_info_t original_vision_info,
                    vision_info_t moved_vision_info);
 bool validate_kinematic_result(kinematic_output_t kinematic_result);
-
-// extern arm_motor_t BASE_MOTOR;
-// extern arm_motor_t ELBOW_MOTOR;
-// extern arm_motor_t WRIST_MOTOR;
-
-// void arm_init();
-
-// void rover_stop();
-
-// void arm_forward(int speed);
-
-// void arm_reverse(int speed);
-
-// void arm_pointTurn_CW(int speed);
-
-// void arm_pointTurn_CCW(int speed);
-
-// void arm_steer_forward();
-
-// void arm_steer_right(int angle);
-
-// void arm_steer_left(int angle);
-
-// void arm_steer_point();
 
 #endif // ROVERCORE_ROVER_H
