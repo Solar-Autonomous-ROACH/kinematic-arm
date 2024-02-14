@@ -2,7 +2,7 @@
 #define ARM_H
 
 #include "arm_motor.h"
-#include "arm_motor_controller.h"
+#include "arm_motor_api.h"
 #include "claw.h"
 #include "kinematic_engine.h"
 #include "rover.h"

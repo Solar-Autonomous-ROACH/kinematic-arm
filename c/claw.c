@@ -1,6 +1,6 @@
 #include "claw.h"
 
-#include "arm_motor_controller.h"
+#include "arm_motor_api.h"
 
 #include "logger.h"
 

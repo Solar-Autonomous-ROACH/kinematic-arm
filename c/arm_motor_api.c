@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#include "arm_motor_controller.h" // Include the header file "motor.h"
+#include "arm_motor_api.h" // Include the header file "motor.h"
 
 static motor_t motors[MAX_MOTORS];
 
