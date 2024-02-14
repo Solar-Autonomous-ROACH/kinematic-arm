@@ -1,9 +1,10 @@
+#include <stdio.h>
+
 #include "arm_motor_controller.h" // Include the header file "motor.h"
 
 static motor_t motors[MAX_MOTORS];
 
-void motor_init() {
-  printf("Initialized motors\n");
+void motor_init_all() {
   MotorController_init(&(motors[WRIST_MOTOR_IDX].motor_controller),
                        WRIST_MOTOR_ADDRESS);
   MotorController_init(&(motors[ELBOW_MOTOR_IDX].motor_controller),
@@ -13,6 +14,13 @@ void motor_init() {
   MotorController_init(&(motors[CLAW_MOTOR_IDX]).motor_controller,
                        CLAW_MOTOR_ADDRESS);
   motor_update_all();
+}
+
+void motor_close_all() {
+  MotorController_close(&(motors[WRIST_MOTOR_IDX].motor_controller));
+  MotorController_close(&(motors[ELBOW_MOTOR_IDX].motor_controller));
+  MotorController_close(&(motors[BASE_MOTOR_IDX]).motor_controller);
+  MotorController_close(&(motors[CLAW_MOTOR_IDX]).motor_controller);
 }
 
 void motor_update_all() {

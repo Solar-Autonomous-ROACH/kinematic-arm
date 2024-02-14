@@ -214,8 +214,13 @@ bool vision_get_coordinates(vision_info_t *v) {
  *
  */
 void vision_terminate(bool wait) {
-  kill(vision_pid, SIGTERM);
   if (wait) {
+    // first disable SIGCHLD handler
+    sa.sa_handler = SIG_DFL; // Set to default handler
+    sa.sa_flags = 0;
+    sigemptyset(&sa.sa_mask);
+    sigaction(SIGCHLD, &sa, NULL);
+    kill(vision_pid, SIGTERM);
     int status;
     pid_t wait_ret = waitpid(vision_pid, &status, 0);
     if (wait_ret == -1) {
@@ -226,5 +231,8 @@ void vision_terminate(bool wait) {
       close(vision_fd);
       vision_state = VISION_TERMINATED;
     }
+  } else {
+    // just kill SIGCHLD handler will handler the rest
+    kill(vision_pid, SIGTERM);
   }
 }

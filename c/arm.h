@@ -69,6 +69,7 @@ typedef enum {
 // extern static struct motor_t arm_motor_subarray[4];
 
 void arm_init();
+void arm_close();
 void arm_handle_state(void);
 void stop_arm();
 arm_motors_status_t arm_motors_state_handler(bool base, bool elbow, bool wrist);

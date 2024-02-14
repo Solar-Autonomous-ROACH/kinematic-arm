@@ -1,10 +1,9 @@
 #ifndef ARM_MOTOR_CONTROLLER_H
 #define ARM_MOTOR_CONTROLLER_H
 
-#include "rover.h"
-#include <aio.h>
 #include <stdint.h>
-#include <stdio.h>
+
+#include "rover.h"
 
 #define WRIST_MOTOR_IDX 0
 #define ELBOW_MOTOR_IDX 1
@@ -35,7 +34,9 @@ typedef struct {
   uint16_t stopped_duration; // time in ms motor has been stopped
 } motor_t;
 
-void motor_init();
+void motor_init_all();
+void motor_close_all();
+
 int motor_update(uint8_t motor_index);
 void motor_update_all();
 

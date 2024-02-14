@@ -606,8 +606,10 @@ void arm_init() {
   BASE_MOTOR.ki = 0.1;
   BASE_MOTOR.integral_threshold = 1000;
 
-  motor_init();
+  motor_init_all();
   claw_init();
 
   isr_attach_function(arm_isr);
 }
+
+void arm_close() { motor_close_all(); }

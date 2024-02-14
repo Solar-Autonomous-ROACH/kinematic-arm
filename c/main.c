@@ -15,11 +15,7 @@
 
 void sigint_handler(int sig) {
   printf("Received SIGINT signal %d\n", sig);
-  if (mmio_is_valid()) {
-    for (int i = 0; i < MAX_MOTORS; i++) {
-      set_motor_speed(i, 0);
-    }
-  }
+  arm_close();
   vision_terminate(true);
   exit(0);
 }
