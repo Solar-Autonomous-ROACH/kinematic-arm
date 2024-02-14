@@ -33,11 +33,10 @@ int main() {
   sigaction(SIGINT, &sa, NULL);
 
   vision_init();
+  arm_init();
   isr_init();
 
   while (1) {
     pause();
   }
-
-  close_mem();
 }

@@ -10,8 +10,7 @@ ROVERLIBFLAG = -lrover
 
 # Source files
 # SRCS = main.c mmio.c led.c move.c isr.c motor.c steering_motor.c rover.c
-SHARED_SRCS = arm_motor_controller.c rover_isr.c arm_motor.c arm.c kinematic_engine.c logger.c claw.c vision.c
-SRCS = $(SHARED_SRCS)
+SRCS = arm_motor_controller.c arm_motor.c arm.c kinematic_engine.c logger.c claw.c vision.c
 
 # Object files
 OBJS = $(SRCS:.c=.o)

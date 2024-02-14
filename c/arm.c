@@ -167,7 +167,9 @@ void arm_handle_state() {
         // USE ROVER API TO MOVE
         arm_state = ROVER_MOVING;
         rover_move_x(kinematic_result.extra_distance, 20.0); // moving forward
+        // TODO: @lcartier @gibsonhooper25 fix that
         rover_rotate(
+            ROVER_ROTATE_COUNTER,
             kinematic_result
                 .turn_angle); // turn angle is +90 to -90. make sure this is
                               // adjusted to whatever rover team provides
@@ -534,11 +536,27 @@ void set_joint_angle(arm_motor_t *arm_motor, uint16_t angle) {
   }
 }
 
-// CURRENTLY
-// WRIST_MOTOR_PIN 0
-// ELBOW_MOTOR_PIN 1
-// BASE_MOTOR_PIN 2
-// CLAW_MOTOR_PIN 3
+void arm_isr() {
+  static unsigned long millis; // stores number of milliseconds since startup
+  for (int i = 0; i < MAX_MOTORS; i++) {
+    // printf("i: %d, ", i);
+    motor_update(i);
+  }
+  // printf("\n");
+// #define DEBUG_WRIST
+#if defined(DEBUG_WRIST) || defined(DEBUG_ELBOW) || defined(DEBUG_BASE) ||     \
+    defined(DEBUG_CLAW)
+  arm_handle_state_debug();
+#else
+  arm_handle_state();
+#endif
+  // motor_update(CLAW_MOTOR_IDX);
+  // set_motor_speed(WRIST_MOTOR_IDX, 50);
+  // set_motor_speed(ELBOW_MOTOR_IDX, 40);
+
+  millis++;
+}
+
 void arm_init() {
   WRIST_MOTOR.name = "WRIST";
   WRIST_MOTOR.index = WRIST_MOTOR_IDX;
@@ -590,4 +608,6 @@ void arm_init() {
 
   motor_init();
   claw_init();
+
+  isr_attach_function(arm_isr);
 }
