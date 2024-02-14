@@ -4,7 +4,6 @@
 
 #include "arm.h"
 #include "kinematic_engine.h"
-#include "rover_isr.h"
 
 #include "rover.h"
 #include "vision.h"
