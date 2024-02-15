@@ -24,7 +24,7 @@ all: $(TARGET)
 rovermacos:
 	$(MAKE) TARGET=rovermacos LIBPATH=~/Documents/projects/capstone/SIMBA_C_Driver/rover all
 
-$(TARGET): $(OBJS)
+$(TARGET): $(OBJS) $(LIBPATH)/librover.a
 	$(CC) $(CFLAGS) -L $(LIBPATH) $(OBJS) -o $(TARGET) -lm $(ROVERLIBFLAG)
 
 %.o: %.c
