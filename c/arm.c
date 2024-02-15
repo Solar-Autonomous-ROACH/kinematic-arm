@@ -155,8 +155,8 @@ void arm_handle_state() {
         log_message(LOG_WARNING, "No test tube found\n",
                     original_vision_info.confidence);
           // move the rover to some place idk
-          // rover_move_x()
-          // rover_rotate()
+          // rover_move_x(int64_t dist, double speed)
+          // rover_rotate(int dir, int angle)
         break;
       case VISION_SUCCESS:
         log_message(LOG_INFO,
@@ -172,8 +172,8 @@ void arm_handle_state() {
           log_message(LOG_WARNING, "Confidence level %lf is too low\n",
                     original_vision_info.confidence);
           // move the rover to some place idk
-          // rover_move_x()
-          // rover_rotate()
+          // rover_move_x(int64_t dist, double speed)
+          // rover_rotate(int dir, int angle)
         } else {
           kinematic_engine(original_vision_info.x, original_vision_info.y,
                           original_vision_info.z, &kinematic_result);
@@ -183,10 +183,8 @@ void arm_handle_state() {
           if (!validate_kinematic_result(kinematic_result)) {
             // USE ROVER API TO MOVE - can't reach the object
             arm_state = ROVER_MOVING;
-            rover_move_x(kinematic_result.extra_distance); // moving forward
-            rover_rotate(
-              kinematic_result
-                  .turn_angle); // turn angle is +90 to -90. make sure this is
+            //rover_move_x(kinematic_result.extra_distance, speed); // moving forward
+            //rover_rotate(int dir, kinematic_result.turn_angle); // turn angle is +90 to -90. make sure this is
                                 // adjusted to whatever rover team provides
           } else {
             log_message(LOG_INFO,
@@ -215,8 +213,7 @@ void arm_handle_state() {
     break;
 
   case ROVER_MOVING:
-    if (rover_movement_done()) {
-      // if (true) {
+    if (check_rover_done()) {
       arm_state = CAPTURE_VISION_INFO;
     }
     break;
@@ -291,8 +288,8 @@ void arm_handle_state() {
         if (consecutive_pickup_failures == CONSECUTIVE_PICKUP_FAILURE_MAX){
           arm_state = ROVER_MOVING;
           consecutive_pickup_failures = 0;
-          // rover_move_x()
-          // rover_rotate()
+          // rover_move_x(int64_t dist, double speed)
+          // rover_rotate(int dir, int angle)
           //probably move somewhere else since we can't pick up the current tube
         } else {
           arm_state = CAPTURE_VISION_INFO; // did not correctly acquire - restart
