@@ -430,6 +430,7 @@ void arm_handle_state_debug() {
   case CALIBRATE:
     if (arm_calibrate_debug() == ARM_CALIBRATE_READY) {
       arm_state = WAIT_FOR_INPUT;
+      set_joints_angle(90, 90, 90);
       log_message(LOG_INFO, "Calibrate done, heading to WAIT_FOR_INPUT\n");
     }
     break;
