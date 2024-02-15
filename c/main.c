@@ -30,6 +30,8 @@ int main() {
   arm_init();
   isr_init();
 
+  set_joints_angle(90, 90, 90);
+
   while (1) {
     pause();
   }

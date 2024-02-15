@@ -67,7 +67,7 @@ arms_calibrate_state_t arm_calibrate() {
 }
 
 /** none or only one of these should be true at a time */
-// #define DEBUG_WRIST
+#define DEBUG_WRIST
 // #define DEBUG_ELBOW
 // #define DEBUG_BASE
 // #define DEBUG_CLAW
@@ -539,21 +539,12 @@ void set_joint_angle(arm_motor_t *arm_motor, uint16_t angle) {
 void arm_isr() {
   static unsigned long millis; // stores number of milliseconds since startup
   motor_update_all();
-  // for (int i = 0; i < MAX_MOTORS; i++) {
-  //   // printf("i: %d, ", i);
-  //   motor_update(i);
-  // }
-  // printf("\n");
-// #define DEBUG_WRIST
 #if defined(DEBUG_WRIST) || defined(DEBUG_ELBOW) || defined(DEBUG_BASE) ||     \
     defined(DEBUG_CLAW)
   arm_handle_state_debug();
 #else
   arm_handle_state();
 #endif
-  // motor_update(CLAW_MOTOR_IDX);
-  // set_motor_speed(WRIST_MOTOR_IDX, 50);
-  // set_motor_speed(ELBOW_MOTOR_IDX, 40);
 
   millis++;
 }
