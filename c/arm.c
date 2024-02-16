@@ -67,7 +67,7 @@ arms_calibrate_state_t arm_calibrate() {
 }
 
 /** none or only one of these should be true at a time */
-#define DEBUG_WRIST
+// #define DEBUG_WRIST
 // #define DEBUG_ELBOW
 // #define DEBUG_BASE
 // #define DEBUG_CLAW
@@ -421,7 +421,7 @@ void set_joints_angle(int16_t base_angle, int16_t elbow_angle,
     set_joint_angle(&ELBOW_MOTOR, elbow_angle);
   }
   if (wrist_angle >= 0) {
-        set_joint_angle(&WRIST_MOTOR, wrist_angle);
+    set_joint_angle(&WRIST_MOTOR, wrist_angle);
   }
 }
 
