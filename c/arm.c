@@ -421,7 +421,7 @@ void set_joints_angle(int16_t base_angle, int16_t elbow_angle,
     set_joint_angle(&ELBOW_MOTOR, elbow_angle);
   }
   if (wrist_angle >= 0) {
-    set_joint_angle(&WRIST_MOTOR, wrist_angle);
+        set_joint_angle(&WRIST_MOTOR, wrist_angle);
   }
 }
 
@@ -431,6 +431,7 @@ void arm_handle_state_debug() {
     if (arm_calibrate_debug() == ARM_CALIBRATE_READY) {
       arm_state = WAIT_FOR_INPUT;
       set_joints_angle(90, 90, 90);
+      input_ready = true;
       log_message(LOG_INFO, "Calibrate done, heading to WAIT_FOR_INPUT\n");
     }
     break;
@@ -438,9 +439,9 @@ void arm_handle_state_debug() {
   case WAIT_FOR_INPUT:
     if (input_ready) {
       input_ready = false;
-      set_joints_angle(base_target_angle, elbow_target_angle,
-                       wrist_target_angle);
-      log_message(LOG_INFO, "Got input, heading to PREPARE FOR MOVE\n");
+      // set_joints_angle(base_target_angle, elbow_target_angle,
+      //                  wrist_target_angle);
+      // log_message(LOG_INFO, "Got input, heading to PREPARE FOR MOVE\n");
       arm_state = MOVE_TARGET_BE1;
     }
     break;
