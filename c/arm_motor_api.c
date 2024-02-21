@@ -7,12 +7,16 @@ static motor_t motors[MAX_MOTORS];
 void motor_init_all() {
   MotorController_init(&(motors[WRIST_MOTOR_IDX].motor_controller),
                        WRIST_MOTOR_ADDRESS);
+  motors[WRIST_MOTOR_IDX].motor_controller.clk_divisor = 2;
   MotorController_init(&(motors[ELBOW_MOTOR_IDX].motor_controller),
                        ELBOW_MOTOR_ADDRESS);
+  motors[ELBOW_MOTOR_IDX].motor_controller.clk_divisor = 2;
   MotorController_init(&(motors[BASE_MOTOR_IDX]).motor_controller,
                        BASE_MOTOR_ADDRESS);
+  motors[BASE_MOTOR_IDX].motor_controller.clk_divisor = 2;
   MotorController_init(&(motors[CLAW_MOTOR_IDX]).motor_controller,
                        CLAW_MOTOR_ADDRESS);
+  motors[CLAW_MOTOR_IDX].motor_controller.clk_divisor = 2;
   motor_update_all();
 }
 
