@@ -214,6 +214,7 @@ void arm_handle_state() {
 
   case ROVER_MOVING:
     if (check_rover_done()) {
+      // if (true) {
       arm_state = CAPTURE_VISION_INFO;
     }
     break;
@@ -447,16 +448,18 @@ void arm_handle_state_debug() {
   case ARM_CALIBRATE:
     if (arm_calibrate_debug() == ARM_CALIBRATE_READY) {
       arm_state = WAIT_FOR_INPUT;
-      printf("Calibrate done, heading to WAIT_FOR_INPUT\n");
+      set_joints_angle(90, 90, 90);
+      input_ready = true;
+      log_message(LOG_INFO, "Calibrate done, heading to WAIT_FOR_INPUT\n");
     }
     break;
 
   case WAIT_FOR_INPUT:
     if (input_ready) {
       input_ready = false;
-      set_joints_angle(base_target_angle, elbow_target_angle,
-                       wrist_target_angle);
-      printf("Got input, heading to PREPARE FOR MOVE\n");
+      // set_joints_angle(base_target_angle, elbow_target_angle,
+      //                  wrist_target_angle);
+      // log_message(LOG_INFO, "Got input, heading to PREPARE FOR MOVE\n");
       arm_state = MOVE_TARGET_BE1;
     }
     break;
@@ -464,19 +467,19 @@ void arm_handle_state_debug() {
   case MOVE_TARGET_BE1:
 #ifdef DEBUG_WRIST
     if (arm_motor_handle_state(&WRIST_MOTOR) == ARM_MOTOR_CHECK_POSITION) {
-      printf("MOVE_TARGET complete, Waiting for input\n");
+      log_message(LOG_INFO, "MOVE_TARGET complete, Waiting for input\n");
       arm_state = WAIT_FOR_INPUT;
     }
     break;
 #elif defined DEBUG_ELBOW
     if (arm_motor_handle_state(&ELBOW_MOTOR) == ARM_MOTOR_CHECK_POSITION) {
-      printf("MOVE_TARGET complete, Waiting for input\n");
+      log_message(LOG_INFO, "MOVE_TARGET complete, Waiting for input\n");
       arm_state = WAIT_FOR_INPUT;
     }
     break;
 #elif defined DEBUG_BASE
     if (arm_motor_handle_state(&BASE_MOTOR) == ARM_MOTOR_CHECK_POSITION) {
-      printf("MOVE_TARGET complete, Waiting for input\n");
+      log_message(LOG_INFO, "MOVE_TARGET complete, Waiting for input\n");
       arm_state = WAIT_FOR_INPUT;
     }
     break;
@@ -553,11 +556,19 @@ void set_joint_angle(arm_motor_t *arm_motor, uint16_t angle) {
   }
 }
 
-// CURRENTLY
-// WRIST_MOTOR_PIN 0
-// ELBOW_MOTOR_PIN 1
-// BASE_MOTOR_PIN 2
-// CLAW_MOTOR_PIN 3
+void arm_isr() {
+  static unsigned long millis; // stores number of milliseconds since startup
+  motor_update_all();
+#if defined(DEBUG_WRIST) || defined(DEBUG_ELBOW) || defined(DEBUG_BASE) ||     \
+    defined(DEBUG_CLAW)
+  arm_handle_state_debug();
+#else
+  arm_handle_state();
+#endif
+
+  millis++;
+}
+
 void arm_init() {
   WRIST_MOTOR.name = "WRIST";
   WRIST_MOTOR.index = WRIST_MOTOR_IDX;
@@ -607,6 +618,10 @@ void arm_init() {
   BASE_MOTOR.ki = 0.1;
   BASE_MOTOR.integral_threshold = 1000;
 
-  motor_init();
+  motor_init_all();
   claw_init();
+
+  isr_attach_function(arm_isr);
 }
+
+void arm_close() { motor_close_all(); }

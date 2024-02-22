@@ -2,15 +2,12 @@
 #define ARM_H
 
 #include "arm_motor.h"
-#include "arm_motor_controller.h"
+#include "arm_motor_api.h"
 #include "claw.h"
 #include "kinematic_engine.h"
 #include "rover.h"
 #include "vision.h"
 #include <stdint.h>
-
-// #define STEERING_GEAR_RATIO 172
-// #define WHEEL_GEAR_RATIO 212
 
 #define MAX_STEERING_TICKS 300
 
@@ -75,6 +72,7 @@ typedef enum {
 // extern static struct motor_t arm_motor_subarray[4];
 
 void arm_init();
+void arm_close();
 void arm_handle_state(void);
 void stop_arm();
 arm_motors_status_t arm_motors_state_handler(bool base, bool elbow, bool wrist);
@@ -93,29 +91,5 @@ bool arm_movement_complete();
 bool verify_pickup(vision_info_t original_vision_info,
                    vision_info_t moved_vision_info);
 bool validate_kinematic_result(kinematic_output_t kinematic_result);
-
-// extern arm_motor_t BASE_MOTOR;
-// extern arm_motor_t ELBOW_MOTOR;
-// extern arm_motor_t WRIST_MOTOR;
-
-// void arm_init();
-
-// void rover_stop();
-
-// void arm_forward(int speed);
-
-// void arm_reverse(int speed);
-
-// void arm_pointTurn_CW(int speed);
-
-// void arm_pointTurn_CCW(int speed);
-
-// void arm_steer_forward();
-
-// void arm_steer_right(int angle);
-
-// void arm_steer_left(int angle);
-
-// void arm_steer_point();
 
 #endif // ROVERCORE_ROVER_H

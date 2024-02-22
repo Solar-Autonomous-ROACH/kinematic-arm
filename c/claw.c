@@ -1,4 +1,7 @@
 #include "claw.h"
+
+#include "arm_motor_api.h"
+
 #include "logger.h"
 
 claw_motor_t CLAW_MOTOR;
@@ -8,7 +11,7 @@ claw_motor_t CLAW_MOTOR;
 void claw_init() {
   CLAW_MOTOR.index = CLAW_MOTOR_IDX;
   CLAW_MOTOR.motor =
-      get_motor(CLAW_MOTOR_PIN); // TODO: Change to correct motor value
+      get_motor(CLAW_MOTOR_IDX); // TODO: Change to correct motor value
   CLAW_MOTOR.state = CLAW_CHECK_POSITION;
   CLAW_MOTOR.CPR = 12;
   CLAW_MOTOR.gear_ratio = 19.225;
