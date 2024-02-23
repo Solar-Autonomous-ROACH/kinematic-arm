@@ -1,12 +1,17 @@
 #include "claw.h"
 
-#include "arm_motor_api.h"
-
 #include "logger.h"
 
-claw_motor_t CLAW_MOTOR;
+#define HALL_EFFECT_ADDRESS 0x80110000
 
+claw_motor_t CLAW_MOTOR;
+static volatile unsigned int *hall_mmio;
 #define MAGNET_DETECTED(reading) (reading == 0) // you love to see it
+
+#define GPIO_READ_NOT_IMPLEMENTED 255
+
+void claw_relative_turn(uint16_t ticks, bool openclose);
+bool claw_turn_done(long *diff_pt, bool openclose);
 
 void claw_init() {
   CLAW_MOTOR.index = CLAW_MOTOR_IDX;
@@ -19,6 +24,7 @@ void claw_init() {
   CLAW_MOTOR.is_open = true;
   CLAW_MOTOR.target_angle_ticks = 0;
   CLAW_MOTOR.target_is_open = true;
+  hall_mmio = mmio_init(HALL_EFFECT_ADDRESS);
 }
 
 // negative claw speed = rotation
@@ -26,7 +32,8 @@ void claw_init() {
 claw_state_t claw_handle_state() {
   long diff;
   long abs_diff;
-  uint8_t hall_reading = gpio_read(GPIO_HALL_EFFECT_PIN);
+  uint8_t hall_reading = *hall_mmio;
+  // hall_reading = GPIO_READ_NOT_IMPLEMENTED;
 
   switch (CLAW_MOTOR.state) {
   case CLAW_CALIBRATE_START:
@@ -154,8 +161,8 @@ void set_claw_speed(uint8_t speed, bool openclose) {
 bool claw_turn_done(long *diff_pt, bool openclose) {
   long diff = CLAW_MOTOR.motor->target_pos - CLAW_MOTOR.motor->abs_pos;
 
-  if (openclose && diff <= CLAW_ERROR_MARGIN ||
-      !openclose && diff >= -CLAW_ERROR_MARGIN) {
+  if ((openclose && diff <= CLAW_ERROR_MARGIN) ||
+      (!openclose && diff >= -CLAW_ERROR_MARGIN)) {
     if (diff_pt) {
       *diff_pt = diff;
     }

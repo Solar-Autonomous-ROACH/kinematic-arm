@@ -28,7 +28,7 @@ void handler(int signo __attribute__((unused))) {
   pid_t wait_ret = waitpid(vision_pid, &status, WNOHANG);
   if (wait_ret == -1) {
     perror("waitpid vision");
-    exit(1);
+    raise(SIGINT);
   } else if (wait_ret > 0) {
     fclose(vision_stdout);
     close(vision_fd);
@@ -96,7 +96,7 @@ void vision_request_coordinates() {
       vision_state == VISION_SUCCESS) {
     if (kill(vision_pid, SIGUSR1) == -1) {
       perror("kill vision");
-      exit(1);
+      raise(SIGINT);
     }
     vision_state = VISION_IN_PROGRESS;
   }
@@ -180,7 +180,7 @@ vision_status_t vision_receive_input_isr() {
   poll_out = poll(fds, 1, 0);
   if (poll_out == -1) {
     perror("poll error");
-    exit(1);
+    raise(SIGINT);
   } else if (poll_out > 0) {
     // log_message(LOG_INFO, "read character from poll\n");
     vision_state = vision_receive_input();
@@ -228,7 +228,7 @@ void vision_terminate(bool wait) {
     pid_t wait_ret = waitpid(vision_pid, &status, 0);
     if (wait_ret == -1) {
       perror("waitpid vision");
-      exit(1);
+      raise(SIGINT);
     } else if (wait_ret > 0) {
       fclose(vision_stdout);
       close(vision_fd);

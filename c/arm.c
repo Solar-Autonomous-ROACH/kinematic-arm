@@ -1,5 +1,6 @@
 #include "arm.h"
 #include "logger.h"
+#include <signal.h>
 #include <stdlib.h>
 
 // static struct arm_motor_t arm_motor_array[4];
@@ -103,7 +104,6 @@ arms_calibrate_state_t arm_calibrate_debug() {
   return ARM_CALIBRATE_READY;
 }
 
-
 void arm_handle_state() {
   static unsigned long time_in_state = 0; // ms
   arm_motors_status_t status;
@@ -131,7 +131,9 @@ void arm_handle_state() {
   case CAPTURE_VISION_INFO:
     // send signal to vision python program
     vision_result = vision_receive_input_isr();
-    if (vision_result == VISION_READY_FOR_CAPTURE || vision_result == VISION_SUCCESS || vision_result == VISION_SAMPLE_NOT_FOUND) {
+    if (vision_result == VISION_READY_FOR_CAPTURE ||
+        vision_result == VISION_SUCCESS ||
+        vision_result == VISION_SAMPLE_NOT_FOUND) {
       log_message(LOG_INFO, "Requesting vision coordinates\n");
       vision_request_coordinates();
       arm_state = WAIT_FOR_INPUT;
@@ -142,73 +144,75 @@ void arm_handle_state() {
     // wait for coordinates and orientation info from vision team
     vision_result = vision_receive_input_isr();
     switch (vision_result) {
-      case VISION_TERMINATED:
-      case VISION_ERROR:
-        log_message(LOG_INFO, "Vision terminated or error, re-initializing\n");
-        vision_init();
-        break;
-      case VISION_IN_PROGRESS:
-        //do nothing, just waiting for capture to finish
-        break;
-      case VISION_SAMPLE_NOT_FOUND:
-        arm_state = ROVER_MOVING;
-        log_message(LOG_WARNING, "No test tube found\n",
-                    original_vision_info.confidence);
-          // move the rover to some place idk
-          // rover_move_x(int64_t dist, double speed)
-          // rover_rotate(int dir, int angle)
-        break;
-      case VISION_SUCCESS:
-        log_message(LOG_INFO,
+    case VISION_TERMINATED:
+    case VISION_ERROR:
+      log_message(LOG_INFO, "Vision terminated or error, re-initializing\n");
+      raise(SIGINT); // sucide: not recommended for humans
+      break;
+    case VISION_IN_PROGRESS:
+      // do nothing, just waiting for capture to finish
+      break;
+    case VISION_SAMPLE_NOT_FOUND:
+      arm_state = ROVER_MOVING;
+      log_message(LOG_WARNING, "No test tube found\n",
+                  original_vision_info.confidence);
+      // move the rover to some place idk
+      // rover_move_x(int64_t dist, double speed)
+      // rover_rotate(int dir, int angle)
+      break;
+    case VISION_SUCCESS:
+      log_message(LOG_INFO,
                   "Vision returned success, processing coordinates...\n");
-        if (!vision_get_coordinates(&original_vision_info)) {
-          perror("read original coordinates error");
-          exit(1);
-        }
-        log_message(LOG_INFO, "Confidence level = %lf\n",
+      if (!vision_get_coordinates(&original_vision_info)) {
+        perror("read original coordinates error");
+        raise(SIGINT);
+      }
+      log_message(LOG_INFO, "Confidence level = %lf\n",
+                  original_vision_info.confidence);
+      if (original_vision_info.confidence < VISION_CONFIDENCE_MINIMUM) {
+        arm_state = ROVER_MOVING;
+        log_message(LOG_WARNING, "Confidence level %lf is too low\n",
                     original_vision_info.confidence);
-        if (original_vision_info.confidence < VISION_CONFIDENCE_MINIMUM) {
+        // move the rover to some place idk
+        // rover_move_x(int64_t dist, double speed)
+        // rover_rotate(int dir, int angle)
+      } else {
+        kinematic_engine(original_vision_info.x, original_vision_info.y,
+                         original_vision_info.z, &kinematic_result);
+        claw_target_angle = original_vision_info.angle % 360;
+        log_message(LOG_INFO, "Claw target angle from vision = %d\n",
+                    claw_target_angle);
+        if (!validate_kinematic_result(kinematic_result)) {
+          // USE ROVER API TO MOVE - can't reach the object
           arm_state = ROVER_MOVING;
-          log_message(LOG_WARNING, "Confidence level %lf is too low\n",
-                    original_vision_info.confidence);
-          // move the rover to some place idk
-          // rover_move_x(int64_t dist, double speed)
-          // rover_rotate(int dir, int angle)
+          // rover_move_x(kinematic_result.extra_distance, speed); // moving
+          // forward rover_rotate(int dir, kinematic_result.turn_angle); // turn
+          // angle is +90 to -90. make sure this is
+          //  adjusted to whatever rover team provides
         } else {
-          kinematic_engine(original_vision_info.x, original_vision_info.y,
-                          original_vision_info.z, &kinematic_result);
-          claw_target_angle = original_vision_info.angle % 360;
-          log_message(LOG_INFO, "Claw target angle from vision = %d\n",
-                      claw_target_angle);
-          if (!validate_kinematic_result(kinematic_result)) {
-            // USE ROVER API TO MOVE - can't reach the object
-            arm_state = ROVER_MOVING;
-            //rover_move_x(kinematic_result.extra_distance, speed); // moving forward
-            //rover_rotate(int dir, kinematic_result.turn_angle); // turn angle is +90 to -90. make sure this is
-                                // adjusted to whatever rover team provides
+          log_message(LOG_INFO,
+                      "Got input, Base: %hd, Elbow: %hd, Wrist: %hd, heading "
+                      "to PREPARE "
+                      "FOR MOVE\n",
+                      base_target_angle, elbow_target_angle,
+                      wrist_target_angle);
+          set_joints_angle(base_target_angle, elbow_target_angle, 0);
+          set_claw_angle(claw_target_angle);
+          open_claw();
+          if (base_target_angle == 0 && elbow_target_angle == 0 &&
+              wrist_target_angle == 0) {
+            move_home();
           } else {
-            log_message(LOG_INFO,
-                        "Got input, Base: %hd, Elbow: %hd, Wrist: %hd, heading "
-                        "to PREPARE "
-                        "FOR MOVE\n",
-                        base_target_angle, elbow_target_angle,
-                        wrist_target_angle);
-            set_joints_angle(base_target_angle, elbow_target_angle, 0);
-            set_claw_angle(claw_target_angle);
-            open_claw();
-            if (base_target_angle == 0 && elbow_target_angle == 0 &&
-                wrist_target_angle == 0) {
-              move_home();
-            } else {
-              arm_state = MOVE_TARGET_BE1;
-            }
+            arm_state = MOVE_TARGET_BE1;
           }
         }
-        break;
-      default:
-        //should never be STARTING or READY_FOR_CAPTURE
-        log_message(LOG_ERROR, "Vision returned an unexpected status in WAIT_FOR_INPUT\n");
-        break;
+      }
+      break;
+    default:
+      // should never be STARTING or READY_FOR_CAPTURE
+      log_message(LOG_ERROR,
+                  "Vision returned an unexpected status in WAIT_FOR_INPUT\n");
+      break;
     }
     break;
 
@@ -271,6 +275,7 @@ void arm_handle_state() {
                vision_receive_input_isr() == VISION_SUCCESS) {
       if (!vision_get_coordinates(&moved_vision_info)) {
         perror("read moved coordinates error");
+        raise(SIGINT);
         exit(1);
       }
       if (verify_pickup(original_vision_info, moved_vision_info)) {
@@ -286,16 +291,17 @@ void arm_handle_state() {
       } else {
         log_message(LOG_INFO, "verify pickup failed\n");
         consecutive_pickup_failures++;
-        if (consecutive_pickup_failures == CONSECUTIVE_PICKUP_FAILURE_MAX){
+        if (consecutive_pickup_failures == CONSECUTIVE_PICKUP_FAILURE_MAX) {
           arm_state = ROVER_MOVING;
           consecutive_pickup_failures = 0;
           // rover_move_x(int64_t dist, double speed)
           // rover_rotate(int dir, int angle)
-          //probably move somewhere else since we can't pick up the current tube
+          // probably move somewhere else since we can't pick up the current
+          // tube
         } else {
-          arm_state = CAPTURE_VISION_INFO; // did not correctly acquire - restart
-                                          // by taking new picture
-        }        
+          arm_state = CAPTURE_VISION_INFO; // did not correctly acquire -
+                                           // restart by taking new picture
+        }
       }
     }
 
