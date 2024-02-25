@@ -1,5 +1,28 @@
+/**
+ * @file claw.c
+ * @author Christian Honein (chonein@outlook.com)
+ * Feel free to email me any questions about this
+ * @remark Message to whoever is reading this code in the future
+ * Sorry if the code is confusing. The way the claw works is confusing.
+ * Code can probably be written better.
+ * Also get a basic understanding of how the claw works before you even attempt
+ * to read this.
+ *
+ * @note IMPORTANT INFORMATION ABOUT THE CLAW:
+ * negative claw speed = rotation
+ * positive claw speed = open/close
+ *
+ * If encoders are implemented and connected correctly:
+ * positive speed: encoder count increases
+ * negative speed: encoder count decreases
+ *
+ * negative speed: clockwise
+ * positive speed: counter clockwise
+ *
+ * Suggestions on how to make better:
+ * Have a motor update specific to claw?
+ */
 #include "claw.h"
-
 #include "logger.h"
 
 #define HALL_EFFECT_ADDRESS 0x80110000
@@ -27,8 +50,6 @@ void claw_init() {
   hall_mmio = mmio_init(HALL_EFFECT_ADDRESS);
 }
 
-// negative claw speed = rotation
-// positive claw speed = open/close
 claw_state_t claw_handle_state() {
   long diff;
   long abs_diff;
@@ -43,7 +64,8 @@ claw_state_t claw_handle_state() {
       CLAW_MOTOR.state = CLAW_CHECK_POSITION; // assume calibrated
     } else if (MAGNET_DETECTED(hall_reading)) {
       // magnet detected
-      toggle_claw(); // opens/close claw
+      // opens/close claw
+      claw_relative_turn(CLAW_MOTOR.CPR * CLAW_MOTOR.gear_ratio / 4, true);
       // open/close claw to see which magnet was detected
       CLAW_MOTOR.state = CLAW_CALIBRATE_WAIT_FOR_TURN;
     } else {
@@ -58,15 +80,51 @@ claw_state_t claw_handle_state() {
       // magnet detected
       set_claw_speed(0, false);
       // open/close claw to see which magnet was detected
-      toggle_claw();
+      claw_relative_turn(CLAW_MOTOR.CPR * CLAW_MOTOR.gear_ratio / 4, true);
       CLAW_MOTOR.state = CLAW_CALIBRATE_WAIT_FOR_TURN;
     }
-    // no magnet detected. keep going
+    // else, no magnet detected. keep going
     break;
 
   case CLAW_CALIBRATE_WAIT_FOR_TURN:
-    diff = CLAW_MOTOR.target_angle_ticks - CLAW_MOTOR.current_angle_ticks;
-    abs_diff = diff < 0 ? -diff : diff;
+    if (claw_turn_done(NULL, true)) {
+      set_claw_speed(0, false);
+      if (MAGNET_DETECTED(hall_reading)) {
+        // we were on rotation magnet
+        claw_relative_turn(CLAW_MOTOR.CPR * CLAW_MOTOR.gear_ratio / 2, false);
+        CLAW_MOTOR.state = CLAW_CALIBRATE_GOTO_OPEN_CLOSE_MAGNET;
+      } else {
+        // we were on open/close magnet. calibration done
+        set_claw_speed(CLAW_SPEED, true);
+        CLAW_MOTOR.state = CLAW_CALIBRATE_OPEN_CLAW;
+      }
+    }
+    break;
+
+  case CLAW_CALIBRATE_GOTO_OPEN_CLOSE_MAGNET:
+    if (claw_turn_done(NULL, false)) {
+      set_claw_speed(0, false);
+
+      if (MAGNET_DETECTED(hall_reading)) {
+        CLAW_MOTOR.current_angle_ticks =
+            CLAW_MOTOR.CPR * CLAW_MOTOR.gear_ratio / 4;
+        CLAW_MOTOR.is_open = true;
+        CLAW_MOTOR.state = CLAW_CHECK_POSITION;
+      } else {
+        set_claw_speed(CLAW_SPEED, true);
+        CLAW_MOTOR.state = CLAW_CALIBRATE_OPEN_CLAW;
+      }
+    }
+    break;
+
+  case CLAW_CALIBRATE_OPEN_CLAW:
+    if (MAGNET_DETECTED(hall_reading)) {
+      set_claw_speed(0, false);
+      CLAW_MOTOR.current_angle_ticks =
+          CLAW_MOTOR.CPR * CLAW_MOTOR.gear_ratio / 4;
+      CLAW_MOTOR.is_open = true;
+      CLAW_MOTOR.state = CLAW_CHECK_POSITION;
+    }
     break;
 
   case CLAW_CHECK_POSITION:
@@ -79,7 +137,7 @@ claw_state_t claw_handle_state() {
         // positive angle->we can directly turn to the difference
         ticks = abs_diff;
       } else {
-        // TODO: christian: cam this be changed to -180 + abs diff instead of
+        // TODO: christian: can this be changed to -180 + abs diff instead of
         // 360 - abs diff aka ticks = - CLAW_MOTOR.CPR * CLAW_MOTOR.gear_ratio /
         // 2 + abs_diff;
         ticks = CLAW_MOTOR.CPR * CLAW_MOTOR.gear_ratio - abs_diff;
@@ -92,10 +150,10 @@ claw_state_t claw_handle_state() {
     break;
 
   case CLAW_ROTATING:
-    // update current_angle_ticks
     if (claw_turn_done(NULL, false)) {
       // we are there!
       set_claw_speed(0, false);
+      // update current_angle_ticks
       CLAW_MOTOR.current_angle_ticks =
           CLAW_MOTOR.target_angle_ticks; // TODO: add a -diff
       // check if we need to open/close claw
@@ -108,9 +166,7 @@ claw_state_t claw_handle_state() {
     break;
 
   case CLAW_OPENING_CLOSING:
-    diff = CLAW_MOTOR.motor->target_pos - CLAW_MOTOR.motor->abs_pos;
-    if (diff <= CLAW_ERROR_MARGIN) {
-      // we are there!
+    if (claw_turn_done(NULL, true)) {
       CLAW_MOTOR.is_open = CLAW_MOTOR.target_is_open;
       set_claw_speed(0, false);
       CLAW_MOTOR.state = CLAW_CHECK_POSITION;
@@ -123,6 +179,7 @@ claw_state_t claw_handle_state() {
   return CLAW_MOTOR.state;
 }
 
+/** Functions used to interface with claw */
 void claw_goto_calibrate() { CLAW_MOTOR.state = CLAW_CALIBRATE_START; }
 
 void set_claw_angle(uint16_t angle) {
@@ -144,6 +201,7 @@ void close_claw() {
     CLAW_MOTOR.target_is_open = false;
   }
 }
+/** END */
 
 /**
  * @brief Set the claw speed object
