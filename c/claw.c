@@ -25,10 +25,8 @@
 #include "claw.h"
 #include "logger.h"
 
-#define HALL_EFFECT_ADDRESS 0x80110000
-
 claw_motor_t CLAW_MOTOR;
-static volatile unsigned int *hall_mmio;
+static volatile unsigned int *hall_mmio = NULL;
 #define MAGNET_DETECTED(reading) (reading == 0) // you love to see it
 
 #define GPIO_READ_NOT_IMPLEMENTED 255
@@ -47,7 +45,9 @@ void claw_init() {
   CLAW_MOTOR.is_open = true;
   CLAW_MOTOR.target_angle_ticks = 0;
   CLAW_MOTOR.target_is_open = true;
-  hall_mmio = mmio_init(HALL_EFFECT_ADDRESS);
+  if (hall_mmio == NULL) {
+    hall_mmio = mmio_init(HALL_EFFECT_ADDRESS);
+  }
 }
 
 claw_state_t claw_handle_state() {
@@ -63,12 +63,14 @@ claw_state_t claw_handle_state() {
       // gpio_read not implemented
       CLAW_MOTOR.state = CLAW_CHECK_POSITION; // assume calibrated
     } else if (MAGNET_DETECTED(hall_reading)) {
+      log_message(LOG_INFO, "Started on magnet. open/close 90 degs\n");
       // magnet detected
       // opens/close claw
       claw_relative_turn(CLAW_MOTOR.CPR * CLAW_MOTOR.gear_ratio / 4, true);
       // open/close claw to see which magnet was detected
       CLAW_MOTOR.state = CLAW_CALIBRATE_WAIT_FOR_TURN;
     } else {
+      log_message(LOG_INFO, "Started not on magnet. rotate to find magnet\n");
       // turn whole claw to start looking for magnet
       set_claw_speed(CLAW_SPEED, false);
       CLAW_MOTOR.state = CLAW_CALIBRATE_WAIT_FOR_MAGNET;
@@ -77,6 +79,7 @@ claw_state_t claw_handle_state() {
 
   case CLAW_CALIBRATE_WAIT_FOR_MAGNET:
     if (MAGNET_DETECTED(hall_reading)) {
+      log_message(LOG_INFO, "Found a magnet.\n");
       // magnet detected
       set_claw_speed(0, false);
       // open/close claw to see which magnet was detected
@@ -90,10 +93,14 @@ claw_state_t claw_handle_state() {
     if (claw_turn_done(NULL, true)) {
       set_claw_speed(0, false);
       if (MAGNET_DETECTED(hall_reading)) {
+        log_message(
+            LOG_INFO,
+            "Found magnet again. Must be rotation magnet. Turn 180 degs\n");
         // we were on rotation magnet
         claw_relative_turn(CLAW_MOTOR.CPR * CLAW_MOTOR.gear_ratio / 2, false);
         CLAW_MOTOR.state = CLAW_CALIBRATE_GOTO_OPEN_CLOSE_MAGNET;
       } else {
+        log_message(LOG_INFO, "Lost magnet. Must be open/close magnet.\n");
         // we were on open/close magnet. calibration done
         set_claw_speed(CLAW_SPEED, true);
         CLAW_MOTOR.state = CLAW_CALIBRATE_OPEN_CLAW;
@@ -106,11 +113,16 @@ claw_state_t claw_handle_state() {
       set_claw_speed(0, false);
 
       if (MAGNET_DETECTED(hall_reading)) {
+        log_message(
+            LOG_INFO,
+            "Reach open/close magnet and detected it. Calibratation Done.\n");
         CLAW_MOTOR.current_angle_ticks =
             CLAW_MOTOR.CPR * CLAW_MOTOR.gear_ratio / 4;
         CLAW_MOTOR.is_open = true;
         CLAW_MOTOR.state = CLAW_CHECK_POSITION;
       } else {
+        log_message(LOG_INFO, "Reach open/close magnet and not detected. "
+                              "open/close to get to open.\n");
         set_claw_speed(CLAW_SPEED, true);
         CLAW_MOTOR.state = CLAW_CALIBRATE_OPEN_CLAW;
       }
@@ -119,6 +131,8 @@ claw_state_t claw_handle_state() {
 
   case CLAW_CALIBRATE_OPEN_CLAW:
     if (MAGNET_DETECTED(hall_reading)) {
+      log_message(LOG_INFO, "Reached calibrated position claw open with open "
+                            "close magnet on hall effect.\n");
       set_claw_speed(0, false);
       CLAW_MOTOR.current_angle_ticks =
           CLAW_MOTOR.CPR * CLAW_MOTOR.gear_ratio / 4;
