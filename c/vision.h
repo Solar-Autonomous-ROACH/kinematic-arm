@@ -4,14 +4,15 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#define VISION_CONFIDENCE_MINIMUM 0.5
+
 typedef struct {
   int16_t x; // centimeters
   int16_t y;
   int16_t z;
   int16_t angle; // 0 to 179
+  double confidence;
 } vision_info_t;
-
-
 
 typedef enum {
   VISION_TERMINATED,

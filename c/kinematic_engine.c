@@ -8,20 +8,27 @@ double law_of_cosines(double a, double b, double c) {
 
 int to_deg(double radians) { return (int)(radians * RAD_TO_DEG); }
 
-void kinematic_engine(float x_pos, float y_pos, float z_pos, kinematic_output_t *output) {
+void kinematic_engine(float x_pos, float y_pos, float z_pos, float angle_pos,
+                      kinematic_output_t *output) {
   // printf("Values: %f, %f, %f\n", x_pos, y_pos, z_pos);
   double magnitude, theta_1, theta_2, shoulder_rad, elbow_rad;
   clock_t start_time, end_time;
 
-  start_time = clock(); //For timing the whole thing
+  start_time = clock(); // For timing the whole thing
 
   /*Set output to 0 so no stale values*/
-  //output->
+  output->turn_angle = 0;
+  output->extra_distance = 0;
+  output->error = false;
+  output->base_angle = 0;
+  output->elbow_angle = 0;
+  output->wrist_angle = 0;
+  output->claw_angle = 0;
 
   /*Convert from vision coords to internal coords*/
   x_pos -= VISION_X_OFFSET;
   y_pos -= VISION_Y_OFFSET;
-  z_pos -= VISION_Z_OFFSET; 
+  z_pos -= VISION_Z_OFFSET;
 
   if (!((0 - SMALL_DOUBLE) <= z_pos && z_pos <= SMALL_DOUBLE)) {
     // If Z is something other than 0, get angle and new x distance
@@ -34,7 +41,7 @@ void kinematic_engine(float x_pos, float y_pos, float z_pos, kinematic_output_t 
   }
 
   // y_pos += W_C_LENGTH; //accounting for claw position, as should be same
-  y_pos += CLAW_Y; //2D Claw angle coming in to grab
+  y_pos += CLAW_Y; // 2D Claw angle coming in to grab
   x_pos += CLAW_X;
 
   // printf("YPos: %f", y_pos);
@@ -42,17 +49,16 @@ void kinematic_engine(float x_pos, float y_pos, float z_pos, kinematic_output_t 
   magnitude = sqrt(x_pos * x_pos + y_pos * y_pos);
   // printf("Mag: %f\n", magnitude);
   /*Do Checks to see if position is in range and within bounding lines*/
-  
-  output->extra_distance = 0;
-  output->error = false;
-  
+
   // log_message(LOG_INFO, "Testing1\n");
   // log_message(LOG_INFO, "Magnitude = %.3f\n", magnitude);
-  // log_message(LOG_INFO, "Arm Length = %.3f\n", (S_E_LENGTH + E_W_LENGTH + 0.0) * 0.98);
+  // log_message(LOG_INFO, "Arm Length = %.3f\n", (S_E_LENGTH + E_W_LENGTH +
+  // 0.0) * 0.98);
   if (magnitude > (S_E_LENGTH + E_W_LENGTH + 0.0) * 0.98) { // check if in range
-    // output->extra_distance = (int) (magnitude - S_E_LENGTH - E_W_LENGTH - DISTANCE_OVERSHOOT);
-    // log_message(LOG_INFO, "Testing2\n");
-    output->extra_distance = ((int) (magnitude - S_E_LENGTH - E_W_LENGTH + DISTANCE_OVERSHOOT));
+    // output->extra_distance = (int) (magnitude - S_E_LENGTH - E_W_LENGTH -
+    // DISTANCE_OVERSHOOT); log_message(LOG_INFO, "Testing2\n");
+    output->extra_distance =
+        ((int)(magnitude - S_E_LENGTH - E_W_LENGTH + DISTANCE_OVERSHOOT));
     return;
   } else if (LOWER_AREA_BOUND > (y_pos - CLAW_Y)) { // Lower Bound
     output->error = true;
@@ -70,14 +76,15 @@ void kinematic_engine(float x_pos, float y_pos, float z_pos, kinematic_output_t 
   theta_2 = law_of_cosines(S_E_LENGTH, magnitude, E_W_LENGTH);
   // printf("Thetas: %d, %d", to_deg(theta_1), to_deg(theta_2));
 
-  //add angles of two triangles together
+  // add angles of two triangles together
   shoulder_rad = theta_1 + atan(y_pos / x_pos);
   elbow_rad = PI - theta_1 - theta_2;
 
-  //get the angles in respect to the servo directions
+  // get the angles in respect to the servo directions
   output->base_angle = to_deg(PI - shoulder_rad + SHOULDER_CONST);
   output->elbow_angle = to_deg(elbow_rad);
   output->wrist_angle = to_deg(WRIST_CONST + shoulder_rad + elbow_rad);
+  output->claw_angle = (int)angle_pos + CLAW_CONST;
 
   end_time = clock();
   log_message(LOG_INFO, "Engine Elapsed: %.1f ms\n",
