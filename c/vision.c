@@ -223,7 +223,7 @@ void vision_terminate(bool wait) {
     sa.sa_flags = 0;
     sigemptyset(&sa.sa_mask);
     sigaction(SIGCHLD, &sa, NULL);
-    kill(vision_pid, SIGTERM);
+    kill(vision_pid, SIGINT);
     int status;
     pid_t wait_ret = waitpid(vision_pid, &status, 0);
     if (wait_ret == -1) {
@@ -236,6 +236,6 @@ void vision_terminate(bool wait) {
     }
   } else {
     // just kill SIGCHLD handler will handler the rest
-    kill(vision_pid, SIGTERM);
+    kill(vision_pid, SIGINT);
   }
 }

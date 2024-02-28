@@ -96,8 +96,9 @@ claw_state_t claw_handle_state() {
         log_message(
             LOG_INFO,
             "Found magnet again. Must be rotation magnet. Turn 180 degs\n");
-        // we were on rotation magnet
-        claw_relative_turn(CLAW_MOTOR.CPR * CLAW_MOTOR.gear_ratio / 2, false);
+        // we were on rotation magnet. Turn 180. add some extra for slippage
+        claw_relative_turn(CLAW_MOTOR.CPR * CLAW_MOTOR.gear_ratio / 2 + 10,
+                           false);
         CLAW_MOTOR.state = CLAW_CALIBRATE_GOTO_OPEN_CLOSE_MAGNET;
       } else {
         log_message(LOG_INFO, "Lost magnet. Must be open/close magnet.\n");
@@ -227,7 +228,7 @@ void close_claw() {
 void set_claw_speed(uint8_t speed, bool openclose) {
   // assume turning positive opens/closes the claw
   // turning positive should increase abs_pos
-  set_motor_speed(CLAW_MOTOR.index, openclose ? speed : -speed);
+  set_motor_speed(CLAW_MOTOR.index, openclose ? (speed + 15) : -speed);
 }
 
 bool claw_turn_done(long *diff_pt, bool openclose) {
