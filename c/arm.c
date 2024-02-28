@@ -178,10 +178,8 @@ void arm_handle_state() {
         // rover_rotate(int dir, int angle)
       } else {
         kinematic_engine(original_vision_info.x, original_vision_info.y,
-                         original_vision_info.z, &kinematic_result);
-        claw_target_angle = original_vision_info.angle % 360;
-        log_message(LOG_INFO, "Claw target angle from vision = %d\n",
-                    claw_target_angle);
+                         original_vision_info.z, original_vision_info.angle,
+                         &kinematic_result);
         if (!validate_kinematic_result(kinematic_result)) {
           // USE ROVER API TO MOVE - can't reach the object
           arm_state = ROVER_MOVING;
@@ -191,16 +189,17 @@ void arm_handle_state() {
           //  adjusted to whatever rover team provides
         } else {
           log_message(LOG_INFO,
-                      "Got input, Base: %hd, Elbow: %hd, Wrist: %hd, heading "
+                      "Got input, Base: %hd, Elbow: %hd, Wrist: %hd, Claw: "
+                      "%hd, heading "
                       "to PREPARE "
                       "FOR MOVE\n",
-                      base_target_angle, elbow_target_angle,
-                      wrist_target_angle);
+                      base_target_angle, elbow_target_angle, wrist_target_angle,
+                      claw_target_angle);
           set_joints_angle(base_target_angle, elbow_target_angle, 0);
           set_claw_angle(claw_target_angle);
           open_claw();
           if (base_target_angle == 0 && elbow_target_angle == 0 &&
-              wrist_target_angle == 0) {
+              wrist_target_angle == 0 && claw_target_angle == 0) {
             move_home();
           } else {
             arm_state = MOVE_TARGET_BE1;
@@ -373,13 +372,14 @@ bool validate_kinematic_result(kinematic_output_t kinematic_result) {
     int wrist_angle = kinematic_result.wrist_angle;
     if (base_angle > 10) {
       // base_angle correction
-      base_angle += 12;
+      base_angle += BASE_CORRECTION_ANGLE;
     }
     if (base_angle < 360 && elbow_angle < 360 && wrist_angle < 360) {
       input_ready = true;
       base_target_angle = base_angle;
       elbow_target_angle = elbow_angle;
       wrist_target_angle = wrist_angle;
+      claw_target_angle = kinematic_result.claw_angle;
       return true;
     }
   }
@@ -401,10 +401,11 @@ bool verify_pickup(vision_info_t original_vision_info,
   int y_diff = moved_vision_info.y - original_vision_info.y;
   int z_diff = moved_vision_info.z - original_vision_info.z;
   int angle_diff = moved_vision_info.angle - original_vision_info.angle;
-  return (abs(x_diff) < X_VERIFICATION_ERROR &&
+  return (abs(x_diff) <= X_VERIFICATION_ERROR &&
           y_diff == VERIFICATION_RAISE_DISTANCE &&
-          abs(z_diff) < Z_VERIFICATION_ERROR &&
-          abs(angle_diff) < ANGLE_VERIFICATION_ERROR);
+          abs(z_diff) <= Z_VERIFICATION_ERROR &&
+          abs(angle_diff) <= ANGLE_VERIFICATION_ERROR &&
+          moved_vision_info.confidence >= VISION_CONFIDENCE_MINIMUM);
 }
 
 void move_home() {
