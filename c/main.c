@@ -3,11 +3,9 @@
 //
 
 #include "arm.h"
-#include "isr.h"
 #include "kinematic_engine.h"
 
-#include "arm_motor_controller.h"
-#include "mmio.h"
+#include "rover.h"
 #include "vision.h"
 #include <signal.h>
 #include <stdio.h>
@@ -15,11 +13,7 @@
 
 void sigint_handler(int sig) {
   printf("Received SIGINT signal %d\n", sig);
-  if (mmio_is_valid()) {
-    for (int i = 0; i < MAX_MOTORS; i++) {
-      set_motor_speed(i, 0);
-    }
-  }
+  arm_close();
   vision_terminate(true);
   exit(0);
 }
@@ -33,11 +27,10 @@ int main() {
   sigaction(SIGINT, &sa, NULL);
 
   vision_init();
+  arm_init();
   isr_init();
 
   while (1) {
     pause();
   }
-
-  close_mem();
 }

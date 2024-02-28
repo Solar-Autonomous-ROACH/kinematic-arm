@@ -28,7 +28,7 @@ void handler(int signo __attribute__((unused))) {
   pid_t wait_ret = waitpid(vision_pid, &status, WNOHANG);
   if (wait_ret == -1) {
     perror("waitpid vision");
-    exit(1);
+    raise(SIGINT);
   } else if (wait_ret > 0) {
     fclose(vision_stdout);
     close(vision_fd);
@@ -37,8 +37,8 @@ void handler(int signo __attribute__((unused))) {
 }
 
 void vision_init() {
-  // only init if terminated
-  if (vision_state != VISION_TERMINATED) {
+  // only init if terminated or errored out
+  if (vision_state != VISION_TERMINATED && vision_state != VISION_ERROR) {
     return;
   }
   /** pipe for getting input from vision */
@@ -96,7 +96,7 @@ void vision_request_coordinates() {
       vision_state == VISION_SUCCESS) {
     if (kill(vision_pid, SIGUSR1) == -1) {
       perror("kill vision");
-      exit(1);
+      raise(SIGINT);
     }
     vision_state = VISION_IN_PROGRESS;
   }
@@ -135,14 +135,16 @@ vision_status_t vision_receive_input() {
     // fscanf(vision_stdout, "a=%hd\n", &(vision_info.angle));
     // log_message(LOG_INFO, "a = %hd\n", vision_info.angle);
     // exit(0);
-    if (fscanf(vision_stdout, "=%hd,y=%hd,z=%hd,a=%hd", &(vision_info.x),
-               &(vision_info.y), &(vision_info.z), &(vision_info.angle)) > 0) {
+    if (fscanf(vision_stdout, "=%hd,y=%hd,z=%hd,a=%hd,c=%lf", &(vision_info.x),
+               &(vision_info.y), &(vision_info.z), &(vision_info.angle),
+               &(vision_info.confidence)) > 0) {
       dummy = fgetc(vision_stdout); // get rid of extra newline
       if (dummy != '\n') {
-        log_message(LOG_ERROR, "Vision error\n");
+        log_message_line(LOG_ERROR, __LINE__, "Vision error\n");
       }
-      log_message(LOG_INFO, "x=%hd,y=%hd,z=%hd,a=%hd\n", (vision_info.x),
-                  vision_info.y, vision_info.z, vision_info.angle);
+      log_message(LOG_INFO, "x=%hd,y=%hd,z=%hd,a=%hd,c=%lf\n", vision_info.x,
+                  vision_info.y, vision_info.z, vision_info.angle,
+                  vision_info.confidence);
       vision_state = VISION_SUCCESS;
     } else {
       log_message(LOG_INFO, "vision fscan error\n");
@@ -154,12 +156,12 @@ vision_status_t vision_receive_input() {
     vision_state = VISION_SAMPLE_NOT_FOUND;
     dummy = fgetc(vision_stdout); // get rid of edxtra
     if (dummy != '\n') {
-      log_message(LOG_ERROR, "Vision error\n");
+      log_message_line(LOG_ERROR, __LINE__, "Vision error\n");
     }
     break;
 
   default:
-    log_message(LOG_ERROR, "Vision error\n");
+    log_message_line(LOG_ERROR, __LINE__, "Vision error\n");
     vision_state = VISION_ERROR;
     break;
   }
@@ -178,7 +180,7 @@ vision_status_t vision_receive_input_isr() {
   poll_out = poll(fds, 1, 0);
   if (poll_out == -1) {
     perror("poll error");
-    exit(1);
+    raise(SIGINT);
   } else if (poll_out > 0) {
     // log_message(LOG_INFO, "read character from poll\n");
     vision_state = vision_receive_input();
@@ -201,6 +203,7 @@ bool vision_get_coordinates(vision_info_t *v) {
     v->y = vision_info.y;
     v->z = vision_info.z;
     v->angle = vision_info.angle;
+    v->confidence = vision_info.confidence;
     return true;
   }
   if (vision_state != VISION_SAMPLE_NOT_FOUND) {
@@ -214,17 +217,25 @@ bool vision_get_coordinates(vision_info_t *v) {
  *
  */
 void vision_terminate(bool wait) {
-  kill(vision_pid, SIGTERM);
   if (wait) {
+    // first disable SIGCHLD handler
+    sa.sa_handler = SIG_DFL; // Set to default handler
+    sa.sa_flags = 0;
+    sigemptyset(&sa.sa_mask);
+    sigaction(SIGCHLD, &sa, NULL);
+    kill(vision_pid, SIGINT);
     int status;
     pid_t wait_ret = waitpid(vision_pid, &status, 0);
     if (wait_ret == -1) {
       perror("waitpid vision");
-      exit(1);
+      raise(SIGINT);
     } else if (wait_ret > 0) {
       fclose(vision_stdout);
       close(vision_fd);
       vision_state = VISION_TERMINATED;
     }
+  } else {
+    // just kill SIGCHLD handler will handler the rest
+    kill(vision_pid, SIGINT);
   }
 }

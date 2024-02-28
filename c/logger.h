@@ -13,5 +13,6 @@ typedef enum {
 } LogLevel;
 void set_log_level(LogLevel level);
 int log_message(LogLevel level, char *restrict format, ...);
+int log_message_line(LogLevel level, int linenum, char *restrict format, ...);
 
 #endif
