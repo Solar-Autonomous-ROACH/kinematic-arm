@@ -77,9 +77,14 @@ void vision_init() {
   } else {
     dup2(pipefd[WRITE_END], STDOUT_FILENO);
     close(pipefd[READ_END]);
-
-    if (execlp("/home/xilinx/arm_2024/python/vision.py", "vision.py", NULL) ==
-        -1) {
+#ifdef VISION_DEMO
+    const char *vision_path = "/home/xilinx/arm_2024/python/vision.py";
+    const char *vision_prog_name = "vision.py";
+#else
+    const char *vision_path = "/home/ubuntu/Retina2023/visionSystemControl.py";
+    const char *vision_prog_name = "visionSystemControl.py";
+#endif
+    if (execlp(vision_path, vision_prog_name, NULL) == -1) {
       perror("exec vision");
       exit(1);
     }
