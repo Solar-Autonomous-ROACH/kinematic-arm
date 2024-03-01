@@ -178,8 +178,8 @@ void arm_handle_state() {
         // rover_rotate(int dir, int angle)
       } else {
         kinematic_engine(original_vision_info.x, original_vision_info.y,
-                         original_vision_info.z, original_vision_info.angle,
-                         &kinematic_result);
+                         /*original_vision_info.z*/ 0,
+                         original_vision_info.angle, &kinematic_result);
         if (!validate_kinematic_result(kinematic_result)) {
           // USE ROVER API TO MOVE - can't reach the object
           arm_state = ROVER_MOVING;
@@ -196,7 +196,7 @@ void arm_handle_state() {
                       base_target_angle, elbow_target_angle, wrist_target_angle,
                       claw_target_angle);
           set_joints_angle(base_target_angle, elbow_target_angle, 0);
-          set_claw_angle(claw_target_angle);
+          // set_claw_angle(claw_target_angle);
           open_claw();
           if (base_target_angle == 0 && elbow_target_angle == 0 &&
               wrist_target_angle == 0 && claw_target_angle == 0) {
@@ -267,17 +267,21 @@ void arm_handle_state() {
     if (time_in_state < 1000) {
       return;
     }
+    vision_result = vision_receive_input_isr();
     status = arm_motors_state_handler(true, false, false);
     if (status == ARM_MOTORS_ERROR) {
       arm_state = arm_recalibrate();
     } else if (status == ARM_MOTORS_READY &&
-               vision_receive_input_isr() == VISION_SUCCESS) {
-      if (!vision_get_coordinates(&moved_vision_info)) {
-        perror("read moved coordinates error");
+               (vision_result == VISION_SUCCESS ||
+                vision_result == VISION_SAMPLE_NOT_FOUND)) {
+      if (vision_result == VISION_SUCCESS &&
+          !vision_get_coordinates(&moved_vision_info)) {
+        log_message(LOG_ERROR, "read moved coordinates error\n");
         raise(SIGINT);
         exit(1);
       }
-      if (verify_pickup(original_vision_info, moved_vision_info)) {
+      if (vision_result == VISION_SAMPLE_NOT_FOUND ||
+          verify_pickup(original_vision_info, moved_vision_info)) {
         // set_joints_angle(BASE_PLACE_ANGLE, ELBOW_PLACE_ANGLE,
         // WRIST_PLACE_ANGLE);
         log_message(LOG_INFO, "verify pickup succeeded\n");

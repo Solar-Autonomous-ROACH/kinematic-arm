@@ -4,6 +4,7 @@
 # Compiler options
 CC = gcc
 CFLAGS = -Wall -Wextra -O1
+DUMMY = 
 
 LIBPATH = ~/SIMBA_C_Driver/rover
 ROVERLIBFLAG = -lrover
@@ -21,14 +22,17 @@ TARGET = roverCore
 # Targets
 all: $(TARGET)
 
+dummy:
+	$(MAKE) DUMMY='-D VISION_DEMO' all
+
 rovermacos:
 	$(MAKE) TARGET=rovermacos LIBPATH=~/Documents/projects/capstone/SIMBA_C_Driver/rover all
 
 $(TARGET): $(OBJS) $(LIBPATH)/librover.a
-	$(CC) $(CFLAGS) -L $(LIBPATH) $(OBJS) -o $(TARGET) -lm $(ROVERLIBFLAG)
+	$(CC) $(DUMMY) $(CFLAGS) -L $(LIBPATH) $(OBJS) -o $(TARGET) -lm $(ROVERLIBFLAG)
 
 %.o: %.c
-	$(CC) $(CFLAGS) -I $(LIBPATH) -c $< -o $@
+	$(CC) $(DUMMY) $(CFLAGS) -I $(LIBPATH) -c $< -o $@
 
 clean:
 	rm -f $(OBJS) $(KRIA_OBJS) $(TARGET) rovermacos

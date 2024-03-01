@@ -78,13 +78,13 @@ void vision_init() {
     dup2(pipefd[WRITE_END], STDOUT_FILENO);
     close(pipefd[READ_END]);
 #ifdef VISION_DEMO
-    const char *vision_path = "/home/xilinx/arm_2024/python/vision.py";
-    const char *vision_prog_name = "vision.py";
+    const char *vision_path = "/home/ubuntu/armada/vision.py";
 #else
     const char *vision_path = "/home/ubuntu/Retina2023/visionSystemControl.py";
-    const char *vision_prog_name = "visionSystemControl.py";
 #endif
-    if (execlp(vision_path, vision_prog_name, NULL) == -1) {
+    if (execle("/usr/local/share/pynq-venv/bin/python3",
+               "/usr/local/share/pynq-venv/bin/python3", vision_path,
+               NULL) == -1) {
       perror("exec vision");
       exit(1);
     }
@@ -243,4 +243,22 @@ void vision_terminate(bool wait) {
     // just kill SIGCHLD handler will handler the rest
     kill(vision_pid, SIGINT);
   }
+}
+
+void append_to_pythonpath(const char *path_to_append) {
+  // Get the current value of PYTHONPATH
+  char *current_path = getenv("PYTHONPATH");
+
+  // Concatenate the new path
+  char new_path[1024]; // Assuming a max length of 1024
+  if (current_path != NULL) {
+    snprintf(new_path, sizeof(new_path), "%s:%s", current_path, path_to_append);
+  } else {
+    snprintf(new_path, sizeof(new_path), "%s", path_to_append);
+  }
+
+  // Set the new value of PYTHONPATH
+  setenv("PYTHONPATH", new_path,
+         1); // The third argument 1 overwrites the existing value if PYTHONPATH
+             // is already set
 }
