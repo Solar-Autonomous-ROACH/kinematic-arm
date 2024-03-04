@@ -4,35 +4,44 @@
 # Compiler options
 CC = gcc
 CFLAGS = -Wall -Wextra -O1
-DUMMY = 
 
 LIBPATH = ~/SIMBA_C_Driver/rover
 ROVERLIBFLAG = -lrover
 
 # Source files
-# SRCS = main.c mmio.c led.c move.c isr.c motor.c steering_motor.c rover.c
-SRCS = arm_motor_api.c arm_motor.c arm.c kinematic_engine.c logger.c claw.c vision.c main.c
+LIBSRCS = arm_motor_api.c arm_motor.c arm.c kinematic_engine.c logger.c claw.c vision.c
+SRCS = $(LIBSRCS) main.c
 
 # Object files
 OBJS = $(SRCS:.c=.o)
+LIBOBJS = $(LIBSRCS:.c=.o)
 
 # Executable file
-TARGET = roverCore
+TARGET = arm
+
+LIBNAME = libarm.a
 
 # Targets
-all: $(TARGET)
+all: $(TARGET) $(LIBNAME)
 
 dummy:
-	$(MAKE) DUMMY='-D VISION_DEMO' all
+	make CFLAGS+=-DVISION_DUMMY TARGET=dummy$(TARGET) all
 
-rovermacos:
-	$(MAKE) TARGET=rovermacos LIBPATH=~/Documents/projects/capstone/SIMBA_C_Driver/rover all
+christianenv:
+	make LIBPATH:=~/Documents/projects/capstone/SIMBA_C_Driver/rover all
+
+
+$(LIBNAME): $(LIBOBJS)
+	ar r $(LIBNAME) $(LIBOBJS)
 
 $(TARGET): $(OBJS) $(LIBPATH)/librover.a
-	$(CC) $(DUMMY) $(CFLAGS) -L $(LIBPATH) $(OBJS) -o $(TARGET) -lm $(ROVERLIBFLAG)
+	$(CC) $(CFLAGS) -L $(LIBPATH) $(OBJS) -o $(TARGET) -lm $(ROVERLIBFLAG)
 
 %.o: %.c
-	$(CC) $(DUMMY) $(CFLAGS) -I $(LIBPATH) -c $< -o $@
+	$(CC) $(CFLAGS) -I $(LIBPATH) -c $< -o $@
 
 clean:
-	rm -f $(OBJS) $(KRIA_OBJS) $(TARGET) rovermacos
+	rm -f $(OBJS)
+
+allclean: clean
+	rm -f $(TARGET) dummy$(TARGET) libarm.a

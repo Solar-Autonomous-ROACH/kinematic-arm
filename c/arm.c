@@ -568,7 +568,8 @@ void set_joint_angle(arm_motor_t *arm_motor, uint16_t angle) {
 }
 
 void arm_isr() {
-  static unsigned long millis; // stores number of milliseconds since startup
+  // stores number of milliseconds since startup
+  static unsigned long millis __attribute__((unused));
   motor_update_all();
 #if defined(DEBUG_WRIST) || defined(DEBUG_ELBOW) || defined(DEBUG_BASE) ||     \
     defined(DEBUG_CLAW)

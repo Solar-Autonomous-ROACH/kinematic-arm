@@ -17,7 +17,7 @@
 
 /*Constants for Conversions*/
 /*Vision is offset to where camera is mounted*/
-#ifdef VISION_DEMO
+#ifdef VISION_DUMMY
 #define VISION_X_OFFSET -20 //-50
 #define VISION_Y_OFFSET +0  // 300
 #define VISION_Z_OFFSET 0   // 100
