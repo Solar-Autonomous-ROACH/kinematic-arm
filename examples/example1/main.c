@@ -28,7 +28,17 @@ int main() {
   arm_init();
   isr_init();
 
+
   while (1) {
+    // rover_move_x(100);
+    // while (!rover_move_done()) {
+    //   /* block */
+    // }
+    arm_begin_pickup();
+    while (!arm_pickup_done())
+    {
+      /* block */
+    }
     pause();
   }
 }

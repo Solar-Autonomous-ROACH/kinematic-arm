@@ -25,6 +25,8 @@ vision_status_t vision_result;
 static arms_calibrate_state_t arms_calibrate_state = ARM_CALIBRATE_START;
 kinematic_output_t kinematic_result;
 
+bool arm_requested = false;
+
 /**
  * @brief State machine which goes through the motors and calibrates them
  * @return arms_calibrate_state_t return the state of arm
@@ -129,14 +131,17 @@ void arm_handle_state() {
     break;
 
   case CAPTURE_VISION_INFO:
-    // send signal to vision python program
-    vision_result = vision_receive_input_isr();
-    if (vision_result == VISION_READY_FOR_CAPTURE ||
-        vision_result == VISION_SUCCESS ||
-        vision_result == VISION_SAMPLE_NOT_FOUND) {
-      log_message(LOG_INFO, "Requesting vision coordinates\n");
-      vision_request_coordinates();
-      arm_state = WAIT_FOR_INPUT;
+    if (arm_requested) {
+      arm_requested = false;
+      // send signal to vision python program
+      vision_result = vision_receive_input_isr();
+      if (vision_result == VISION_READY_FOR_CAPTURE ||
+          vision_result == VISION_SUCCESS ||
+          vision_result == VISION_SAMPLE_NOT_FOUND) {
+        log_message(LOG_INFO, "Requesting vision coordinates\n");
+        vision_request_coordinates();
+        arm_state = WAIT_FOR_INPUT;
+      }
     }
     break;
 
@@ -167,8 +172,6 @@ void arm_handle_state() {
         perror("read original coordinates error");
         raise(SIGINT);
       }
-      log_message(LOG_INFO, "Confidence level = %lf\n",
-                  original_vision_info.confidence);
       if (original_vision_info.confidence < VISION_CONFIDENCE_MINIMUM) {
         arm_state = ROVER_MOVING;
         log_message(LOG_WARNING, "Confidence level %lf is too low\n",
@@ -180,9 +183,14 @@ void arm_handle_state() {
         kinematic_engine(original_vision_info.x, original_vision_info.y,
                          /*original_vision_info.z*/ 0,
                          original_vision_info.angle, &kinematic_result);
-        if (!validate_kinematic_result(kinematic_result)) {
+        if (kinematic_result.error){
+          log_message(LOG_INFO, "Kinematic Engine error\n");
+          arm_state = CAPTURE_VISION_INFO;
+          break;
+        } else if (!validate_kinematic_result(kinematic_result)) {
           // USE ROVER API TO MOVE - can't reach the object
           arm_state = ROVER_MOVING;
+          log_message(LOG_INFO, "Validate kinematic result returned false\n");
           // rover_move_x(kinematic_result.extra_distance, speed); // moving
           // forward rover_rotate(int dir, kinematic_result.turn_angle); // turn
           // angle is +90 to -90. make sure this is
@@ -295,13 +303,19 @@ void arm_handle_state() {
         log_message(LOG_INFO, "verify pickup failed\n");
         consecutive_pickup_failures++;
         if (consecutive_pickup_failures == CONSECUTIVE_PICKUP_FAILURE_MAX) {
-          arm_state = ROVER_MOVING;
+          //arm_state = ROVER_MOVING;
+          log_message(LOG_DEBUG, "3 consecutive failures. Moving home\n");
+          //move_home();
+          set_joints_angle(BASE_PLACE_ANGLE, ELBOW_PLACE_ANGLE, 0);
+          arm_state = MOVE_PLACE_1;
+          set_claw_angle(0);
           consecutive_pickup_failures = 0;
           // rover_move_x(int64_t dist, double speed)
           // rover_rotate(int dir, int angle)
           // probably move somewhere else since we can't pick up the current
           // tube
         } else {
+          log_message(LOG_DEBUG, "Taking another picture after pickup verify failed\n");
           arm_state = CAPTURE_VISION_INFO; // did not correctly acquire -
                                            // restart by taking new picture
         }
@@ -338,13 +352,14 @@ void arm_handle_state() {
 
   case MOVE_HOME:
     if (arm_motors_state_handler(true, true, true) == ARM_MOTORS_READY) {
+      cycles_since_claw_calibration++;
+      log_message(LOG_INFO, "Cycles since claw calibration = %d\n", cycles_since_claw_calibration);
       if (cycles_since_claw_calibration == CLAW_CALIBRATION_PERIOD) {
         arm_state = claw_recalibrate();
         cycles_since_claw_calibration = 0;
         log_message(LOG_INFO,
                     "MOVE_HOME complete, heading to CLAW_CALIBRATE\n");
       } else {
-        cycles_since_claw_calibration++;
         arm_state = CAPTURE_VISION_INFO;
         log_message(LOG_INFO,
                     "MOVE_HOME complete, heading to CAPTURE_VISION_INFO\n");
@@ -432,6 +447,14 @@ arm_state_t arm_recalibrate() {
 arm_state_t claw_recalibrate() {
   claw_goto_calibrate();
   return CLAW_CALIBRATE;
+}
+
+void arm_begin_pickup(){
+  arm_requested = true;
+}
+
+bool arm_pickup_done(){
+  return arm_state == CAPTURE_VISION_INFO && arm_requested == false;
 }
 
 /**
@@ -576,6 +599,7 @@ void arm_isr() {
   arm_handle_state_debug();
 #else
   arm_handle_state();
+  //set arm done state here?
 #endif
 
   millis++;
