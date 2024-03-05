@@ -19,6 +19,10 @@ endif
 LDFLAGS := -lm -LROVERLIBPATH $(ROVERLIBFLAG)
 INCLUDEFLAGS := -I $(ROVERLIBPATH) -I $(INC_DIR)
 
+ifeq ($(VISION_DUMMY), 1)
+	CFLAGS += -DVISION_DUMMY
+endif
+
 .PHONY: all clean allclean
 
 ## Library Building

@@ -35,4 +35,12 @@ export ROVERLIBPATH=~/Documents/projects/capstone/SIMBA_C_Driver/rover
 export ARMLIBPATH=~/Documents/projects/capstone/kinematic-arm
 ```
 
+## Running vision dummy instead of regular vision program
+When you compile the library, the regular vision program will be used by default. You can use the dummy vision program instead by making this way
+```bash
+VISION_DUMMY=1 make
+```
+You should get a warning that the following warning:
+`warning: Using dummy vision program`
+
 

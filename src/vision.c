@@ -78,6 +78,7 @@ void vision_init() {
     dup2(pipefd[WRITE_END], STDOUT_FILENO);
     close(pipefd[READ_END]);
 #ifdef VISION_DUMMY
+#pragma message("Using dummy vision program")
     const char *vision_path = "/home/ubuntu/armada/vision.py";
 #else
     const char *vision_path = "/home/ubuntu/Retina2023/visionSystemControl.py";
