@@ -38,7 +38,7 @@ void handler(int signo __attribute__((unused))) {
 
 void vision_init() {
   // only init if terminated or errored out
-  if (vision_state != VISION_TERMINATED && vision_state != VISION_ERROR) {
+  if (vision_state != VISION_TERMINATED) {
     return;
   }
   /** pipe for getting input from vision */
@@ -78,11 +78,12 @@ void vision_init() {
     dup2(pipefd[WRITE_END], STDOUT_FILENO);
     close(pipefd[READ_END]);
 #ifdef VISION_DUMMY
+#pragma message("Using dummy vision program")
     const char *vision_path = "/home/ubuntu/armada/vision.py";
 #else
     const char *vision_path = "/home/ubuntu/Retina2023/visionSystemControl.py";
 #endif
-    if (execle("/usr/local/share/pynq-venv/bin/python3",
+    if (execlp("/usr/local/share/pynq-venv/bin/python3",
                "/usr/local/share/pynq-venv/bin/python3", vision_path,
                NULL) == -1) {
       perror("exec vision");

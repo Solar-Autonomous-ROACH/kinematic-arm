@@ -1,7 +1,6 @@
 #ifndef KINEMATIC_ENGINE_H
 #define KINEMATIC_ENGINE_H
 
-#include <math.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>

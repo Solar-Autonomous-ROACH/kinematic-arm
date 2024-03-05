@@ -2,14 +2,12 @@
 // Created by Tyler Bovenzi on 3/23/23.
 //
 
-#include "arm.h"
-#include "kinematic_engine.h"
-
-#include "rover.h"
-#include "vision.h"
+#include <arm.h>
+#include <rover.h>
 #include <signal.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <vision.h>
 
 void sigint_handler(int sig) {
   printf("Received SIGINT signal %d\n", sig);

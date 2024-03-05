@@ -1,18 +1,19 @@
 // TEST MMIO GPIO CONTROL
-#include "arm.h"
-#include "rover.h"
+#include <arm.h>
 #include <math.h>
+#include <rover.h>
 #include <signal.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <vision.h>
 
 void sigint_handler() {
   printf("SIGINT caught\n");
   // Close Rover
-  arm_close();
   vision_terminate(true);
+  arm_close();
   if (rover_close() != 0) {
     fprintf(stderr, "failed to close rover\n");
   }
@@ -27,6 +28,7 @@ int main() {
     printf("failed to initialize rover\n");
     return -1;
   }
+  vision_init();
   arm_init();
   if (isr_init() != 0) {
     printf("failed to initialize rover\n");
