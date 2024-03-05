@@ -1,5 +1,13 @@
 # Armada
 
+# Compiling the library
+
+In the root of the repositry, run `make`.
+
+# Compiling the examples
+
+Go to the directory of the example you want to run and run `make`.
+
 # Repositry structure: 
 
 ## src
@@ -34,6 +42,11 @@ You can simply modify them by setting ROVERLIBPATH and ARMLIBPATH in your shell.
 export ROVERLIBPATH=~/Documents/projects/capstone/SIMBA_C_Driver/rover
 export ARMLIBPATH=~/Documents/projects/capstone/kinematic-arm
 ```
+You can also do it in one line, for example:
+```
+ARMLIBPATH=~/Documents/projects/capstone/kinematic-arm make
+```
+
 
 ## Running vision dummy instead of regular vision program
 When you compile the library, the regular vision program will be used by default. You can use the dummy vision program instead by making this way
