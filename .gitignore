@@ -8,3 +8,4 @@ test/main
 build/
 bin/
 lib/
+examples/*/main

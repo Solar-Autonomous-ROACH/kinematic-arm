@@ -21,7 +21,8 @@
     "rover.h": "c",
     "isr.h": "c",
     "arm_motor_controller.h": "c",
-    "vision.h": "c"
+    "vision.h": "c",
+    "_arm.h": "c"
   },
   "C_Cpp.clang_format_fallbackStyle": "LLVM"
 }

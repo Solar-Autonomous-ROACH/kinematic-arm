@@ -12,9 +12,9 @@ BIN_DIR := bin
 LIB_DIR := lib
 
 ifeq ($(shell uname), Darwin)
-    ROVERLIBPATH := ~/Documents/projects/capstone/SIMBA_C_Driver/rover
+    ROVERLIBPATH ?= ~/Documents/projects/capstone/SIMBA_C_Driver/rover
 else
-    ROVERLIBPATH := ~/SIMBA_C_Driver/rover
+    ROVERLIBPATH ?= /home/ubuntu/SIMBA_C_Driver/rover
 endif
 LDFLAGS := -lm -LROVERLIBPATH $(ROVERLIBFLAG)
 INCLUDEFLAGS := -I $(ROVERLIBPATH) -I $(INC_DIR)

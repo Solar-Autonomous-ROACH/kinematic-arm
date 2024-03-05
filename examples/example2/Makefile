@@ -5,29 +5,26 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -O1
 
-ROVERLIBPATH = ~/SIMBA_C_Driver/rover
+ROVERLIBPATH ?= /home/ubuntu/SIMBA_C_Driver/rover
 ROVERLIBFLAG = -lrover
 
-ARMLIBPATH = ~/kinematic-arm
+ARMLIBPATH ?= /home/ubuntu/kinematic-arm
 ARMLIBFLAG = -larm
 
 LDFLAGS = -lm $(ROVERLIBFLAG) $(ARMLIBFLAG)
 
 # Source files
-SRCS = main.c
+SRCS = $(wildcard *.c)
+BUILD_DIR = build
 
 # Object files
-OBJS = $(SRCS:.c=.o)
+OBJS = $(SRCS:%.c=$(BUILD_DIR)/%.o)
 
 # Executable file
 TARGET = main
 
-
 # Targets
 all: $(TARGET)
-
-christianenv:
-	make ROVERLIBPATH:=~/Documents/projects/capstone/SIMBA_C_Driver/rover ARMLIBPATH:=~/Documents/projects/capstone/kinematic-arm all
 
 $(TARGET): $(OBJS) $(ROVERLIBPATH)/librover.a $(ARMLIBPATH)/lib/libarm.a
 	$(CC) $(CFLAGS) -L $(ROVERLIBPATH) -L $(ARMLIBPATH)/lib $(OBJS) -o $(TARGET) $(LDFLAGS)
@@ -38,8 +35,14 @@ $(ARMLIBPATH)/lib/libarm.a:
 # Remake the library if needed
 .PHONY: $(ARMLIBPATH)/lib/libarm.a
 
-%.o: %.c
+$(BUILD_DIR)/%.o: %.c | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -I $(ROVERLIBPATH) -I $(ARMLIBPATH)/include -c $< -o $@
 
-clean:
-	rm -f $(OBJS) $(TARGET)
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
+
+cleanbuild:
+	rm -rf build
+
+clean: cleanbuild
+	rm -f $(TARGET)

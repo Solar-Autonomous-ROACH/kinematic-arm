@@ -38,7 +38,7 @@ void handler(int signo __attribute__((unused))) {
 
 void vision_init() {
   // only init if terminated or errored out
-  if (vision_state != VISION_TERMINATED && vision_state != VISION_ERROR) {
+  if (vision_state != VISION_TERMINATED) {
     return;
   }
   /** pipe for getting input from vision */
