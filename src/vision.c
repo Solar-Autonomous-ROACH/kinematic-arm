@@ -83,7 +83,7 @@ void vision_init() {
 #else
     const char *vision_path = "/home/ubuntu/Retina2023/visionSystemControl.py";
 #endif
-    if (execle("/usr/local/share/pynq-venv/bin/python3",
+    if (execlp("/usr/local/share/pynq-venv/bin/python3",
                "/usr/local/share/pynq-venv/bin/python3", vision_path,
                NULL) == -1) {
       perror("exec vision");

@@ -11,7 +11,7 @@ ROVERLIBFLAG = -lrover
 ARMLIBPATH ?= /home/ubuntu/kinematic-arm
 ARMLIBFLAG = -larm
 
-LDFLAGS = -lm $(ROVERLIBFLAG) $(ARMLIBFLAG)
+LDFLAGS = $(ROVERLIBFLAG) $(ARMLIBFLAG) -lm
 
 # Source files
 SRCS = $(wildcard *.c)
