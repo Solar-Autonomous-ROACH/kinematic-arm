@@ -3,10 +3,7 @@
 //
 
 #include "arm.h"
-#include "kinematic_engine.h"
-
 #include "rover.h"
-#include "vision.h"
 #include <signal.h>
 #include <stdio.h>
 #include <unistd.h>

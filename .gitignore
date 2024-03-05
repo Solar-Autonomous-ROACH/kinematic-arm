@@ -5,3 +5,6 @@ c/rovermacos
 c/arm
 c/libarm.a
 test/main
+build/
+bin/
+lib/
