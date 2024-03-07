@@ -20,7 +20,7 @@ This header file has the header files that will be exposed as part of the librar
 
 ## Makefile
 
-Compiles the library. The compiled library is stored in `lib` directory (in gitignore). The object files are stored in `dist` directory. Check this [section](#modifying-rover-library-path-and-arm-library-path) to see how you can modify (librover) library paths. We currently assume librover is located in `/home/ubuntu/SIMBA_C_Driver/rover`
+Compiles the library. The compiled library is stored in `lib` directory (in gitignore). The object files are stored in `build` directory. Check this [section](#modifying-rover-library-path-and-arm-library-path) to see how you can modify (librover) library paths. We currently assume librover is located in `/home/ubuntu/SIMBA_C_Driver/rover`
 
 ## examples
 
