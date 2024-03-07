@@ -18,12 +18,13 @@
 
 /*Constants for Conversions*/
 /*Vision is offset to where camera is mounted*/
+#ifdef OLD_ROVER
 #ifdef VISION_DUMMY
 #define VISION_X_OFFSET -20 //-50
 #define VISION_Y_OFFSET +0  // 300
 #define VISION_Z_OFFSET 0   // 100
 #else
-#define VISION_X_OFFSET 0 //-50 BEFORE: -110
+#define VISION_X_OFFSET 0    //-50 BEFORE: -110
 #define VISION_Y_OFFSET +310 // 300 BEFORE: +395
 #define VISION_Z_OFFSET 0    // 100
 #endif
@@ -35,6 +36,25 @@
 /*Roach is offset to center of rover*/
 #define ROACH_X_OFFSET -215
 #define ROACH_Z_OFFSET -20
+#else
+#ifdef VISION_DUMMY
+#define VISION_X_OFFSET 0 //-50
+#define VISION_Y_OFFSET 0 // 300
+#define VISION_Z_OFFSET 0 // 100
+#else
+#define VISION_X_OFFSET 0    //-50 BEFORE: -110
+#define VISION_Y_OFFSET +310 // 300 BEFORE: +395
+#define VISION_Z_OFFSET 0    // 100
+#endif
+/*Vision Line Compensators for offset plane*/
+#define VISION_COMP_1_A -0.17
+#define VISION_COMP_1_B 89.0
+#define VISION_COMP_2_A 1.07
+#define VISION_COMP_2_B 96.0
+/*Roach is offset to center of rover*/
+#define ROACH_X_OFFSET -215
+#define ROACH_Z_OFFSET -20
+#endif
 
 /*Constants for Vaild Pickup Area / Boundaries*/
 #define TUBE_CENTER_OFFSET 35

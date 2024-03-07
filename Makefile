@@ -25,6 +25,9 @@ endif
 ifeq ($(BAD_KRIA), 1)
 	CFLAGS += -DBAD_KRIA
 endif
+ifeq ($(OLD_ROVER), 1)
+	CFLAGS += -DOLD_ROVER
+endif
 
 .PHONY: all clean allclean
 
