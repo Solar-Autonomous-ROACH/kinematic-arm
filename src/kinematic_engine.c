@@ -42,14 +42,23 @@ void kinematic_engine(float x_pos, float y_pos, float z_pos, float angle_pos,
   
   log_message(LOG_INFO, "After Offset: X = %.3f, Y = %.3f, Z = %.3f\n", x_pos, y_pos, z_pos);
 
-  if (!((0 - SMALL_DOUBLE) <= z_pos && z_pos <= SMALL_DOUBLE)) {
-    // If Z is something other than 0, get angle and new x distance
+  // if (!((0 - SMALL_DOUBLE) <= z_pos && z_pos <= SMALL_DOUBLE)) {
+  //   // If Z is something other than 0, get angle and new x distance
+  //   x_pos -= ROACH_X_OFFSET;
+  //   z_pos -= ROACH_Z_OFFSET;
+  //   output->turn_angle = to_deg(atan(z_pos / x_pos));
+  //   return;
+  // } else {
+  //   output->turn_angle = 0;
+  // }
+
+  //Makes sure that tube is within the Z grabby length of the claw
+  if (0 - TUBE_CENTER_OFFSET <= z_pos && z_pos <= TUBE_CENTER_OFFSET) {
+    output->turn_angle = 0;
+  } else {
     x_pos -= ROACH_X_OFFSET;
     z_pos -= ROACH_Z_OFFSET;
     output->turn_angle = to_deg(atan(z_pos / x_pos));
-    return;
-  } else {
-    output->turn_angle = 0;
   }
 
 
