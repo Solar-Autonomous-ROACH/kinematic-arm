@@ -1,13 +1,6 @@
 #include "arm_motor.h"
 #include "logger.h"
 
-#define buf_size 20
-
-long pos[buf_size];
-long pos_index = 0;
-long spinup = 20;
-long vel = 0;
-
 /**
  * @brief Control a single a_motor. only works if a_motor is calibrated
  * @author Christian Honein
