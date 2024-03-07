@@ -55,11 +55,9 @@ claw_state_t claw_handle_state() {
   long abs_diff;
   // uint8_t hall_reading = *hall_mmio;
   uint8_t hall_reading = GPIO_READ_NOT_IMPLEMENTED;
-  log_message(LOG_INFO, "IN CLAW HANDLE STATE");
 
   switch (CLAW_MOTOR.state) {
   case CLAW_CALIBRATE_START:
-    printf("IN CLAW CALIBRATE START");
     set_claw_speed(0, false);
     if (hall_reading == GPIO_READ_NOT_IMPLEMENTED) {
       // gpio_read not implemented
