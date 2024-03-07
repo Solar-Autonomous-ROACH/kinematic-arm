@@ -22,6 +22,9 @@ INCLUDEFLAGS := -I $(ROVERLIBPATH) -I $(INC_DIR)
 ifeq ($(VISION_DUMMY), 1)
 	CFLAGS += -DVISION_DUMMY
 endif
+ifeq ($(BAD_KRIA), 1)
+	CFLAGS += -DBAD_KRIA
+endif
 
 .PHONY: all clean allclean
 
