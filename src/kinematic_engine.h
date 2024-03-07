@@ -1,7 +1,6 @@
 #ifndef KINEMATIC_ENGINE_H
 #define KINEMATIC_ENGINE_H
 
-#include <math.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -17,9 +16,15 @@
 
 /*Constants for Conversions*/
 /*Vision is offset to where camera is mounted*/
+#ifdef VISION_DUMMY
 #define VISION_X_OFFSET -20 //-50
-#define VISION_Y_OFFSET 0   // 300
+#define VISION_Y_OFFSET +0  // 300
 #define VISION_Z_OFFSET 0   // 100
+#else
+#define VISION_X_OFFSET -110 //-50
+#define VISION_Y_OFFSET +395 // 300
+#define VISION_Z_OFFSET 0    // 100
+#endif
 /*Roach is offset to center of rover*/
 #define ROACH_X_OFFSET -215
 #define ROACH_Z_OFFSET -20

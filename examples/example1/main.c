@@ -2,14 +2,12 @@
 // Created by Tyler Bovenzi on 3/23/23.
 //
 
-#include "arm.h"
-#include "kinematic_engine.h"
-
-#include "rover.h"
-#include "vision.h"
+#include <arm.h>
+#include <rover.h>
 #include <signal.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <vision.h>
 
 void sigint_handler(int sig) {
   printf("Received SIGINT signal %d\n", sig);
@@ -30,7 +28,17 @@ int main() {
   arm_init();
   isr_init();
 
+
   while (1) {
+    // rover_move_x(100);
+    // while (!rover_move_done()) {
+    //   /* block */
+    // }
+    arm_begin_pickup();
+    while (!arm_pickup_done())
+    {
+      /* block */
+    }
     pause();
   }
 }

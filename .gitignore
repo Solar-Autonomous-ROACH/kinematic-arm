@@ -2,3 +2,10 @@
 roverCore
 KineArm.code-workspace
 c/rovermacos
+c/arm
+c/libarm.a
+test/main
+build/
+bin/
+lib/
+examples/*/main
