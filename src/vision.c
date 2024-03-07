@@ -79,7 +79,8 @@ void vision_init() {
     close(pipefd[READ_END]);
 #ifdef VISION_DUMMY
 #pragma message("Using dummy vision program")
-    const char *vision_path = "/home/ubuntu/armada/vision.py";
+    const char *vision_path =
+        "/home/ubuntu/kinematic-arm/vision_dummy/vision.py";
 #else
     const char *vision_path = "/home/ubuntu/Retina2023/visionSystemControl.py";
 #endif
@@ -106,7 +107,8 @@ void vision_request_coordinates() {
     }
     vision_state = VISION_IN_PROGRESS;
   } else {
-    log_message(LOG_DEBUG, "Cannot request coordinates, vision state = %d\n", vision_state);
+    log_message(LOG_DEBUG, "Cannot request coordinates, vision state = %d\n",
+                vision_state);
   }
 }
 
