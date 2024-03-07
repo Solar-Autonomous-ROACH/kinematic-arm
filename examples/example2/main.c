@@ -35,9 +35,17 @@ int main() {
     return -1;
   }
 
+  while (rover_is_calibrated() == false) {
+  }
+
   // testing
   // motor_set_speed(MOTOR_MIDDLE_LEFT_WHEEL, 1000);
   rover_move_x(-10000, 128);
+
+  arm_begin_pickup();
+  while (!arm_pickup_done()) {
+    /* block */
+  }
 
   // infinite loop
   while (1) {
