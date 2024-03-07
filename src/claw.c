@@ -45,9 +45,9 @@ void claw_init() {
   CLAW_MOTOR.is_open = true;
   CLAW_MOTOR.target_angle_ticks = 0;
   CLAW_MOTOR.target_is_open = true;
-  // if (hall_mmio == NULL && HALL_EFFECT_ADDRESS != NULL) {
-  //   hall_mmio = mmio_init(HALL_EFFECT_ADDRESS);
-  // }
+  if (hall_mmio == NULL) {
+    hall_mmio = mmio_init(HALL_EFFECT_ADDRESS);
+  }
 }
 
 claw_state_t claw_handle_state() {
