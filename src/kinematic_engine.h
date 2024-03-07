@@ -10,9 +10,11 @@
 #define S_E_LENGTH 238
 #define E_W_LENGTH 273
 #define W_C_LENGTH 140
-/*Currently set to be 70 deg*/
-#define CLAW_X 48
-#define CLAW_Y 132
+
+/*Angle that claw comes in at off of straight down*/
+#define CLAW_ANGLE 10.0
+#define CLAW_X 24
+#define CLAW_Y 138
 
 /*Constants for Conversions*/
 /*Vision is offset to where camera is mounted*/
@@ -40,7 +42,7 @@
 #define RAD_TO_DEG (180.0 / PI)
 /*This is the 270 deg that is used to finish the triangle
   and the compensator for where the wrist starts measuring from*/
-#define WRIST_CONST ((280.0 + 20.0) / 180.0 * PI - 3 * PI / 2)
+#define WRIST_CONST ((280.0 + CLAW_ANGLE) / 180.0 * PI - 3 * PI / 2)
 /*This is for any tilts in the robot body itself*/
 #define SHOULDER_CONST (0.0 / 180.0 * PI)
 #define CLAW_CONST 90
