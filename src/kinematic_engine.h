@@ -30,6 +30,7 @@
 #define ROACH_Z_OFFSET -20
 
 /*Constants for Vaild Pickup Area / Boundaries*/
+#define TUBE_CENTER_OFFSET 35
 #define LOWER_AREA_BOUND -420
 #define BACK_AREA_BOUND 20
 #define UPPER_AREA_BOUND 100
