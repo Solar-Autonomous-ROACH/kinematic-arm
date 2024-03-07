@@ -105,6 +105,8 @@ void vision_request_coordinates() {
       raise(SIGINT);
     }
     vision_state = VISION_IN_PROGRESS;
+  } else {
+    log_message(LOG_DEBUG, "Cannot request coordinates, vision state = %d\n", vision_state);
   }
 }
 
@@ -160,6 +162,7 @@ vision_status_t vision_receive_input() {
 
   case '0': /** no sample tube found */
     vision_state = VISION_SAMPLE_NOT_FOUND;
+    log_message(LOG_INFO, "No sample tube found\n");
     dummy = fgetc(vision_stdout); // get rid of edxtra
     if (dummy != '\n') {
       log_message_line(LOG_ERROR, __LINE__, "Vision error\n");

@@ -23,17 +23,22 @@
 #define VISION_Y_OFFSET +0  // 300
 #define VISION_Z_OFFSET 0   // 100
 #else
-#define VISION_X_OFFSET -110 //-50
-#define VISION_Y_OFFSET +395 // 300
+#define VISION_X_OFFSET 0 //-50 BEFORE: -110
+#define VISION_Y_OFFSET +310 // 300 BEFORE: +395
 #define VISION_Z_OFFSET 0    // 100
 #endif
+/*Vision Line Compensators for offset plane*/
+#define VISION_COMP_1_A -0.17
+#define VISION_COMP_1_B 89.0
+#define VISION_COMP_2_A 1.07
+#define VISION_COMP_2_B 96.0
 /*Roach is offset to center of rover*/
 #define ROACH_X_OFFSET -215
 #define ROACH_Z_OFFSET -20
 
 /*Constants for Vaild Pickup Area / Boundaries*/
 #define LOWER_AREA_BOUND -420
-#define BACK_AREA_BOUND 20
+#define BACK_AREA_BOUND 100
 #define UPPER_AREA_BOUND 100
 #define DISTANCE_OVERSHOOT 50 // How far we overshoot when we're too far away
 
