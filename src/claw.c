@@ -26,10 +26,12 @@
 #include "logger.h"
 
 claw_motor_t CLAW_MOTOR;
+#ifdef HALL_EFFECT_ADDRESS
 static volatile unsigned int *hall_mmio = NULL;
+#endif
 #define MAGNET_DETECTED(reading) (reading == 0) // you love to see it
 
-#define GPIO_READ_NOT_IMPLEMENTED 255
+#define HALL_EFFECT_NOT_IMPLEMENTED 255
 
 void claw_relative_turn(uint16_t ticks, bool openclose);
 bool claw_turn_done(long *diff_pt, bool openclose);
@@ -45,21 +47,26 @@ void claw_init() {
   CLAW_MOTOR.is_open = true;
   CLAW_MOTOR.target_angle_ticks = 0;
   CLAW_MOTOR.target_is_open = true;
+#ifdef HALL_EFFECT_ADDRESS
   if (hall_mmio == NULL) {
     hall_mmio = mmio_init(HALL_EFFECT_ADDRESS);
   }
+#endif
 }
 
 claw_state_t claw_handle_state() {
   long diff;
   long abs_diff;
-  // uint8_t hall_reading = *hall_mmio;
-  uint8_t hall_reading = GPIO_READ_NOT_IMPLEMENTED;
+#ifdef HALL_EFFECT_ADDRESS
+  uint8_t hall_reading = *hall_mmio;
+#else
+  uint8_t hall_reading = HALL_EFFECT_NOT_IMPLEMENTED;
+#endif
 
   switch (CLAW_MOTOR.state) {
   case CLAW_CALIBRATE_START:
     set_claw_speed(0, false);
-    if (hall_reading == GPIO_READ_NOT_IMPLEMENTED) {
+    if (hall_reading == HALL_EFFECT_NOT_IMPLEMENTED) {
       // gpio_read not implemented
       CLAW_MOTOR.state = CLAW_CHECK_POSITION; // assume calibrated
     } else if (MAGNET_DETECTED(hall_reading)) {
