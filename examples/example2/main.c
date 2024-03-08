@@ -40,7 +40,7 @@ int main() {
 
   // testing
   // motor_set_speed(MOTOR_MIDDLE_LEFT_WHEEL, 1000);
-  rover_move_x(-10000, 128);
+  // rover_move_x(-10000, 128);
 
   arm_begin_pickup();
   while (!arm_pickup_done()) {
