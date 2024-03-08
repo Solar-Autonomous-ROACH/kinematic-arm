@@ -36,21 +36,22 @@
 /*Roach is offset to center of rover*/
 #define ROACH_X_OFFSET -215
 #define ROACH_Z_OFFSET -20
-#else
+#else // New Rover Follows
 #ifdef VISION_DUMMY
 #define VISION_X_OFFSET 0 //-50
 #define VISION_Y_OFFSET 0 // 300
 #define VISION_Z_OFFSET 0 // 100
 #else
+/* Non-Dummy Values for New Rover Follows */
 #define VISION_X_OFFSET 0    //-50 BEFORE: -110
-#define VISION_Y_OFFSET +310 // 300 BEFORE: +395
-#define VISION_Z_OFFSET 0    // 100
+#define VISION_Y_OFFSET +330 // 300 BEFORE: +395
+#define VISION_Z_OFFSET 65   // 100
 #endif
 /*Vision Line Compensators for offset plane*/
-#define VISION_COMP_1_A -0.17
-#define VISION_COMP_1_B 89.0
-#define VISION_COMP_2_A 1.07
-#define VISION_COMP_2_B 96.0
+#define VISION_COMP_1_A 1.0
+#define VISION_COMP_1_B 0.0
+#define VISION_COMP_2_A 1.0
+#define VISION_COMP_2_B 0.0
 /*Roach is offset to center of rover*/
 #define ROACH_X_OFFSET -215
 #define ROACH_Z_OFFSET -20

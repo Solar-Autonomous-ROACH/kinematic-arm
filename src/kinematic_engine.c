@@ -26,21 +26,23 @@ void kinematic_engine(float x_pos, float y_pos, float z_pos, float angle_pos,
   output->elbow_angle = 0;
   output->wrist_angle = 0;
   output->claw_angle = 0;
-  
 
-  //Vision Plane Compensation
-  #ifndef VISION_DUMMY
-  y_pos -=  VISION_COMP_1_B + (VISION_COMP_1_A * x_pos);
+// Vision Plane Compensation
+#ifdef OLD_ROVER
+#ifndef VISION_DUMMY
+  y_pos -= VISION_COMP_1_B + (VISION_COMP_1_A * x_pos);
   x_pos = VISION_COMP_2_B + (VISION_COMP_2_A * x_pos);
   log_message(LOG_INFO, "X_pos = %.3f, Y_pos = %.3f\n", x_pos, y_pos);
-  #endif
+#endif
+#endif
 
   /*Convert from vision coords to internal coords*/
   x_pos -= VISION_X_OFFSET;
   y_pos -= VISION_Y_OFFSET;
   z_pos -= VISION_Z_OFFSET;
-  
-  log_message(LOG_INFO, "After Offset: X = %.3f, Y = %.3f, Z = %.3f\n", x_pos, y_pos, z_pos);
+
+  log_message(LOG_INFO, "After Offset: X = %.3f, Y = %.3f, Z = %.3f\n", x_pos,
+              y_pos, z_pos);
 
   // if (!((0 - SMALL_DOUBLE) <= z_pos && z_pos <= SMALL_DOUBLE)) {
   //   // If Z is something other than 0, get angle and new x distance
@@ -52,7 +54,7 @@ void kinematic_engine(float x_pos, float y_pos, float z_pos, float angle_pos,
   //   output->turn_angle = 0;
   // }
 
-  //Makes sure that tube is within the Z grabby length of the claw
+  // Makes sure that tube is within the Z grabby length of the claw
   if (0 - TUBE_CENTER_OFFSET <= z_pos && z_pos <= TUBE_CENTER_OFFSET) {
     output->turn_angle = 0;
   } else {
@@ -60,7 +62,6 @@ void kinematic_engine(float x_pos, float y_pos, float z_pos, float angle_pos,
     z_pos -= ROACH_Z_OFFSET;
     output->turn_angle = to_deg(atan(z_pos / x_pos));
   }
-
 
   // y_pos += W_C_LENGTH; //accounting for claw position, as should be same
   y_pos += CLAW_Y; // 2D Claw angle coming in to grab
