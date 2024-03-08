@@ -45,7 +45,7 @@
 /* Non-Dummy Values for New Rover Follows */
 #define VISION_X_OFFSET 0    //-50 BEFORE: -110
 #define VISION_Y_OFFSET +330 // 300 BEFORE: +395
-#define VISION_Z_OFFSET 65   // 100
+#define VISION_Z_OFFSET -50  // 100 Mesured 65
 #endif
 /*Vision Line Compensators for offset plane*/
 #define VISION_COMP_1_A 1.0

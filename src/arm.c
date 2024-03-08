@@ -187,8 +187,8 @@ void arm_handle_state() {
         // rover_rotate(int dir, int angle)
       } else {
         kinematic_engine(original_vision_info.x, original_vision_info.y,
-                         /*original_vision_info.z*/ 0,
-                         original_vision_info.angle, &kinematic_result);
+                         original_vision_info.z, original_vision_info.angle,
+                         &kinematic_result);
         if (kinematic_result.error) {
           log_message(LOG_INFO, "Kinematic Engine error\n");
           arm_state = CAPTURE_VISION_INFO;
