@@ -130,7 +130,7 @@ arm_motor_state_t calibrate_handle_state(arm_motor_t *a_motor) {
       set_motor_speed(a_motor->index, 0);
     }
     if (a_motor->moving_time_ms % 500 == 0) {
-      log_message(LOG_INFO, "%s: Raw: %ld, Abs: %ld\n", a_motor->name,
+      log_message(LOG_DEBUG, "%s: Raw: %ld, Abs: %ld\n", a_motor->name,
                   a_motor->motor->raw_pos, a_motor->motor->abs_pos);
     }
     break;

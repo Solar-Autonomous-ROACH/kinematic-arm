@@ -19,7 +19,9 @@
 /*Constants for Conversions*/
 /*Vision is offset to where camera is mounted*/
 #ifdef OLD_ROVER
+#pragma message("Compiling for old rover")
 #ifdef VISION_DUMMY
+#pragma message("Compiling for vision dummy")
 #define VISION_X_OFFSET -20 //-50
 #define VISION_Y_OFFSET +0  // 300
 #define VISION_Z_OFFSET 0   // 100
@@ -38,14 +40,15 @@
 #define ROACH_Z_OFFSET -20
 #else // New Rover Follows
 #ifdef VISION_DUMMY
+#pragma message("Compiling for vision dummy")
 #define VISION_X_OFFSET 0 //-50
 #define VISION_Y_OFFSET 0 // 300
 #define VISION_Z_OFFSET 0 // 100
 #else
 /* Non-Dummy Values for New Rover Follows */
-#define VISION_X_OFFSET 0    //-50 BEFORE: -110
-#define VISION_Y_OFFSET +330 // 300 BEFORE: +395
-#define VISION_Z_OFFSET -50  // 100 Mesured 65
+#define VISION_X_OFFSET -35  //-50 BEFORE: -110
+#define VISION_Y_OFFSET +385 // 300 BEFORE: +395
+#define VISION_Z_OFFSET -65  // 100 Mesured 65
 #endif
 /*Vision Line Compensators for offset plane*/
 #define VISION_COMP_1_A 1.0

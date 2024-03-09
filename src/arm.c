@@ -165,7 +165,7 @@ void arm_handle_state() {
       break;
     case VISION_SAMPLE_NOT_FOUND:
       arm_state = ROVER_MOVING;
-      log_message(LOG_WARNING, "No test tube found\n",
+      log_message(LOG_WARNING, "No test tube found: %.3f\n",
                   original_vision_info.confidence);
       // move the rover to some place idk
       // rover_move_x(int64_t dist, double speed)
@@ -197,6 +197,7 @@ void arm_handle_state() {
           // USE ROVER API TO MOVE - can't reach the object
           arm_state = ROVER_MOVING;
           log_message(LOG_INFO, "Validate kinematic result returned false\n");
+          arm_state = CAPTURE_VISION_INFO;
           // rover_move_x(kinematic_result.extra_distance, speed); // moving
           // forward rover_rotate(int dir, kinematic_result.turn_angle); // turn
           // angle is +90 to -90. make sure this is
@@ -230,10 +231,11 @@ void arm_handle_state() {
     break;
 
   case ROVER_MOVING:
-    if (check_rover_done()) {
-      // if (true) {
-      arm_state = CAPTURE_VISION_INFO;
-    }
+    arm_state = CAPTURE_VISION_INFO;
+    // if (check_rover_done()) {
+    //   // if (true) {
+    //   arm_state = CAPTURE_VISION_INFO;
+    // }
     break;
 
   case MOVE_TARGET_BE1:
@@ -309,7 +311,7 @@ void arm_handle_state() {
           log_message(LOG_INFO, "verify pickup failed\n");
           consecutive_pickup_failures++;
           if (consecutive_pickup_failures == CONSECUTIVE_PICKUP_FAILURE_MAX) {
-            // arm_state = ROVER_MOVING;
+            arm_state = ROVER_MOVING;
             log_message(LOG_DEBUG, "3 consecutive failures. Moving home\n");
             // move_home();
             set_joints_angle(BASE_PLACE_ANGLE, ELBOW_PLACE_ANGLE, 0);
