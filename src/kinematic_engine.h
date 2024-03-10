@@ -51,10 +51,10 @@
 #define VISION_Z_OFFSET -65  // 100 Mesured 65
 #endif
 /*Vision Line Compensators for offset plane*/
-#define VISION_COMP_1_A 1.0
+#define VISION_COMP_1_M 1.0
 #define VISION_COMP_1_B 0.0
-#define VISION_COMP_2_A 1.0
-#define VISION_COMP_2_B 0.0
+#define VISION_COMP_2_M 0.82
+#define VISION_COMP_2_B 15.6
 /*Roach is offset to center of rover*/
 #define ROACH_X_OFFSET -215
 #define ROACH_Z_OFFSET -20
