@@ -471,11 +471,8 @@ bool arm_pickup_done() {
 }
 
 void arm_stop() { //stop_motors is for collisions. arm_stop is for rover web app to call when they want to stop the arm at any point
-  set_motor_speed(WRIST_MOTOR.index, 0);
-  set_motor_speed(ELBOW_MOTOR.index, 0);
-  set_motor_speed(BASE_MOTOR.index, 0);
-  arms_calibrate_state = ARM_CALIBRATE_START;
-  arm_state = ARM_CALIBRATE;
+  stop_motors();
+  arm_state = arm_recalibrate();
 }
 
 /**
