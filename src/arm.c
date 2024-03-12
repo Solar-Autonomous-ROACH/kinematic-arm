@@ -198,7 +198,7 @@ void arm_handle_state() {
           arm_state = ROVER_MOVING;
           log_message(LOG_INFO, "Validate kinematic result returned false\n");
           arm_state = CAPTURE_VISION_INFO;
-          // rover_move_x(kinematic_result.extra_distance, speed); // moving
+          rover_move_x(kinematic_result.extra_distance, 30);
           // forward rover_rotate(int dir, kinematic_result.turn_angle); // turn
           // angle is +90 to -90. make sure this is
           //  adjusted to whatever rover team provides
@@ -311,7 +311,6 @@ void arm_handle_state() {
           log_message(LOG_INFO, "verify pickup failed\n");
           consecutive_pickup_failures++;
           if (consecutive_pickup_failures == CONSECUTIVE_PICKUP_FAILURE_MAX) {
-            arm_state = ROVER_MOVING;
             log_message(LOG_DEBUG, "3 consecutive failures. Moving home\n");
             // move_home();
             set_joints_angle(BASE_PLACE_ANGLE, ELBOW_PLACE_ANGLE, 0);
