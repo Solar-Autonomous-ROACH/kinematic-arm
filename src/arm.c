@@ -195,8 +195,9 @@ void arm_handle_state() {
           break;
         } else if (!validate_kinematic_result(kinematic_result)) {
           // USE ROVER API TO MOVE - can't reach the object
-          arm_state = ROVER_MOVING;
           log_message(LOG_INFO, "Validate kinematic result returned false\n");
+          log_message(LOG_INFO, "GOING TO ROVER MOVING\n");
+          arm_state = ROVER_MOVING;
           rover_move_x(kinematic_result.extra_distance, 128.0);
           // forward rover_rotate(int dir, kinematic_result.turn_angle); // turn
           // angle is +90 to -90. make sure this is
@@ -230,9 +231,9 @@ void arm_handle_state() {
     break;
 
   case ROVER_MOVING:
-    arm_state = CAPTURE_VISION_INFO;
     if (check_rover_done()) {
       // if (true) {
+      log_message(LOG_INFO, "ROVER DONE MOVING GOING TO CAPTURE INFO\n");
       arm_state = CAPTURE_VISION_INFO;
     }
     break;

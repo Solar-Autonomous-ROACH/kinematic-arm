@@ -12,9 +12,9 @@
 #define W_C_LENGTH 140
 
 /*Angle that claw comes in at off of straight down*/
-#define CLAW_ANGLE 10.0
-#define CLAW_X 24
-#define CLAW_Y 138
+#define CLAW_ANGLE 20.0
+#define CLAW_X 48
+#define CLAW_Y 132
 
 /*Constants for Conversions*/
 /*Vision is offset to where camera is mounted*/
@@ -47,7 +47,7 @@
 #else
 /* Non-Dummy Values for New Rover Follows */
 #define VISION_X_OFFSET -35  //-50 BEFORE: -110
-#define VISION_Y_OFFSET +385 // 300 BEFORE: +395
+#define VISION_Y_OFFSET +375 // 300 BEFORE: +395
 #define VISION_Z_OFFSET -65  // 100 Mesured 65
 #endif
 /*Vision Line Compensators for offset plane*/
