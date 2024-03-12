@@ -16,7 +16,8 @@
 #define WRIST_PREP_ANGLE 0
 
 #define BASE_HOME_ANGLE 0
-#define ELBOW_HOME_ANGLE 0
+#define ELBOW_HOME_ANGLE_1 45
+#define ELBOW_HOME_ANGLE_2 0
 #define WRIST_HOME_ANGLE 0
 
 #define BASE_PLACE_ANGLE 40
@@ -46,14 +47,15 @@ typedef enum {
   CAPTURE_VISION_INFO,
   WAIT_FOR_INPUT,
   ROVER_MOVING,
-  MOVE_TARGET_BE1,
-  MOVE_TARGET_WRIST,
+  MOVE_TARGET_1,
+  MOVE_TARGET_2,
   CLAW_ACQUIRE,
   CLAW_CHECK,
   MOVE_PLACE_1,
   MOVE_PLACE_2,
   CLAW_DROPOFF,
-  MOVE_HOME
+  MOVE_HOME_1,
+  MOVE_HOME_2
 } arm_state_t;
 
 typedef enum {
@@ -76,7 +78,7 @@ typedef enum {
 // extern static struct motor_t arm_motor_subarray[4];
 
 void arm_handle_state(void);
-void stop_arm();
+void stop_motors();
 arm_motors_status_t arm_motors_state_handler(bool base, bool elbow, bool wrist);
 void move_home();
 void arm_handle_state_debug();
