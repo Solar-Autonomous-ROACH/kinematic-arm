@@ -33,7 +33,7 @@
 
 #define CONSECUTIVE_PICKUP_FAILURE_MAX 3
 
-#define BASE_CORRECTION_ANGLE 14
+#define BASE_CORRECTION_ANGLE 10
 
 /** only one of these should be true at a time */
 // #define DEBUG_WRIST

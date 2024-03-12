@@ -65,7 +65,7 @@
 #define LOWER_AREA_BOUND -420
 #define BACK_AREA_BOUND 100
 #define UPPER_AREA_BOUND 100
-#define DISTANCE_OVERSHOOT 50 // How far we overshoot when we're too far away
+#define DISTANCE_OVERSHOOT 30 // How far we overshoot when we're too far away
 
 /*Constants for Math /Kine Stuff*/
 #define PI 3.1416

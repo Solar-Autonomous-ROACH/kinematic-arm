@@ -198,7 +198,7 @@ void arm_handle_state() {
           log_message(LOG_INFO, "Validate kinematic result returned false\n");
           log_message(LOG_INFO, "GOING TO ROVER MOVING\n");
           arm_state = ROVER_MOVING;
-          rover_move_x(kinematic_result.extra_distance, 128.0);
+          rover_move_x(kinematic_result.extra_distance, 100.0);
           // forward rover_rotate(int dir, kinematic_result.turn_angle); // turn
           // angle is +90 to -90. make sure this is
           //  adjusted to whatever rover team provides
