@@ -267,7 +267,7 @@ void arm_handle_state() {
   case CLAW_ACQUIRE:
     if (claw_handle_state() == CLAW_CHECK_POSITION) {
       double current_base_angle = get_motor_angle(&BASE_MOTOR);
-      set_joint_angle(&BASE_MOTOR, -current_base_angle - 20);
+      set_joint_angle(&BASE_MOTOR, -current_base_angle - 30);
       log_message(LOG_INFO,
                   "CLAW_ACQUIRE complete, heading to CLAW_CHECK and raising "
                   "base by 20 degrees, current base angle: %f\n",
