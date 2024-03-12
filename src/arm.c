@@ -217,7 +217,7 @@ void arm_handle_state() {
               wrist_target_angle == 0 && claw_target_angle == 0) {
             move_home();
           } else {
-            arm_state = MOVE_TARGET_BE1;
+            arm_state = MOVE_TARGET_1;
           }
         }
       }
@@ -238,7 +238,7 @@ void arm_handle_state() {
     }
     break;
 
-  case MOVE_TARGET_BE1:
+  case MOVE_TARGET_1:
     status = arm_motors_state_handler(true, true, false);
     if (status == ARM_MOTORS_ERROR) {
       arm_state = arm_recalibrate();
@@ -248,12 +248,12 @@ void arm_handle_state() {
           claw_handle_state() == CLAW_CHECK_POSITION) {
         set_joints_angle(base_target_angle, elbow_target_angle,
                          wrist_target_angle);
-        arm_state = MOVE_TARGET_WRIST;
+        arm_state = MOVE_TARGET_2;
       }
     }
     break;
 
-  case MOVE_TARGET_WRIST:
+  case MOVE_TARGET_2:
     status = arm_motors_state_handler(true, true, true);
     if (status == ARM_MOTORS_ERROR) {
       arm_state = arm_recalibrate();
@@ -312,10 +312,7 @@ void arm_handle_state() {
           consecutive_pickup_failures++;
           if (consecutive_pickup_failures == CONSECUTIVE_PICKUP_FAILURE_MAX) {
             log_message(LOG_DEBUG, "3 consecutive failures. Moving home\n");
-            // move_home();
-            set_joints_angle(BASE_PLACE_ANGLE, ELBOW_PLACE_ANGLE, 0);
-            arm_state = MOVE_PLACE_1;
-            set_claw_angle(0);
+            move_home();
             consecutive_pickup_failures = 0;
             // rover_move_x(int64_t dist, double speed)
             // rover_rotate(int dir, int angle)
@@ -358,11 +355,17 @@ void arm_handle_state() {
     if (time_in_state > 500 && claw_handle_state() == CLAW_CHECK_POSITION &&
         time_in_state > 1000) {
       set_joints_angle(BASE_HOME_ANGLE, ELBOW_HOME_ANGLE, WRIST_HOME_ANGLE);
-      arm_state = MOVE_HOME;
+      arm_state = MOVE_HOME_1;
     }
     break;
 
-  case MOVE_HOME:
+  case MOVE_HOME_1:
+    if (claw_handle_state() == CLAW_CHECK_POSITION && arm_motors_state_handler(true, true, true) == ARM_MOTORS_READY) {
+      set_joint_angle(&ELBOW_MOTOR, ELBOW_HOME_ANGLE_2);
+      arm_state = MOVE_HOME_2;
+    }
+    break;
+  case MOVE_HOME_2:
     if (arm_motors_state_handler(true, true, true) == ARM_MOTORS_READY) {
       cycles_since_claw_calibration++;
       log_message(LOG_INFO, "Cycles since claw calibration = %d\n",
@@ -371,11 +374,11 @@ void arm_handle_state() {
         arm_state = claw_recalibrate();
         cycles_since_claw_calibration = 0;
         log_message(LOG_INFO,
-                    "MOVE_HOME complete, heading to CLAW_CALIBRATE\n");
+                    "MOVE_HOME_1 complete, heading to CLAW_CALIBRATE\n");
       } else {
         arm_state = CAPTURE_VISION_INFO;
         log_message(LOG_INFO,
-                    "MOVE_HOME complete, heading to CAPTURE_VISION_INFO\n");
+                    "MOVE_HOME_1 complete, heading to CAPTURE_VISION_INFO\n");
       }
     }
     break;
@@ -442,14 +445,14 @@ bool verify_pickup(vision_info_t original_vision_info,
 
 void move_home() {
   double elbow_angle = get_motor_angle(&ELBOW_MOTOR);
-  if (elbow_angle < ELBOW_HOME_ANGLE) {
+  if (elbow_angle < ELBOW_HOME_ANGLE_1) {
     set_joints_angle(BASE_HOME_ANGLE, elbow_angle, WRIST_HOME_ANGLE);
   } else {
-    set_joints_angle(BASE_HOME_ANGLE, ELBOW_HOME_ANGLE, WRIST_HOME_ANGLE);
+    set_joints_angle(BASE_HOME_ANGLE, ELBOW_HOME_ANGLE_1, WRIST_HOME_ANGLE);
   }
   set_claw_angle(0);
   open_claw();
-  arm_state = MOVE_HOME;
+  arm_state = MOVE_HOME_1;
 }
 
 arm_state_t arm_recalibrate() {
@@ -466,6 +469,11 @@ void arm_begin_pickup() { arm_requested = true; }
 
 bool arm_pickup_done() {
   return arm_state == CAPTURE_VISION_INFO && arm_requested == false;
+}
+
+void arm_stop() { //stop_motors is for collisions. arm_stop is for rover web app to call when they want to stop the arm at any point
+  stop_motors();
+  arm_state = arm_recalibrate();
 }
 
 /**
@@ -505,11 +513,11 @@ void arm_handle_state_debug() {
       // set_joints_angle(base_target_angle, elbow_target_angle,
       //                  wrist_target_angle);
       // log_message(LOG_INFO, "Got input, heading to PREPARE FOR MOVE\n");
-      arm_state = MOVE_TARGET_BE1;
+      arm_state = MOVE_TARGET_1;
     }
     break;
 
-  case MOVE_TARGET_BE1:
+  case MOVE_TARGET_1:
 #ifdef DEBUG_WRIST
     if (arm_motor_handle_state(&WRIST_MOTOR) == ARM_MOTOR_CHECK_POSITION) {
       log_message(LOG_INFO, "MOVE_TARGET complete, Waiting for input\n");
@@ -535,9 +543,9 @@ void arm_handle_state_debug() {
 }
 
 /**
- * @brief Stops all the joints of the arm. used for errors.
+ * @brief Stops all the joints of the arm. used for collision response. 
  */
-void stop_arm() {
+void stop_motors() {
   set_motor_speed(WRIST_MOTOR.index, 0);
   set_motor_speed(ELBOW_MOTOR.index, 0);
   set_motor_speed(BASE_MOTOR.index, 0);
@@ -558,7 +566,7 @@ arm_motors_status_t arm_motors_state_handler(bool base, bool elbow,
   if (base) {
     arm_motor_state_t base_state = arm_motor_handle_state(&BASE_MOTOR);
     if (base_state == ARM_MOTOR_ERROR) {
-      stop_arm();
+      stop_motors();
       return ARM_MOTORS_ERROR;
     } else if (base_state == ARM_MOTOR_MOVING_TO_TARGET) {
       moving_to_target = true;
@@ -567,7 +575,7 @@ arm_motors_status_t arm_motors_state_handler(bool base, bool elbow,
   if (elbow) {
     arm_motor_state_t elbow_state = arm_motor_handle_state(&ELBOW_MOTOR);
     if (elbow_state == ARM_MOTOR_ERROR) {
-      stop_arm();
+      stop_motors();
       return ARM_MOTORS_ERROR;
     } else if (elbow_state == ARM_MOTOR_MOVING_TO_TARGET) {
       moving_to_target = true;
@@ -576,7 +584,7 @@ arm_motors_status_t arm_motors_state_handler(bool base, bool elbow,
   if (wrist) {
     arm_motor_state_t wrist_state = arm_motor_handle_state(&WRIST_MOTOR);
     if (wrist_state == ARM_MOTOR_ERROR) {
-      stop_arm();
+      stop_motors();
       return ARM_MOTORS_ERROR;
     } else if (wrist_state == ARM_MOTOR_MOVING_TO_TARGET) {
       moving_to_target = true;
