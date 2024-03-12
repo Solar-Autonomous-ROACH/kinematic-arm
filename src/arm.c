@@ -143,11 +143,11 @@ void arm_handle_state() {
         arm_state = WAIT_FOR_INPUT;
         arm_requested = false;
       } else {
-        log_message(LOG_DEBUG, "Vision not requested, vision result = %d\n",
+        log_message(LOG_INFO, "Vision not requested, vision result = %d\n",
                     vision_result);
       }
     } else {
-      log_message(LOG_DEBUG, "Arm not requested\n");
+      log_message(LOG_INFO, "Arm not requested\n");
     }
     break;
 
@@ -165,7 +165,7 @@ void arm_handle_state() {
       break;
     case VISION_SAMPLE_NOT_FOUND:
       arm_state = ROVER_MOVING;
-      log_message(LOG_WARNING, "No test tube found: %.3f\n",
+      log_message(LOG_WARNING, "No test tube found\n",
                   original_vision_info.confidence);
       // move the rover to some place idk
       // rover_move_x(int64_t dist, double speed)
@@ -195,10 +195,9 @@ void arm_handle_state() {
           break;
         } else if (!validate_kinematic_result(kinematic_result)) {
           // USE ROVER API TO MOVE - can't reach the object
-          log_message(LOG_INFO, "Validate kinematic result returned false\n");
-          log_message(LOG_INFO, "GOING TO ROVER MOVING\n");
           arm_state = ROVER_MOVING;
-          rover_move_x(kinematic_result.extra_distance, 100.0);
+          log_message(LOG_INFO, "Validate kinematic result returned false\n");
+          // rover_move_x(kinematic_result.extra_distance, speed); // moving
           // forward rover_rotate(int dir, kinematic_result.turn_angle); // turn
           // angle is +90 to -90. make sure this is
           //  adjusted to whatever rover team provides
@@ -233,7 +232,6 @@ void arm_handle_state() {
   case ROVER_MOVING:
     if (check_rover_done()) {
       // if (true) {
-      log_message(LOG_INFO, "ROVER DONE MOVING GOING TO CAPTURE INFO\n");
       arm_state = CAPTURE_VISION_INFO;
     }
     break;
@@ -267,7 +265,7 @@ void arm_handle_state() {
   case CLAW_ACQUIRE:
     if (claw_handle_state() == CLAW_CHECK_POSITION) {
       double current_base_angle = get_motor_angle(&BASE_MOTOR);
-      set_joint_angle(&BASE_MOTOR, -current_base_angle - 30);
+      set_joint_angle(&BASE_MOTOR, -current_base_angle - 20);
       log_message(LOG_INFO,
                   "CLAW_ACQUIRE complete, heading to CLAW_CHECK and raising "
                   "base by 20 degrees, current base angle: %f\n",
@@ -281,25 +279,22 @@ void arm_handle_state() {
     if (time_in_state < 1000) {
       return;
     }
-    if (vision_verify_requested) {
-      vision_verify_requested = false;
-      vision_result = vision_receive_input_isr();
-      status = arm_motors_state_handler(true, false, false);
-      if (status == ARM_MOTORS_ERROR) {
-        arm_state = arm_recalibrate();
-      } else if (status == ARM_MOTORS_READY &&
-                 (vision_result == VISION_SUCCESS ||
-                  vision_result == VISION_SAMPLE_NOT_FOUND)) {
+    status = arm_motors_state_handler(true, false, false);
+    vision_result = vision_receive_input_isr();
+    if (status == ARM_MOTORS_ERROR) {
+      arm_state = arm_recalibrate();
+    } else if (arm_status == ARM_MOTORS_READY) {
+      if (vision_verify_requested) {
         if (vision_result == VISION_SUCCESS &&
             !vision_get_coordinates(&moved_vision_info)) {
-          log_message(LOG_ERROR, "read moved coordinates error\n");
+          log_message(LOG_INFO, "read moved coordinates error\n");
           raise(SIGINT);
           exit(1);
-        }
-        if (vision_result == VISION_SAMPLE_NOT_FOUND ||
-            verify_pickup(original_vision_info, moved_vision_info)) {
+        } else if (vision_result == VISION_SAMPLE_NOT_FOUND ||
+                   verify_pickup(original_vision_info, moved_vision_info)) {
           // set_joints_angle(BASE_PLACE_ANGLE, ELBOW_PLACE_ANGLE,
           // WRIST_PLACE_ANGLE);
+          vision_verify_requested = false;
           log_message(LOG_INFO, "verify pickup succeeded\n");
           set_joints_angle(BASE_PLACE_ANGLE, ELBOW_PLACE_ANGLE, 0);
           arm_state = MOVE_PLACE_1;
@@ -310,8 +305,10 @@ void arm_handle_state() {
         } else {
           log_message(LOG_INFO, "verify pickup failed\n");
           consecutive_pickup_failures++;
+          vision_verify_requested = false;
           if (consecutive_pickup_failures == CONSECUTIVE_PICKUP_FAILURE_MAX) {
-            log_message(LOG_DEBUG, "3 consecutive failures. Moving home\n");
+            // arm_state = ROVER_MOVING;
+            log_message(LOG_INFO, "3 consecutive failures. Moving home\n");
             move_home();
             consecutive_pickup_failures = 0;
             // rover_move_x(int64_t dist, double speed)
@@ -319,16 +316,19 @@ void arm_handle_state() {
             // probably move somewhere else since we can't pick up the current
             // tube
           } else {
-            log_message(LOG_DEBUG,
+            // arm_requested = true;
+            log_message(LOG_INFO,
                         "Taking another picture after pickup verify failed\n");
             arm_state = CAPTURE_VISION_INFO; // did not correctly acquire -
                                              // restart by taking new picture
           }
         }
+      } else {
+        log_message(LOG_INFO,
+                    "Requesting vision coordinates after base motor was raised")
+            vision_request_coordinates();
+        vision_verify_requested = true;
       }
-    } else {
-      vision_request_coordinates();
-      vision_verify_requested = true;
     }
 
     break;
@@ -354,13 +354,14 @@ void arm_handle_state() {
   case CLAW_DROPOFF:
     if (time_in_state > 500 && claw_handle_state() == CLAW_CHECK_POSITION &&
         time_in_state > 1000) {
-      set_joints_angle(BASE_HOME_ANGLE, ELBOW_HOME_ANGLE, WRIST_HOME_ANGLE);
+      set_joints_angle(BASE_HOME_ANGLE, ELBOW_HOME_ANGLE_1, WRIST_HOME_ANGLE);
       arm_state = MOVE_HOME_1;
     }
     break;
 
   case MOVE_HOME_1:
-    if (claw_handle_state() == CLAW_CHECK_POSITION && arm_motors_state_handler(true, true, true) == ARM_MOTORS_READY) {
+    if (claw_handle_state() == CLAW_CHECK_POSITION &&
+        arm_motors_state_handler(true, true, true) == ARM_MOTORS_READY) {
       set_joint_angle(&ELBOW_MOTOR, ELBOW_HOME_ANGLE_2);
       arm_state = MOVE_HOME_2;
     }
@@ -432,15 +433,16 @@ bool verify_pickup(vision_info_t original_vision_info,
               "Moved coordinates: x = %d y = %d z = %d angle = %d conf = %lf\n",
               moved_vision_info.x, moved_vision_info.y, moved_vision_info.z,
               moved_vision_info.angle, moved_vision_info.confidence);
-  int x_diff = moved_vision_info.x - original_vision_info.x;
+  // int x_diff = moved_vision_info.x - original_vision_info.x;
   int y_diff = moved_vision_info.y - original_vision_info.y;
-  int z_diff = moved_vision_info.z - original_vision_info.z;
-  int angle_diff = moved_vision_info.angle - original_vision_info.angle;
-  return (abs(x_diff) <= X_VERIFICATION_ERROR &&
-          y_diff == VERIFICATION_RAISE_DISTANCE &&
-          abs(z_diff) <= Z_VERIFICATION_ERROR &&
-          abs(angle_diff) <= ANGLE_VERIFICATION_ERROR &&
-          moved_vision_info.confidence >= VISION_CONFIDENCE_MINIMUM);
+  // int z_diff = moved_vision_info.z - original_vision_info.z;
+  // int angle_diff = moved_vision_info.angle - original_vision_info.angle;
+  // return (abs(x_diff) <= X_VERIFICATION_ERROR &&
+  //         y_diff == VERIFICATION_RAISE_DISTANCE &&
+  //         abs(z_diff) <= Z_VERIFICATION_ERROR &&
+  //         abs(angle_diff) <= ANGLE_VERIFICATION_ERROR &&
+  //         moved_vision_info.confidence >= VISION_CONFIDENCE_MINIMUM);
+  return (y_diff >= VERIFICATION_RAISE_DISTANCE)
 }
 
 void move_home() {
@@ -471,7 +473,8 @@ bool arm_pickup_done() {
   return arm_state == CAPTURE_VISION_INFO && arm_requested == false;
 }
 
-void arm_stop() { //stop_motors is for collisions. arm_stop is for rover web app to call when they want to stop the arm at any point
+void arm_stop() { // stop_motors is for collisions. arm_stop is for rover web
+                  // app to call when they want to stop the arm at any point
   stop_motors();
   arm_state = arm_recalibrate();
 }
@@ -543,7 +546,7 @@ void arm_handle_state_debug() {
 }
 
 /**
- * @brief Stops all the joints of the arm. used for collision response. 
+ * @brief Stops all the joints of the arm. used for collision response.
  */
 void stop_motors() {
   set_motor_speed(WRIST_MOTOR.index, 0);
