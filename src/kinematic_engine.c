@@ -63,15 +63,15 @@ void kinematic_engine(float x_pos, float y_pos, float z_pos, float angle_pos,
   /*Do Checks to see if position is in range and within bounding lines*/
 
   // log_message(LOG_INFO, "Testing1\n");
-  // log_message(LOG_INFO, "Magnitude = %.3f\n", magnitude);
-  // log_message(LOG_INFO, "Arm Length = %.3f\n", (S_E_LENGTH + E_W_LENGTH +
-  // 0.0) * 0.98);
+  log_message(LOG_INFO, "Magnitude = %.3f\n", magnitude);
+  log_message(LOG_INFO, "Arm Length = %.3f\n",
+              (S_E_LENGTH + E_W_LENGTH + 0.0) * 0.98);
 
   if (magnitude > (S_E_LENGTH + E_W_LENGTH + 0.0) * 0.98) { // check if in range
-  //   // DISTANCE_OVERSHOOT); log_message(LOG_INFO, "Testing2\n");
+    //   // DISTANCE_OVERSHOOT); log_message(LOG_INFO, "Testing2\n");
 
-  // if (300 < (x_pos - CLAW_X)) { //demo version for far bound
-
+    // if (300 < (x_pos - CLAW_X)) { //demo version for far bound
+    // log_message(LOG_INFO, "Magnitude=%.3f\n", magnitude);
     output->extra_distance =
         ((int)(magnitude - S_E_LENGTH - E_W_LENGTH + DISTANCE_OVERSHOOT));
     return;
