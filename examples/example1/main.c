@@ -9,6 +9,8 @@
 #include <unistd.h>
 #include <vision.h>
 
+#define ARM_ONLY
+
 void sigint_handler(int sig) {
   printf("Received SIGINT signal %d\n", sig);
   arm_close();
@@ -23,11 +25,10 @@ int main() {
   sigemptyset(&sa.sa_mask);
   sigaddset(&sa.sa_mask, SIGALRM);
   sigaction(SIGINT, &sa, NULL);
-
+  arm_set_rover_funcs(false);
   vision_init();
   arm_init();
   isr_init();
-
 
   while (1) {
     // rover_move_x(100);
@@ -35,8 +36,7 @@ int main() {
     //   /* block */
     // }
     arm_begin_pickup();
-    while (!arm_pickup_done())
-    {
+    while (!arm_pickup_done()) {
       /* block */
     }
     pause();

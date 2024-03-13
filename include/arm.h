@@ -5,6 +5,7 @@
 
 void arm_init();
 void arm_close();
+void arm_set_rover_funcs(bool on);
 void arm_stop();
 void arm_begin_pickup();
 bool arm_pickup_done();

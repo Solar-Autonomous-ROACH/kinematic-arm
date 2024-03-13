@@ -12,14 +12,16 @@
 #define W_C_LENGTH 140
 
 /*Angle that claw comes in at off of straight down*/
-#define CLAW_ANGLE 10.0
-#define CLAW_X 24
-#define CLAW_Y 138
+#define CLAW_ANGLE 20.0
+#define CLAW_X 48
+#define CLAW_Y 132
 
 /*Constants for Conversions*/
 /*Vision is offset to where camera is mounted*/
 #ifdef OLD_ROVER
+#pragma message("Compiling for old rover")
 #ifdef VISION_DUMMY
+#pragma message("Compiling for vision dummy")
 #define VISION_X_OFFSET -20 //-50
 #define VISION_Y_OFFSET +0  // 300
 #define VISION_Z_OFFSET 0   // 100
@@ -38,20 +40,21 @@
 #define ROACH_Z_OFFSET -20
 #else // New Rover Follows
 #ifdef VISION_DUMMY
+#pragma message("Compiling for vision dummy")
 #define VISION_X_OFFSET 0 //-50
 #define VISION_Y_OFFSET 0 // 300
 #define VISION_Z_OFFSET 0 // 100
 #else
 /* Non-Dummy Values for New Rover Follows */
-#define VISION_X_OFFSET 0    //-50 BEFORE: -110
-#define VISION_Y_OFFSET +330 // 300 BEFORE: +395
-#define VISION_Z_OFFSET -50  // 100 Mesured 65
+#define VISION_X_OFFSET -35  //-50 BEFORE: -110
+#define VISION_Y_OFFSET +375 // 300 BEFORE: +395
+#define VISION_Z_OFFSET -65  // 100 Mesured 65
 #endif
 /*Vision Line Compensators for offset plane*/
-#define VISION_COMP_1_A 1.0
+#define VISION_COMP_1_M 1.0
 #define VISION_COMP_1_B 0.0
-#define VISION_COMP_2_A 1.0
-#define VISION_COMP_2_B 0.0
+#define VISION_COMP_2_M 0.82
+#define VISION_COMP_2_B 15.6
 /*Roach is offset to center of rover*/
 #define ROACH_X_OFFSET -215
 #define ROACH_Z_OFFSET -20
@@ -62,7 +65,7 @@
 #define LOWER_AREA_BOUND -420
 #define BACK_AREA_BOUND 100
 #define UPPER_AREA_BOUND 100
-#define DISTANCE_OVERSHOOT 50 // How far we overshoot when we're too far away
+#define DISTANCE_OVERSHOOT 30 // How far we overshoot when we're too far away
 
 /*Constants for Math /Kine Stuff*/
 #define PI 3.1416
@@ -70,6 +73,8 @@
 /*This is the 270 deg that is used to finish the triangle
   and the compensator for where the wrist starts measuring from*/
 #define WRIST_CONST ((280.0 + CLAW_ANGLE) / 180.0 * PI - 3 * PI / 2)
+// #define WRIST_CONST_1 280.0
+// #define WRIST_CONST_2 (180.0 * PI - 3 * PI / 2)
 /*This is for any tilts in the robot body itself*/
 #define SHOULDER_CONST (0.0 / 180.0 * PI)
 #define CLAW_CONST 90

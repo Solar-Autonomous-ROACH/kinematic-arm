@@ -34,7 +34,11 @@ endif
 ## Library Building
 LIB_NAME := libarm.a
 LIB_SRCS := $(wildcard $(SRC_DIR)/*.c)
+LIB_INTERNALHEADERS := $(wildcard $(SRC_DIR)/*.h)
+LIB_INTERNALHEADERS := $(addprefix $(SRC_DIR)/,$(notdir $(LIB_INTERNALHEADERS)))
 LIB_INCFILES := $(wildcard $(INC_DIR)/*.h)
+LIB_INCFILES := $(addprefix $(INC_DIR)/,$(notdir $(LIB_INCFILES)))
+
 LIB_OBJS = $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o,$(LIB_SRCS))
 
 all: $(LIB_DIR)/$(LIB_NAME)
@@ -42,7 +46,7 @@ all: $(LIB_DIR)/$(LIB_NAME)
 $(LIB_DIR)/$(LIB_NAME): $(LIB_OBJS) | $(LIB_DIR)
 	ar r $@ $^
 
-$(BUILD_DIR)/%.o: $(SRC_DIR)/%.c | $(BUILD_DIR)
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.c $(LIB_INTERNALHEADERS) $(LIB_INCFILES) | $(BUILD_DIR)
 	$(CC) $(CFLAGS) $(INCLUDEFLAGS) -c $< -o $@
 
 $(LIB_DIR):

@@ -22,7 +22,13 @@ void sigint_handler() {
 
 int main() {
   // Configure signal handler
-  signal(SIGINT, sigint_handler);
+  struct sigaction sa;
+  sa.sa_handler = sigint_handler;
+  sa.sa_flags = 0;
+  sigemptyset(&sa.sa_mask);
+  sigaddset(&sa.sa_mask, SIGALRM);
+  sigaction(SIGINT, &sa, NULL);
+
   // Initialize rover
   if (rover_init() != 0) {
     printf("failed to initialize rover\n");
@@ -42,14 +48,11 @@ int main() {
   // motor_set_speed(MOTOR_MIDDLE_LEFT_WHEEL, 1000);
   // rover_move_x(-10000, 128);
 
-  arm_begin_pickup();
-  while (!arm_pickup_done()) {
-    /* block */
-  }
-
-  // infinite loop
   while (1) {
-    pause();
+    arm_begin_pickup();
+    while (!arm_pickup_done()) {
+      /* block */
+    }
   }
 
   return 0;

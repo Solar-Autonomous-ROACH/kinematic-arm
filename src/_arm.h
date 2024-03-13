@@ -25,7 +25,7 @@
 #define WRIST_PLACE_ANGLE 200
 
 // all in millimeters, for pickup verification
-#define VERIFICATION_RAISE_DISTANCE 100
+#define VERIFICATION_RAISE_DISTANCE 20
 #define VERIFICATION_RAISE_MINIMUM 50
 #define X_VERIFICATION_ERROR 5
 #define Y_VERIFICATION_ERROR 20
@@ -34,7 +34,7 @@
 
 #define CONSECUTIVE_PICKUP_FAILURE_MAX 3
 
-#define BASE_CORRECTION_ANGLE 14
+#define BASE_CORRECTION_ANGLE 10
 
 /** only one of these should be true at a time */
 // #define DEBUG_WRIST
@@ -51,6 +51,7 @@ typedef enum {
   MOVE_TARGET_2,
   CLAW_ACQUIRE,
   CLAW_CHECK,
+  CLAW_RAISING,
   MOVE_PLACE_1,
   MOVE_PLACE_2,
   CLAW_DROPOFF,
@@ -78,6 +79,8 @@ typedef enum {
 // extern static struct motor_t arm_motor_subarray[4];
 
 void arm_handle_state(void);
+void handle_pickup_validation();
+void handle_vision_input();
 void stop_motors();
 arm_motors_status_t arm_motors_state_handler(bool base, bool elbow, bool wrist);
 void move_home();
