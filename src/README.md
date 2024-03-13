@@ -1,33 +1,15 @@
-# GoScout PYNQ Library - C Code
+# Armada C library
 
-This directory contains the C source code for the GoScout PYNQ library, which provides a set of functions for controlling various hardware components on the Digilent PYNQ Z1 development board.
+This directory contains the library's source files and internal headers.
 
-### mmio.c: 
+Before looking at these files, take a look at [example 1](/examples/example1/main.c)
+If it's your first time, I would suggest looking at the files in the following order:
 
-Comminication between PS and PL using AXI Memory Mapped IO
+1. logger
+2. arm_motor_api
+3. arm_motor
+4. claw (You can see right now that claw calibration and hall effect do not exist because they are not connected/implemented in FPGA)
+5. kinematic_engine
+6. arm
 
-- creates global var: mmio for writing to control registers
-- creates gloval var: mmio_read for reading from status registers
-
-### motor.c:
-
-Facilitates reading motor encoder positions and writing to pwm registers
-
-### isr.c:
-
-Establishes interrupt service routine to run every 1ms
-
-### led.c:
-
-Writing to onboard RGB leds. 
-
-## Usage:
-
-- Navigate into c directory
-- make
-- sudo ./roverCore
-
-Note: currently needs root priviledges to read memory tables
-
-
-
+Enjoy :)
