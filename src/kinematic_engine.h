@@ -65,7 +65,7 @@
 #define LOWER_AREA_BOUND -420
 #define BACK_AREA_BOUND 100
 #define UPPER_AREA_BOUND 100
-#define DISTANCE_OVERSHOOT 50 // How far we overshoot when we're too far away
+#define DISTANCE_OVERSHOOT 30 // How far we overshoot when we're too far away
 
 /*Constants for Math /Kine Stuff*/
 #define PI 3.1416
@@ -73,6 +73,8 @@
 /*This is the 270 deg that is used to finish the triangle
   and the compensator for where the wrist starts measuring from*/
 #define WRIST_CONST ((280.0 + CLAW_ANGLE) / 180.0 * PI - 3 * PI / 2)
+// #define WRIST_CONST_1 280.0
+// #define WRIST_CONST_2 (180.0 * PI - 3 * PI / 2)
 /*This is for any tilts in the robot body itself*/
 #define SHOULDER_CONST (0.0 / 180.0 * PI)
 #define CLAW_CONST 90

@@ -24,9 +24,9 @@ vision_info_t moved_vision_info;
 vision_status_t vision_result;
 static arms_calibrate_state_t arms_calibrate_state = ARM_CALIBRATE_START;
 kinematic_output_t kinematic_result;
+static bool rover_funcs_off = false;
 
 bool arm_requested = false;
-bool vision_verify_requested = false;
 
 /**
  * @brief State machine which goes through the motors and calibrates them
@@ -143,95 +143,21 @@ void arm_handle_state() {
         arm_state = WAIT_FOR_INPUT;
         arm_requested = false;
       } else {
-        log_message(LOG_INFO, "Vision not requested, vision result = %d\n",
+        log_message(LOG_DEBUG, "Vision not requested, vision result = %d\n",
                     vision_result);
       }
     } else {
-      log_message(LOG_INFO, "Arm not requested\n");
+      log_message(LOG_DEBUG, "Arm not requested\n");
     }
     break;
 
   case WAIT_FOR_INPUT:
     // wait for coordinates and orientation info from vision team
-    vision_result = vision_receive_input_isr();
-    switch (vision_result) {
-    case VISION_TERMINATED:
-    case VISION_ERROR:
-      log_message(LOG_INFO, "Vision terminated or error, re-initializing\n");
-      raise(SIGINT); // sucide: not recommended for humans
-      break;
-    case VISION_IN_PROGRESS:
-      // do nothing, just waiting for capture to finish
-      break;
-    case VISION_SAMPLE_NOT_FOUND:
-      arm_state = ROVER_MOVING;
-      log_message(LOG_WARNING, "No test tube found\n",
-                  original_vision_info.confidence);
-      // move the rover to some place idk
-      // rover_move_x(int64_t dist, double speed)
-      // rover_rotate(int dir, int angle)
-      break;
-    case VISION_SUCCESS:
-      log_message(LOG_INFO,
-                  "Vision returned success, processing coordinates...\n");
-      if (!vision_get_coordinates(&original_vision_info)) {
-        perror("read original coordinates error");
-        raise(SIGINT);
-      }
-      if (original_vision_info.confidence < VISION_CONFIDENCE_MINIMUM) {
-        arm_state = ROVER_MOVING;
-        log_message(LOG_WARNING, "Confidence level %lf is too low\n",
-                    original_vision_info.confidence);
-        // move the rover to some place idk
-        // rover_move_x(int64_t dist, double speed)
-        // rover_rotate(int dir, int angle)
-      } else {
-        kinematic_engine(original_vision_info.x, original_vision_info.y,
-                         original_vision_info.z, original_vision_info.angle,
-                         &kinematic_result);
-        if (kinematic_result.error) {
-          log_message(LOG_INFO, "Kinematic Engine error\n");
-          arm_state = CAPTURE_VISION_INFO;
-          break;
-        } else if (!validate_kinematic_result(kinematic_result)) {
-          // USE ROVER API TO MOVE - can't reach the object
-          arm_state = ROVER_MOVING;
-          log_message(LOG_INFO, "Validate kinematic result returned false\n");
-          // rover_move_x(kinematic_result.extra_distance, speed); // moving
-          // forward rover_rotate(int dir, kinematic_result.turn_angle); // turn
-          // angle is +90 to -90. make sure this is
-          //  adjusted to whatever rover team provides
-        } else {
-          log_message(LOG_INFO,
-                      "Got input, Base: %hd, Elbow: %hd, Wrist: %hd, Claw: "
-                      "%hd, heading "
-                      "to PREPARE "
-                      "FOR MOVE\n",
-                      base_target_angle, elbow_target_angle, wrist_target_angle,
-                      claw_target_angle);
-          set_joints_angle(base_target_angle, elbow_target_angle, 0);
-          // set_claw_angle(claw_target_angle);
-          open_claw();
-          if (base_target_angle == 0 && elbow_target_angle == 0 &&
-              wrist_target_angle == 0 && claw_target_angle == 0) {
-            move_home();
-          } else {
-            arm_state = MOVE_TARGET_1;
-          }
-        }
-      }
-      break;
-    default:
-      // should never be STARTING or READY_FOR_CAPTURE
-      log_message(LOG_ERROR,
-                  "Vision returned an unexpected status in WAIT_FOR_INPUT\n");
-      break;
-    }
+    handle_vision_input();
     break;
 
   case ROVER_MOVING:
     if (check_rover_done()) {
-      // if (true) {
       arm_state = CAPTURE_VISION_INFO;
     }
     break;
@@ -257,80 +183,41 @@ void arm_handle_state() {
       arm_state = arm_recalibrate();
     } else if (status == ARM_MOTORS_READY) {
       log_message(LOG_INFO, "MOVE_TARGET complete, heading to CLAW_ACQUIRE\n");
-      arm_state = CLAW_ACQUIRE;
       close_claw();
+      arm_state = CLAW_ACQUIRE;
     }
     break;
 
   case CLAW_ACQUIRE:
     if (claw_handle_state() == CLAW_CHECK_POSITION) {
       double current_base_angle = get_motor_angle(&BASE_MOTOR);
-      set_joint_angle(&BASE_MOTOR, -current_base_angle - 20);
+      set_joint_angle(&BASE_MOTOR, -current_base_angle - 30);
       log_message(LOG_INFO,
-                  "CLAW_ACQUIRE complete, heading to CLAW_CHECK and raising "
-                  "base by 20 degrees, current base angle: %f\n",
+                  "CLAW_ACQUIRE complete, heading to CLAW_RAISING and raising "
+                  "base by 30 degrees, current base angle: %f\n",
                   current_base_angle);
+      arm_state = CLAW_RAISING;
+    }
+    break;
+
+  case CLAW_RAISING:
+    status = arm_motors_state_handler(true, false, false);
+    if (status == ARM_MOTORS_ERROR) {
+      arm_state = arm_recalibrate();
+    } else if (status == ARM_MOTORS_READY) {
+      log_message(
+          LOG_INFO,
+          "Requesting vision coordinates after base motor was raised\n");
+      vision_request_coordinates();
       arm_state = CLAW_CHECK;
     }
-
     break;
 
   case CLAW_CHECK:
     if (time_in_state < 1000) {
       return;
     }
-    status = arm_motors_state_handler(true, false, false);
-    vision_result = vision_receive_input_isr();
-    if (status == ARM_MOTORS_ERROR) {
-      arm_state = arm_recalibrate();
-    } else if (arm_status == ARM_MOTORS_READY) {
-      if (vision_verify_requested) {
-        if (vision_result == VISION_SUCCESS &&
-            !vision_get_coordinates(&moved_vision_info)) {
-          log_message(LOG_INFO, "read moved coordinates error\n");
-          raise(SIGINT);
-          exit(1);
-        } else if (vision_result == VISION_SAMPLE_NOT_FOUND ||
-                   verify_pickup(original_vision_info, moved_vision_info)) {
-          // set_joints_angle(BASE_PLACE_ANGLE, ELBOW_PLACE_ANGLE,
-          // WRIST_PLACE_ANGLE);
-          vision_verify_requested = false;
-          log_message(LOG_INFO, "verify pickup succeeded\n");
-          set_joints_angle(BASE_PLACE_ANGLE, ELBOW_PLACE_ANGLE, 0);
-          arm_state = MOVE_PLACE_1;
-          log_message(LOG_INFO,
-                      "CLAW_CHECK complete, heading to MOVE_PLACE_1\n");
-          set_claw_angle(0);
-          consecutive_pickup_failures = 0;
-        } else {
-          log_message(LOG_INFO, "verify pickup failed\n");
-          consecutive_pickup_failures++;
-          vision_verify_requested = false;
-          if (consecutive_pickup_failures == CONSECUTIVE_PICKUP_FAILURE_MAX) {
-            // arm_state = ROVER_MOVING;
-            log_message(LOG_INFO, "3 consecutive failures. Moving home\n");
-            move_home();
-            consecutive_pickup_failures = 0;
-            // rover_move_x(int64_t dist, double speed)
-            // rover_rotate(int dir, int angle)
-            // probably move somewhere else since we can't pick up the current
-            // tube
-          } else {
-            // arm_requested = true;
-            log_message(LOG_INFO,
-                        "Taking another picture after pickup verify failed\n");
-            arm_state = CAPTURE_VISION_INFO; // did not correctly acquire -
-                                             // restart by taking new picture
-          }
-        }
-      } else {
-        log_message(LOG_INFO,
-                    "Requesting vision coordinates after base motor was raised")
-            vision_request_coordinates();
-        vision_verify_requested = true;
-      }
-    }
-
+    handle_pickup_validation();
     break;
 
   case MOVE_PLACE_1:
@@ -375,11 +262,11 @@ void arm_handle_state() {
         arm_state = claw_recalibrate();
         cycles_since_claw_calibration = 0;
         log_message(LOG_INFO,
-                    "MOVE_HOME_1 complete, heading to CLAW_CALIBRATE\n");
+                    "MOVE_HOME_2 complete, heading to CLAW_CALIBRATE\n");
       } else {
         arm_state = CAPTURE_VISION_INFO;
         log_message(LOG_INFO,
-                    "MOVE_HOME_1 complete, heading to CAPTURE_VISION_INFO\n");
+                    "MOVE_HOME_2 complete, heading to CAPTURE_VISION_INFO\n");
       }
     }
     break;
@@ -387,9 +274,124 @@ void arm_handle_state() {
   default:
     break;
   }
-
   if (prev_state != arm_state) {
     time_in_state = 0;
+  }
+}
+
+void handle_pickup_validation() {
+  vision_result = vision_receive_input_isr();
+  bool pickup_successful = false;
+
+  if (vision_result == VISION_SUCCESS) {
+    if (!vision_get_coordinates(&moved_vision_info)) {
+      log_message(LOG_ERROR, "read moved coordinates error\n");
+      raise(SIGINT);
+    }
+    if (verify_pickup(original_vision_info, moved_vision_info)) {
+      pickup_successful = true;
+    } else {
+      log_message(LOG_INFO, "verify pickup failed\n");
+      consecutive_pickup_failures++;
+      if (consecutive_pickup_failures == CONSECUTIVE_PICKUP_FAILURE_MAX) {
+        log_message(LOG_INFO, "3 consecutive failures. Moving home\n");
+        move_home();
+        consecutive_pickup_failures = 0;
+      } else {
+        log_message(LOG_INFO,
+                    "Taking another picture after pickup verify failed\n");
+        arm_state = CAPTURE_VISION_INFO; // did not correctly acquire -
+                                         // restart by taking new picture
+      }
+    }
+  } else if (vision_result == VISION_SAMPLE_NOT_FOUND) {
+    pickup_successful = true;
+  }
+  if (pickup_successful) {
+    log_message(LOG_INFO, "verify pickup succeeded\n");
+    set_joints_angle(BASE_PLACE_ANGLE, ELBOW_PLACE_ANGLE, 0);
+    arm_state = MOVE_PLACE_1;
+    log_message(LOG_INFO, "CLAW_CHECK complete, heading to MOVE_PLACE_1\n");
+    set_claw_angle(0);
+    consecutive_pickup_failures = 0;
+  }
+}
+
+void arm_set_rover_funcs(bool on) { rover_funcs_off = !on; }
+
+void handle_vision_input() {
+  vision_result = vision_receive_input_isr();
+  switch (vision_result) {
+  case VISION_TERMINATED:
+  case VISION_ERROR:
+    log_message(LOG_INFO, "Vision terminated or error, re-initializing\n");
+    raise(SIGINT); // sucide: not recommended for humans
+    break;
+  case VISION_IN_PROGRESS:
+    // do nothing, just waiting for capture to finish
+    break;
+  case VISION_SAMPLE_NOT_FOUND:
+    // give control back to rover
+    arm_state = CAPTURE_VISION_INFO;
+    log_message(LOG_WARNING, "No test tube found\n",
+                original_vision_info.confidence);
+    break;
+  case VISION_SUCCESS:
+    log_message(LOG_INFO,
+                "Vision returned success, processing coordinates...\n");
+    if (!vision_get_coordinates(&original_vision_info)) {
+      perror("read original coordinates error");
+      raise(SIGINT);
+    }
+    if (original_vision_info.confidence < VISION_CONFIDENCE_MINIMUM) {
+      // give control back to rover
+      arm_state = CAPTURE_VISION_INFO;
+      log_message(LOG_WARNING, "Confidence level %lf is too low\n",
+                  original_vision_info.confidence);
+    } else {
+      kinematic_engine(original_vision_info.x, original_vision_info.y,
+                       original_vision_info.z, original_vision_info.angle,
+                       &kinematic_result);
+      if (validate_kinematic_result(kinematic_result)) {
+        log_message(LOG_INFO,
+                    "Got input, Base: %hd, Elbow: %hd, Wrist: %hd, Claw: "
+                    "%hd, heading "
+                    "to PREPARE "
+                    "FOR MOVE\n",
+                    base_target_angle, elbow_target_angle, wrist_target_angle,
+                    claw_target_angle);
+        set_joints_angle(base_target_angle, elbow_target_angle, 0);
+        // set_claw_angle(claw_target_angle);
+        open_claw();
+        if (base_target_angle == 0 && elbow_target_angle == 0 &&
+            wrist_target_angle == 0 && claw_target_angle == 0) {
+          move_home();
+        } else {
+          arm_state = MOVE_TARGET_1;
+        }
+      } else {
+        // USE ROVER API TO MOVE - can't reach the object
+        if (rover_funcs_off) {
+          move_home();
+        } else {
+          rover_move_x(kinematic_result.extra_distance, 100);
+          log_message(
+              LOG_INFO,
+              "Validate kinematic result returned false. Moving rover %hd\n",
+              kinematic_result.extra_distance);
+          arm_state = ROVER_MOVING;
+        }
+        // forward rover_rotate(int dir, kinematic_result.turn_angle); // turn
+        // angle is +90 to -90. make sure this is
+        //  adjusted to whatever rover team provides
+      }
+    }
+    break;
+  default:
+    // should never be STARTING or READY_FOR_CAPTURE
+    log_message(LOG_ERROR,
+                "Vision returned an unexpected status in WAIT_FOR_INPUT\n");
+    break;
   }
 }
 
@@ -401,6 +403,9 @@ bool validate_kinematic_result(kinematic_output_t kinematic_result) {
               kinematic_result.extra_distance, kinematic_result.turn_angle,
               kinematic_result.base_angle, kinematic_result.elbow_angle,
               kinematic_result.wrist_angle, kinematic_result.error);
+  if (kinematic_result.error) {
+    return false;
+  }
   if (kinematic_result.extra_distance == 0 &&
       kinematic_result.turn_angle == 0) {
     int base_angle = kinematic_result.base_angle;
@@ -442,7 +447,7 @@ bool verify_pickup(vision_info_t original_vision_info,
   //         abs(z_diff) <= Z_VERIFICATION_ERROR &&
   //         abs(angle_diff) <= ANGLE_VERIFICATION_ERROR &&
   //         moved_vision_info.confidence >= VISION_CONFIDENCE_MINIMUM);
-  return (y_diff >= VERIFICATION_RAISE_DISTANCE)
+  return (y_diff >= VERIFICATION_RAISE_DISTANCE);
 }
 
 void move_home() {

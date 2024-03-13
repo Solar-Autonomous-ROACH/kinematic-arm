@@ -51,6 +51,7 @@ typedef enum {
   MOVE_TARGET_2,
   CLAW_ACQUIRE,
   CLAW_CHECK,
+  CLAW_RAISING,
   MOVE_PLACE_1,
   MOVE_PLACE_2,
   CLAW_DROPOFF,
@@ -78,6 +79,8 @@ typedef enum {
 // extern static struct motor_t arm_motor_subarray[4];
 
 void arm_handle_state(void);
+void handle_pickup_validation();
+void handle_vision_input();
 void stop_motors();
 arm_motors_status_t arm_motors_state_handler(bool base, bool elbow, bool wrist);
 void move_home();

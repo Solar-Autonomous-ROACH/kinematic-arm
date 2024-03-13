@@ -56,6 +56,14 @@ void kinematic_engine(float x_pos, float y_pos, float z_pos, float angle_pos,
   y_pos += CLAW_Y; // 2D Claw angle coming in to grab
   x_pos += CLAW_X;
 
+  // Finding Best Claw Attack Angle
+  // claw_attack_rad = PI / 2 - atan(x_pos / (0 - y_pos));
+  // claw_y = cos(claw_attack_rad) * W_C_LENGTH;
+  // claw_x = sin(claw_attack_rad) * W_C_LENGTH;
+  // y_pos += claw_y;
+  // x_pos += claw_x;
+  // log_message(LOG_INFO, "Claw Rad=%.3f, Y_Len=%.3f, X_Len=%.3f\n",
+  //             claw_attack_rad, claw_y, claw_x);
   // printf("YPos: %f", y_pos);
 
   magnitude = sqrt(x_pos * x_pos + y_pos * y_pos);
@@ -63,17 +71,22 @@ void kinematic_engine(float x_pos, float y_pos, float z_pos, float angle_pos,
   /*Do Checks to see if position is in range and within bounding lines*/
 
   // log_message(LOG_INFO, "Testing1\n");
-  log_message(LOG_INFO, "Magnitude = %.3f\n", magnitude);
-  log_message(LOG_INFO, "Arm Length = %.3f\n",
-              (S_E_LENGTH + E_W_LENGTH + 0.0) * 0.98);
+  // log_message(LOG_INFO, "Magnitude = %.3f\n", magnitude);
+  // log_message(LOG_INFO, "Arm Length = %.3f\n",
+  // (S_E_LENGTH + E_W_LENGTH + 0.0) * 0.98);
 
-  if (magnitude > (S_E_LENGTH + E_W_LENGTH + 0.0) * 0.98) { // check if in range
-    //   // DISTANCE_OVERSHOOT); log_message(LOG_INFO, "Testing2\n");
+  // if (magnitude > (S_E_LENGTH + E_W_LENGTH + 0.0) * 0.98) { // check if in
+  // range
+  //   // DISTANCE_OVERSHOOT); log_message(LOG_INFO, "Testing2\n");
 
-    // if (300 < (x_pos - CLAW_X)) { //demo version for far bound
+  if (270 < (x_pos - CLAW_X)) { // demo version for far bound
     // log_message(LOG_INFO, "Magnitude=%.3f\n", magnitude);
-    output->extra_distance =
-        ((int)(magnitude - S_E_LENGTH - E_W_LENGTH + DISTANCE_OVERSHOOT));
+    // output->extra_distance =
+    //     ((int)(magnitude - S_E_LENGTH - E_W_LENGTH + DISTANCE_OVERSHOOT));
+    output->extra_distance = ((int)(magnitude - 270 + DISTANCE_OVERSHOOT));
+    if (output->extra_distance > 1000) {
+      output->extra_distance = 100;
+    }
     return;
   } else if (LOWER_AREA_BOUND > (y_pos - CLAW_Y)) { // Lower Bound
     output->error = true;

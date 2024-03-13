@@ -22,7 +22,13 @@ void sigint_handler() {
 
 int main() {
   // Configure signal handler
-  signal(SIGINT, sigint_handler);
+  struct sigaction sa;
+  sa.sa_handler = sigint_handler;
+  sa.sa_flags = 0;
+  sigemptyset(&sa.sa_mask);
+  sigaddset(&sa.sa_mask, SIGALRM);
+  sigaction(SIGINT, &sa, NULL);
+
   // Initialize rover
   if (rover_init() != 0) {
     printf("failed to initialize rover\n");
