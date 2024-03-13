@@ -72,7 +72,9 @@
 #define RAD_TO_DEG (180.0 / PI)
 /*This is the 270 deg that is used to finish the triangle
   and the compensator for where the wrist starts measuring from*/
-#define WRIST_CONST ((280.0 + CLAW_ANGLE) / 180.0 * PI - 3 * PI / 2)
+// #define WRIST_CONST ((280.0 + CLAW_ANGLE) / 180.0 * PI - 3 * PI / 2)
+#define WRIST_CONST_1 280.0
+#define WRIST_CONST_2 (180.0 * PI - 3 * PI / 2)
 /*This is for any tilts in the robot body itself*/
 #define SHOULDER_CONST (0.0 / 180.0 * PI)
 #define CLAW_CONST 90

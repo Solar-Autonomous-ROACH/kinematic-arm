@@ -13,7 +13,7 @@ int to_deg(double radians) { return (int)(radians * RAD_TO_DEG); }
 void kinematic_engine(float x_pos, float y_pos, float z_pos, float angle_pos,
                       kinematic_output_t *output) {
   // printf("Values: %f, %f, %f\n", x_pos, y_pos, z_pos);
-  double magnitude, theta_1, theta_2, shoulder_rad, elbow_rad;
+  double magnitude, theta_1, theta_2, shoulder_rad, elbow_rad, claw_attack_rad;
   clock_t start_time, end_time;
 
   start_time = clock(); // For timing the whole thing
@@ -53,9 +53,13 @@ void kinematic_engine(float x_pos, float y_pos, float z_pos, float angle_pos,
   }
 
   // y_pos += W_C_LENGTH; //accounting for claw position, as should be same
-  y_pos += CLAW_Y; // 2D Claw angle coming in to grab
-  x_pos += CLAW_X;
+  // y_pos += CLAW_Y; // 2D Claw angle coming in to grab
+  // x_pos += CLAW_X;
 
+  //Finding Best Claw Attack Angle
+  claw_attack_rad = pi / 2 - atan(x_pos / y_pos);
+  y_pos += cos(claw_attack_rad) * W_C_LENGTH;
+  x_pos += sin(claw_attack_rad) * W_C_LENGTH;
   // printf("YPos: %f", y_pos);
 
   magnitude = sqrt(x_pos * x_pos + y_pos * y_pos);
@@ -98,7 +102,7 @@ void kinematic_engine(float x_pos, float y_pos, float z_pos, float angle_pos,
   // get the angles in respect to the servo directions
   output->base_angle = to_deg(PI - shoulder_rad + SHOULDER_CONST);
   output->elbow_angle = to_deg(elbow_rad);
-  output->wrist_angle = to_deg(WRIST_CONST + shoulder_rad + elbow_rad);
+  output->wrist_angle = to_deg(((WRIST_CONST_1 + to_deg(claw_attack_rad)) / WRIST_CONST_2) + shoulder_rad + elbow_rad);
   output->claw_angle = (int)angle_pos + CLAW_CONST;
 
   end_time = clock();
