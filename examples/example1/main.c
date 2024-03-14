@@ -31,6 +31,7 @@ int main() {
   isr_init();
 
   while (1) {
+    // rover_steer_forward();
     // rover_move_x(100);
     // while (!rover_move_done()) {
     //   /* block */

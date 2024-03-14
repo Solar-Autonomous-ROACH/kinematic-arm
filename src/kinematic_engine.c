@@ -83,7 +83,7 @@ void kinematic_engine(float x_pos, float y_pos, float z_pos, float angle_pos,
     // log_message(LOG_INFO, "Magnitude=%.3f\n", magnitude);
     // output->extra_distance =
     //     ((int)(magnitude - S_E_LENGTH - E_W_LENGTH + DISTANCE_OVERSHOOT));
-    output->extra_distance = ((int)(magnitude - 270 + DISTANCE_OVERSHOOT));
+    output->extra_distance = ((int)(x_pos - CLAW_X - 270 + DISTANCE_OVERSHOOT));
     if (output->extra_distance > 1000) {
       output->extra_distance = 100;
     }

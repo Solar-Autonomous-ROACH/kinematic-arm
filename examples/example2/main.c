@@ -46,6 +46,7 @@ int main() {
 
   // testing
   // motor_set_speed(MOTOR_MIDDLE_LEFT_WHEEL, 1000);
+  // rover_steer_forward();
   // rover_move_x(-10000, 128);
 
   while (1) {
