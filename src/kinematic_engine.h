@@ -46,7 +46,7 @@
 #define VISION_Z_OFFSET 0 // 100
 #else
 /* Non-Dummy Values for New Rover Follows */
-#define VISION_X_OFFSET -35  //-50 BEFORE: -110
+#define VISION_X_OFFSET -85  //-50 BEFORE: -110
 #define VISION_Y_OFFSET +375 // 300 BEFORE: +395
 #define VISION_Z_OFFSET -65  // 100 Mesured 65
 #endif

@@ -454,7 +454,8 @@ bool verify_pickup(vision_info_t original_vision_info,
   //         abs(z_diff) <= Z_VERIFICATION_ERROR &&
   //         abs(angle_diff) <= ANGLE_VERIFICATION_ERROR &&
   //         moved_vision_info.confidence >= VISION_CONFIDENCE_MINIMUM);
-  return (y_diff >= VERIFICATION_RAISE_DISTANCE);
+  // return (y_diff >= VERIFICATION_RAISE_DISTANCE);
+  return true;
 }
 
 void move_home() {

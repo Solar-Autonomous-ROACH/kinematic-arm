@@ -20,9 +20,9 @@
 #define ELBOW_HOME_ANGLE_2 0
 #define WRIST_HOME_ANGLE 0
 
-#define BASE_PLACE_ANGLE 40
-#define ELBOW_PLACE_ANGLE 45
-#define WRIST_PLACE_ANGLE 200
+#define BASE_PLACE_ANGLE 35
+#define ELBOW_PLACE_ANGLE 65
+#define WRIST_PLACE_ANGLE 210
 
 // all in millimeters, for pickup verification
 #define VERIFICATION_RAISE_DISTANCE 20
