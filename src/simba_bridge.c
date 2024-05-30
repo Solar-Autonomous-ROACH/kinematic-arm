@@ -29,7 +29,7 @@ int armada_rover_rotate(int angle, double speed) {
     //Angle can be postive or negative
     long inner_tics = deg_len_ticks(angle, INNER_RADIUS);
     long outer_tics = deg_len_ticks(angle, OUTER_RADIUS);
-    for (int i = 0; i < NUM_MOTORS; i++) {
+    for (int i = 0; i < NUM_MOTORS_2; i++) {
         switch (servos[i].motor.addr) {
             //Long Distance
         case MOTOR_REAR_RIGHT_WHEEL:
@@ -77,7 +77,7 @@ int armada_rover_rotate(int angle, double speed) {
 
 long deg_len_ticks(int angle, int radius) {
     int arc_distance = radius * radius * M_PI * angle;
-    return (distance * 12) / (124 * M_PI / 116);
+    return (arc_distance * 12) / (124 * M_PI / 116);
     //Values copied from other file as didn't want to redefine
 // /* For Motion*/
 // #define WHEEL_DIAMETER 124     /* mm diameter of the wheel*/
