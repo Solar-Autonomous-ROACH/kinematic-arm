@@ -77,7 +77,7 @@ int armada_rover_rotate(int angle, double speed) {
 
 
 long deg_len_ticks(int angle, int radius) {
-    int arc_distance = radius * radius * M_PI * angle;
+    long arc_distance = 2 * radius * M_PI * angle / 360;
     return (arc_distance * 12) / (124 * M_PI / 116);
     //Values copied from other file as didn't want to redefine
 // /* For Motion*/
