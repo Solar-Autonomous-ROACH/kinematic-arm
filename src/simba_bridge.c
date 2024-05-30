@@ -19,7 +19,7 @@
 #include <sys/time.h>
 #include <unistd.h>
 
-extern Servo servos[NUM_MOTORS];
+extern Servo servos[];
 
 
 /* Rotates rover to angle, with postive x being counterclockwise
@@ -76,7 +76,7 @@ int armada_rover_rotate(int angle, double speed) {
 
 
 long deg_len_ticks(int angle, int radius) {
-    int arc_distance = radius * radius * M_PI * angle
+    int arc_distance = radius * radius * M_PI * angle;
     return (distance * 12) / (124 * M_PI / 116);
     //Values copied from other file as didn't want to redefine
 // /* For Motion*/
