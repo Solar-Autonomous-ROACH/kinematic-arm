@@ -29,6 +29,7 @@ int armada_rover_rotate(int angle, double speed) {
     //Angle can be postive or negative
     long inner_tics = deg_len_ticks(angle, INNER_RADIUS);
     long outer_tics = deg_len_ticks(angle, OUTER_RADIUS);
+    printf("INNER: %d OUTER: %d\n", inner_tics, outer_tics);
     for (int i = 0; i < NUM_MOTORS_2; i++) {
         switch (servos[i].motor.addr) {
             //Long Distance
