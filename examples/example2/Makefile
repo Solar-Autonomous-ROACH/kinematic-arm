@@ -8,7 +8,7 @@ CFLAGS = -Wall -Wextra -O1
 ROVERLIBPATH ?= /home/ubuntu/SIMBA_C_Driver/rover
 ROVERLIBFLAG = -lrover
 
-ARMLIBPATH ?= /home/ubuntu/kinematic-arm
+ARMLIBPATH ?= /home/ubuntu/armada_test/test3/kinematic-arm
 ARMLIBFLAG = -larm
 
 LDFLAGS = $(ROVERLIBFLAG) $(ARMLIBFLAG) -lm
