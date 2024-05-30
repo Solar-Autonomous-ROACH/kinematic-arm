@@ -7,6 +7,7 @@
 #include "arm_motor_api.h"
 #include "claw.h"
 #include "kinematic_engine.h"
+#include "simba_bridge.h"
 #include "rover.h"
 #include "vision.h"
 #include <stdint.h>
