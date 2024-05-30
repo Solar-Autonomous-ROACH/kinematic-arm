@@ -160,6 +160,7 @@ void arm_handle_state() {
     if (check_rover_done()) {
       //check if need to turn or if need to move x
       if (kinematic_result.turn_angle != 0) {//turning
+        log_message(LOG_INFO, "Calling Armada_rover_rotate\n");
         armada_rover_rotate(kinematic_result.turn_angle, 100);
         arm_state = ROVER_MOVING;
       } else {//moving forward
