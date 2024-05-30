@@ -158,8 +158,14 @@ void arm_handle_state() {
 
   case ROVER_STEERING:
     if (check_rover_done()) {
-      rover_move_x(kinematic_result.extra_distance, 100);
-      arm_state = ROVER_MOVING;
+      //check if need to turn or if need to move x
+      if (kinematic_result.turn_angle != 0) {//turning
+        armada_rover_rotate(kinematic_result.turn_angle, 100);
+        arm_state = ROVER_MOVING;
+      } else {//moving forward
+        rover_move_x(kinematic_result.extra_distance, 100);
+        arm_state = ROVER_MOVING;
+      }
     }
     break;
 
@@ -381,12 +387,22 @@ void handle_vision_input() {
         if (rover_funcs_off) {
           move_home();
         } else {
-          rover_steer_forward();
-          log_message(
-              LOG_INFO,
-              "Validate kinematic result returned false. Moving rover %hd\n",
-              kinematic_result.extra_distance);
-          arm_state = ROVER_STEERING;
+          //add check to see if turn or go forward -> rover_steer_point();
+          if (kinematic_result.turn_angle != 0) {//need to turn
+            rover_steer_point();
+            log_message(
+                LOG_INFO,
+                "Validate kinematic result returned false. Turning rover %hd\n",
+                kinematic_result.turn_angle);
+            arm_state = ROVER_STEERING;
+          } else {//need to move forward
+            rover_steer_forward();
+            log_message(
+                LOG_INFO,
+                "Validate kinematic result returned false. Moving rover %hd\n",
+                kinematic_result.extra_distance);
+            arm_state = ROVER_STEERING;
+          }
         }
         // forward rover_rotate(int dir, kinematic_result.turn_angle); // turn
         // angle is +90 to -90. make sure this is
