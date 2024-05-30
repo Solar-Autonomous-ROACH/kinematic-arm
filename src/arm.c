@@ -171,7 +171,9 @@ void arm_handle_state() {
     break;
 
   case ROVER_MOVING:
+    log_message(LOG_INFO, "In Rover Moving\n")
     if (check_rover_done()) {
+      log_message(LOG_INFO, "Done with Moving\n")
       arm_state = CAPTURE_VISION_INFO;
     }
     break;
