@@ -161,7 +161,8 @@ void arm_handle_state() {
       //check if need to turn or if need to move x
       if (kinematic_result.turn_angle != 0) {//turning
         log_message(LOG_INFO, "Calling Armada_rover_rotate\n");
-        armada_rover_rotate(kinematic_result.turn_angle, 100);
+        // armada_rover_rotate(kinematic_result.turn_angle, 100);
+        rover_move_x(kinematic_result.turn_angle, 100);
         arm_state = ROVER_MOVING;
       } else {//moving forward
         rover_move_x(kinematic_result.extra_distance, 100);
@@ -171,7 +172,7 @@ void arm_handle_state() {
     break;
 
   case ROVER_MOVING:
-    log_message(LOG_INFO, "In Rover Moving\n");
+    //log_message(LOG_INFO, "In Rover Moving\n");
     if (check_rover_done()) {
       log_message(LOG_INFO, "Done with Moving\n");
       arm_state = CAPTURE_VISION_INFO;
