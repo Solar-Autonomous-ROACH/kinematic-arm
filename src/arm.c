@@ -162,7 +162,7 @@ void arm_handle_state() {
       if (kinematic_result.turn_angle != 0) {//turning
         // log_message(LOG_INFO, "Calling Armada_rover_rotate\n");
         armada_rover_rotate(kinematic_result.turn_angle, 100);
-        rover_move_x(kinematic_result.turn_angle, 100);
+        // rover_move_x(kinematic_result.turn_angle, 100);
         arm_state = ROVER_MOVING;
       } else {//moving forward
         rover_move_x(kinematic_result.extra_distance, 100);
