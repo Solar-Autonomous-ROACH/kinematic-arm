@@ -66,7 +66,7 @@
 #define BACK_AREA_BOUND 100
 #define UPPER_AREA_BOUND 100
 #define DISTANCE_OVERSHOOT 50 // How far we overshoot when we're too far away
-#define ANGLE_OVERSHOOT 5 // How much we overshoot angle corrections to prevent really small moves
+#define ANGLE_OVERSHOOT 3 // How much we overshoot angle corrections to prevent really small moves
 
 /*Constants for Math /Kine Stuff*/
 #define PI 3.1416
