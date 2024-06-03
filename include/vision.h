@@ -11,6 +11,7 @@ typedef struct {
   int16_t y;
   int16_t z;
   int16_t angle; // 0 to 179
+  int16_t type; //0 for normal tube, 1 for grasped tube
   double confidence;
 } vision_info_t;
 

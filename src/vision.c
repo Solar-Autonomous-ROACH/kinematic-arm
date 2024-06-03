@@ -145,16 +145,16 @@ vision_status_t vision_receive_input() {
     // fscanf(vision_stdout, "a=%hd\n", &(vision_info.angle));
     // log_message(LOG_INFO, "a = %hd\n", vision_info.angle);
     // exit(0);
-    if (fscanf(vision_stdout, "=%hd,y=%hd,z=%hd,a=%hd,c=%lf", &(vision_info.x),
+    if (fscanf(vision_stdout, "=%hd,y=%hd,z=%hd,a=%hd,c=%lf,g=%hd", &(vision_info.x),
                &(vision_info.y), &(vision_info.z), &(vision_info.angle),
-               &(vision_info.confidence)) > 0) {
+               &(vision_info.confidence), &(vision_info.type)) > 0) {
       dummy = fgetc(vision_stdout); // get rid of extra newline
       if (dummy != '\n') {
         log_message_line(LOG_ERROR, __LINE__, "Vision error\n");
       }
-      log_message(LOG_INFO, "x=%hd,y=%hd,z=%hd,a=%hd,c=%lf\n", vision_info.x,
+      log_message(LOG_INFO, "x=%hd,y=%hd,z=%hd,a=%hd,c=%lf,g=%hd\n", vision_info.x,
                   vision_info.y, vision_info.z, vision_info.angle,
-                  vision_info.confidence);
+                  vision_info.confidence, vision_info.type);
       vision_state = VISION_SUCCESS;
     } else {
       log_message(LOG_INFO, "vision fscan error\n");
