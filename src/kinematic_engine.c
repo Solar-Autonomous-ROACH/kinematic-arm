@@ -49,7 +49,7 @@ void kinematic_engine(float x_pos, float y_pos, float z_pos, float angle_pos,
   } else {
     x_pos -= ROACH_X_OFFSET;
     z_pos -= ROACH_Z_OFFSET;
-    output->turn_angle = to_deg(atan(z_pos / x_pos));
+    output->turn_angle = to_deg(atan(z_pos / x_pos)) + ANGLE_OVERSHOOT;
   }
 
   // y_pos += W_C_LENGTH; //accounting for claw position, as should be same
